@@ -2,6 +2,8 @@
 
 **Created**: January 16, 2026
 **Status**: Active Learning Path
+**Repository**: https://github.com/habond/aws-learn
+**Interactive Site**: https://habond.github.io/aws-learn/
 
 ---
 

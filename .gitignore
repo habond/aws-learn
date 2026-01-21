@@ -6,6 +6,13 @@
 # Claude
 .claude/
 
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
 # Python
 __pycache__/
 *.py[cod]
@@ -49,3 +56,9 @@ logs/
 # Temporary files
 *.tmp
 *.bak
+
+# Lesson working files (created during course work)
+lesson-*/bucket-policy.json
+lesson-*/lambda-*-policy.json
+lesson-*/trust-policy.json
+*.zip

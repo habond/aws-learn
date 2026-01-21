@@ -131,6 +131,41 @@ Keep track of your AWS spending to avoid surprises!
 
 ---
 
+## Repository Structure
+
+This repository contains everything you need for your AWS learning journey:
+
+```
+aws-learn/
+├── lesson-01-first-internet-empire/   # S3, CloudFront, Route 53
+├── lesson-02-renting-computers/       # EC2, VPC, Load Balancers
+├── lesson-03-servers-are-so-2010/     # Lambda, API Gateway, DynamoDB
+├── lesson-04-automate-all-things/     # Terraform fundamentals
+├── lesson-05-containers/              # Docker, ECS, Fargate
+├── lesson-06-data-pipelines/          # S3 events, RDS, ElastiCache
+├── lesson-07-event-driven-chaos/      # SNS, SQS, Step Functions
+├── lesson-08-big-data/                # Kinesis, Glue, Athena
+├── lesson-09-ai-ml-buzzwords/         # SageMaker, Rekognition, Bedrock
+├── lesson-10-observability/           # CloudWatch, X-Ray, Grafana
+├── lesson-11-security/                # IAM, WAF, GuardDuty, KMS
+├── lesson-12-victory-lap/             # Capstone project
+├── docs/                              # Interactive course website
+├── resources/                         # Shared resources
+├── GETTING-STARTED.md                 # Initial setup guide
+├── QUICKSTART.md                      # Jump right in
+└── SPEC.md                           # Curriculum specification
+```
+
+Each lesson directory contains:
+- `README.md` - Complete lesson instructions and project details
+- `notes.md` - Space for your learning notes
+- Code templates and configuration files
+- Any lesson-specific resources
+
+**Note**: When working through lessons, you'll create additional files (policies, configs, etc.). These are ignored by git as they're personal to your learning journey.
+
+---
+
 ## Prerequisites & Setup
 
 ### Before Starting Lesson 1:
