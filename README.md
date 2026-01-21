@@ -2,6 +2,8 @@
 
 **Your 12-Week Hands-On Journey to AWS Mastery**
 
+📖 **[View Interactive Course Website](https://habond.github.io/aws-learn/)**
+
 ---
 
 ## About This Curriculum
