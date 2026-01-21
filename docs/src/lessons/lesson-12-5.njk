@@ -1,0 +1,179 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-12-5.html
+lessonNumber: 12
+lessonTitle: "Victory Lap - Build Something Amazing!"
+duration: "~10-20 hours"
+cost: "$10-20"
+stepNumber: 5
+totalSteps: 8
+progress: 62.5
+title: "Lesson 12: Frontend Integration - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-12.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Capstone Overview</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Infrastructure Setup</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">Processing Pipeline</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">API Layer</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-12-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Frontend Integration</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">CI/CD Pipeline</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Monitoring &amp; Cost Optimization</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-8.html">
+  <span class="step-number">8</span>
+  <span class="step-title">Deliverables &amp; Next Steps</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 12 - Part 5</span>
+        <h1>Frontend Integration</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 4: Frontend Integration (2 hours)</h2>
+
+        <h3>Step 5: Build Simple Upload Interface</h3>
+        <p>Create <code>frontend/index.html</code>:</p>
+
+        <pre><code class="language-javascript">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;Video Platform&lt;/title&gt;
+  &lt;style&gt;
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .upload-section {
+      border: 2px dashed #ccc;
+      padding: 40px;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .video-card {
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .video-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Video Platform&lt;/h1&gt;
+
+  &lt;div class="upload-section"&gt;
+    &lt;h2&gt;Upload Video&lt;/h2&gt;
+    &lt;input type="file" id="fileInput" accept="video/*"&gt;
+    &lt;button onclick="uploadVideo()"&gt;Upload&lt;/button&gt;
+    &lt;div id="uploadStatus"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class="video-grid" id="videoGrid"&gt;&lt;/div&gt;
+
+  &lt;script&gt;
+    const API_ENDPOINT = 'YOUR_API_ENDPOINT';
+
+    async function uploadVideo() {
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) return;
+
+      const statusDiv = document.getElementById('uploadStatus');
+      statusDiv.textContent = 'Getting upload URL...';
+
+      // Get presigned URL
+      const response = await fetch(`${API_ENDPOINT}/upload-url`, {
+        method: 'POST',
+        body: JSON.stringify({ filename: file.name })
+      });
+
+      const { uploadUrl, videoId } = await response.json();
+
+      statusDiv.textContent = 'Uploading...';
+
+      // Upload to S3
+      await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file
+      });
+
+      statusDiv.textContent = 'Upload complete! Processing...';
+
+      // Refresh video list
+      setTimeout(loadVideos, 5000);
+    }
+
+    async function loadVideos() {
+      const response = await fetch(`${API_ENDPOINT}/videos`);
+      const videos = await response.json();
+
+      const grid = document.getElementById('videoGrid');
+      grid.innerHTML = videos.map(video =&gt; `
+        &lt;div class="video-card"&gt;
+          &lt;img src="${video.thumbnailUrl}" alt="${video.title}"&gt;
+          &lt;h3&gt;${video.title}&lt;/h3&gt;
+          &lt;p&gt;Uploaded: ${new Date(video.uploadedAt).toLocaleDateString()}&lt;/p&gt;
+        &lt;/div&gt;
+      `).join('');
+    }
+
+    // Load videos on page load
+    loadVideos();
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-12-4.html" class="btn btn-secondary">← Previous: API Layer</a>
+          <a href="lesson-12-6.html" class="btn btn-primary">Next: CI/CD Pipeline →</a>
+        </div>
+      </div>

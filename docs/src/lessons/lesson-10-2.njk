@@ -1,0 +1,142 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-10-2.html
+lessonNumber: 10
+lessonTitle: "Observability - Know What's Happening"
+duration: "~6 hours"
+cost: "$2-3"
+stepNumber: 2
+totalSteps: 6
+progress: 33.33
+title: "Lesson 10: CloudWatch Logs Insights - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-10.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Advanced CloudWatch Metrics</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-10-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">CloudWatch Logs Insights</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-10-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">CloudWatch Alarms</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-10-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">X-Ray Distributed Tracing</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-10-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">CloudWatch Synthetics</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-10-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Container Insights + Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 10 - Part 2</span>
+        <h1>CloudWatch Logs Insights</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 2: CloudWatch Logs Insights (1 hour)</h2>
+
+        <h3>Step 2: Create Log Group and Stream Logs</h3>
+
+        <pre><code class="language-bash"># Create log group
+aws logs create-log-group --log-group-name /app/monitored-app
+
+# Create log stream
+aws logs create-log-stream \
+  --log-group-name /app/monitored-app \
+  --log-stream-name app-logs-$(date +%Y%m%d)</code></pre>
+
+        <p>Update app to send logs:</p>
+
+        <pre><code class="language-javascript">// Add to monitored-app/index.js
+const { CloudWatchLogsClient, PutLogEventsCommand } = require('@aws-sdk/client-cloudwatch-logs');
+const logsClient = new CloudWatchLogsClient({});
+
+async function logToCloudWatch(message, level = 'INFO') {
+  try {
+    await logsClient.send(new PutLogEventsCommand({
+      logGroupName: '/app/monitored-app',
+      logStreamName: `app-logs-${new Date().toISOString().split('T')[0].replace(/-/g, '')}`,
+      logEvents: [
+        {
+          message: JSON.stringify({ level, message, timestamp: new Date().toISOString() }),
+          timestamp: Date.now()
+        }
+      ]
+    }));
+  } catch (error) {
+    console.error('Failed to send logs:', error);
+  }
+}
+
+// Use in order endpoint
+app.post('/order', express.json(), async (req, res) =&gt; {
+  // ... existing code
+  await logToCloudWatch(`Order placed: ${amount}`);
+  // ...
+});</code></pre>
+
+        <h3>Step 3: Query Logs with CloudWatch Insights</h3>
+
+        <pre><code class="language-bash"># Query logs for errors
+aws logs start-query \
+  --log-group-name /app/monitored-app \
+  --start-time $(date -u -v-1H +%s) \
+  --end-time $(date -u +%s) \
+  --query-string 'fields @timestamp, @message | filter level = "ERROR" | sort @timestamp desc | limit 20'
+
+# Get query ID from output
+export QUERY_ID="paste-query-id"
+
+# Get results (wait a moment for query to complete)
+aws logs get-query-results --query-id $QUERY_ID</code></pre>
+
+        <p><strong>Common queries:</strong></p>
+
+        <pre><code>-- Find slow requests
+fields @timestamp, requestDuration
+| filter requestDuration &gt; 1000
+| sort requestDuration desc
+| limit 20
+
+-- Count errors by hour
+stats count() by bin(1h) as hour
+| filter level = "ERROR"
+
+-- Find high revenue orders
+fields @timestamp, amount
+| filter amount &gt; 100
+| sort amount desc</code></pre>
+
+        <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 15px; margin: 20px 0;">
+          <strong>Pro Tip:</strong> CloudWatch Logs Insights uses a SQL-like query language. You can save frequently used queries for quick access in the console.
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-10.html" class="btn btn-secondary">← Previous: Advanced CloudWatch Metrics</a>
+          <a href="lesson-10-3.html" class="btn btn-primary">Next: CloudWatch Alarms →</a>
+        </div>
+      </div>

@@ -1,0 +1,158 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-07.html
+lessonNumber: 7
+lessonTitle: "Event-Driven Chaos"
+duration: "~8 hours"
+cost: "$2-3"
+stepNumber: 1
+totalSteps: 5
+progress: 20
+title: "Lesson 7: Event-Driven Chaos - AWS Learning Tutorial"
+tocContent: |
+  <li class="active">
+  <a href="lesson-07.html">
+  <span class="step-number">1</span>
+  <span class="step-title">SNS Topics</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-07-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">SQS Queues</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-07-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">EventBridge</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-07-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">Step Functions</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-07-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Complete Integration</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 7 - Part 1</span>
+        <h1>Event-Driven Chaos (Master Async Workflows)</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>What You're Building</h2>
+        <p>Build a complete order processing system using event-driven architecture. When an order is placed, it triggers a complex workflow: validate payment, check inventory, send notifications, update databases, and handle failures gracefully. You'll use SNS (pub/sub messaging), SQS (queues), EventBridge (event bus), and Step Functions (orchestration).</p>
+
+        <p><strong>Real-world use case</strong>: E-commerce order processing, payment systems, workflow automation, microservices communication.</p>
+
+        <h2>What You'll Learn</h2>
+        <ul>
+          <li><strong>SNS</strong>: Pub/Sub messaging (one-to-many)</li>
+          <li><strong>SQS</strong>: Message queues (reliable delivery)</li>
+          <li><strong>EventBridge</strong>: Event bus (routing events)</li>
+          <li><strong>Step Functions</strong>: Workflow orchestration</li>
+          <li><strong>Dead Letter Queues</strong>: Error handling</li>
+          <li><strong>Fan-out patterns</strong>: Parallel processing</li>
+          <li><strong>Event-driven architecture</strong>: Design patterns</li>
+        </ul>
+
+        <h2>Prerequisites</h2>
+        <ul>
+          <li>Completed Lessons 1-6</li>
+          <li>AWS CLI configured</li>
+          <li>Node.js installed</li>
+          <li>Understanding of async messaging</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Architecture Overview</h2>
+        <pre><code class="language-bash">API Gateway → Lambda (Place Order)
+                ↓
+           EventBridge
+                ↓
+         ┌──────┴──────┐
+         ↓             ↓
+    Step Function    SNS Topic
+         ↓             ↓
+    Validate      ┌────┴────┐
+         ↓        ↓         ↓
+    Reserve     Email     SMS
+         ↓      Lambda   Lambda
+    Process
+         ↓
+     Complete</code></pre>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Part 1: SNS Topics (Simple Notification Service) (1 hour)</h2>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is SNS and when should I use it?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> SNS (Simple Notification Service) is a pub/sub messaging service - publishers send messages to topics, and all subscribers receive those messages. It's a one-to-many broadcast system where a single message can trigger multiple different actions simultaneously.</p>
+
+            <p><strong>Why we need it:</strong> When something happens (like an order being placed), you often need to do multiple things: send an email, update inventory, log to analytics, trigger a workflow. Without SNS, you'd have to call each service individually. SNS lets you publish once and fan out to many subscribers automatically.</p>
+
+            <p><strong>Key details:</strong> SNS supports multiple subscriber types: SQS queues, Lambda functions, HTTP endpoints, email, and SMS. Messages are pushed immediately to subscribers (unlike SQS where consumers pull). SNS can filter messages so subscribers only receive relevant events based on message attributes.</p>
+
+            <p><strong>Common gotcha:</strong> SNS doesn't guarantee order or store messages long-term - if a subscriber is down when a message arrives, it might be lost (unless the subscriber is an SQS queue). For critical workflows requiring retries and guaranteed delivery, pair SNS with SQS in a fan-out pattern.</p>
+          </div>
+        </div>
+
+        <h3>Step 1: Create SNS Topics</h3>
+        <pre><code class="language-bash"># Create topic for order events
+aws sns create-topic --name order-events
+
+export ORDER_TOPIC_ARN=$(aws sns list-topics \
+  --query "Topics[?contains(TopicArn, 'order-events')].TopicArn" \
+  --output text)
+
+echo "Order Topic ARN: $ORDER_TOPIC_ARN"
+
+# Create topic for notifications
+aws sns create-topic --name order-notifications
+
+export NOTIFICATION_TOPIC_ARN=$(aws sns list-topics \
+  --query "Topics[?contains(TopicArn, 'order-notifications')].TopicArn" \
+  --output text)</code></pre>
+
+        <h3>Step 2: Subscribe Email to Notifications</h3>
+        <pre><code class="language-bash"># Replace with your email
+export YOUR_EMAIL="your-email@example.com"
+
+aws sns subscribe \
+  --topic-arn $NOTIFICATION_TOPIC_ARN \
+  --protocol email \
+  --notification-endpoint $YOUR_EMAIL
+
+# Check your email and confirm subscription!</code></pre>
+
+        <h3>Step 3: Test SNS Publishing</h3>
+        <pre><code class="language-bash"># Publish test message
+aws sns publish \
+  --topic-arn $NOTIFICATION_TOPIC_ARN \
+  --subject "Test Order Notification" \
+  --message "Your order has been placed successfully!"
+
+# Check your email!</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-06.html" class="btn btn-secondary">← Previous Lesson</a>
+          <a href="lesson-07-2.html" class="btn btn-primary">Next: SQS Queues →</a>
+        </div>
+      </div>

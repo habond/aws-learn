@@ -1,0 +1,7 @@
+{
+  "sensor_id": "string",
+  "timestamp": "string (ISO 8601)",
+  "temperature": "double",
+  "humidity": "double",
+  "location": "string"
+}

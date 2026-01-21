@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 2: Load Balancer - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 2</h2>
+        <div class="lesson-title">Renting Computers in Someone Else&#39;s Basement</div>
+        <div class="lesson-meta">
+          <span>~8 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 71.5%;"></div>
+      </div>
+      <div class="progress-text">Step 5 of 7</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-02.html">
+<span class="step-number">1</span>
+<span class="step-title">VPC Basics</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-2.html">
+<span class="step-number">2</span>
+<span class="step-title">SSH Key Pair</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-3.html">
+<span class="step-number">3</span>
+<span class="step-title">Launch EC2 Instance</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-4.html">
+<span class="step-number">4</span>
+<span class="step-title">Deploy Application</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-02-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Load Balancer</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Auto Scaling</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-7.html">
+<span class="step-number">7</span>
+<span class="step-title">CloudWatch + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li class="current">
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 2 - Part 5</span>
+        <h1>Load Balancer &amp; Multiple Instances</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 5: Load Balancer &amp; Multiple Instances (2 hours)</h2>
+
+        
+
+        <h3>Step 10: Create AMI from Your Instance</h3>
+        <p>Make a snapshot of your configured server:</p>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What's an AMI and why create one?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> An AMI (Amazon Machine Image) is a template/snapshot of your EC2 instance - it captures the operating system, installed software, and configuration. Think of it like taking a photo of your server's entire setup.</p>
+
+            <p><strong>Why we need it:</strong> You've spent time configuring this server (installing Node.js, deploying your app, setting up systemd services). Rather than repeat those manual steps for each new server, you can launch identical copies from this AMI in seconds. Essential for scaling and disaster recovery.</p>
+
+            <p><strong>Key details:</strong> The AMI only captures the root volume's state. If you have separate data volumes, snapshot those separately. AMIs are region-specific - you'll need to copy them to other regions if deploying globally.</p>
+
+            <p><strong>Common gotcha:</strong> Creating an AMI from a running instance can cause file system inconsistencies (like taking a photo while someone's moving). For production systems, stop the instance first or use AWS Backup for guaranteed consistency.</p>
+          </div>
+        </div>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">EC2</span></div><code class="language-bash"># Create AMI
+aws ec2 create-image \
+  --instance-id $INSTANCE_ID \
+  --name "web-app-ami-$(date +%Y%m%d)" \
+  --description "Web app with Node.js"
+
+# Get AMI ID
+export MY_AMI=$(aws ec2 describe-images \
+  --owners self \
+  --filters "Name=name,Values=web-app-ami-*" \
+  --query "Images | sort_by(@, &amp;CreationDate) | [-1].ImageId" \
+  --output text)
+
+echo "AMI ID: $MY_AMI"
+
+# Wait for AMI to be available
+aws ec2 wait image-available --image-ids $MY_AMI</code></pre>
+
+        <h3>Step 11: Create Target Group</h3>
+
+        
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What's a Target Group?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A Target Group is a collection of servers (EC2 instances, containers, or IP addresses) that receive traffic from a load balancer. It's like a group of workers that can handle incoming requests.</p>
+
+            <p><strong>Why we need it:</strong> The load balancer needs to know which servers to send traffic to. The target group defines this collection and includes health check settings to ensure traffic only goes to healthy servers.</p>
+
+            <p><strong>Key details:</strong> You specify the protocol (HTTP/HTTPS/TCP) and port your application listens on. The health check path (like <code>/health</code>) is regularly checked - if it returns 200 OK, the server is "healthy". Unhealthy servers are automatically removed from rotation.</p>
+
+            <p><strong>Common gotcha:</strong> Make sure your application actually implements the health check endpoint! If <code>/health</code> doesn't exist, all instances will be marked unhealthy and your app won't receive traffic.</p>
+          </div>
+        </div>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">ALB</span></div><code class="language-bash"># Create target group
+aws elbv2 create-target-group \
+  --name web-app-tg \
+  --protocol HTTP \
+  --port 3000 \
+  --vpc-id $VPC_ID \
+  --health-check-path /health
+
+# Get target group ARN
+export TG_ARN=$(aws elbv2 describe-target-groups \
+  --names web-app-tg \
+  --query "TargetGroups[0].TargetGroupArn" \
+  --output text)
+
+echo "Target Group ARN: $TG_ARN"</code></pre>
+
+        <h3>Step 12: Create Application Load Balancer</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What's a Load Balancer and why do we need one?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A Load Balancer distributes incoming traffic across multiple servers so no single server gets overwhelmed. Think of it like a receptionist directing visitors to available doctors - ensuring no one doctor has a waiting room full of patients while others sit idle.</p>
+
+            <p><strong>Why we need it:</strong> Running a single server creates problems: (1) If it fails, your entire site goes down. (2) If traffic spikes, one server can't handle it. (3) You can't update without downtime. A load balancer solves all three by spreading traffic across multiple servers.</p>
+
+            <p><strong>Key details:</strong> ALB (Application Load Balancer) works at the HTTP/HTTPS level, understanding URLs and headers. It requires at least 2 subnets in different Availability Zones for high availability. It continuously monitors server health and only sends traffic to healthy instances.</p>
+
+            <p><strong>Common gotcha:</strong> The load balancer needs to be in public subnets (with internet access) even if your application servers are in private subnets. Also, security groups must allow traffic on the load balancer's port (typically 80/443).</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Why do we need 2 Availability Zones?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Availability Zones (AZs) are physically separate data centers within an AWS region. Each has independent power, cooling, and networking.</p>
+
+            <p><strong>Why we need it:</strong> If one data center has a problem (power outage, network issue, hardware failure), servers in other AZs keep running. By spreading your load balancer across 2+ AZs, your application stays available even if an entire data center fails.</p>
+
+            <p><strong>Key details:</strong> Load balancers require a minimum of 2 AZs. AWS automatically distributes traffic across all enabled AZs. There's no extra charge for multi-AZ load balancing.</p>
+
+            <p><strong>Common gotcha:</strong> Your instances should also be spread across the same AZs as your load balancer. There's a small data transfer cost for cross-AZ traffic, but availability is worth it.</p>
+          </div>
+        </div>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">ALB</span><span class="code-service-badge">EC2</span></div><code class="language-bash"># Get subnet IDs (need at least 2 in different AZs)
+export SUBNET_IDS=$(aws ec2 describe-subnets \
+  --filters "Name=vpc-id,Values=$VPC_ID" \
+  --query "Subnets[0:2].SubnetId" \
+  --output text | tr '\t' ' ')
+
+# Create ALB
+aws elbv2 create-load-balancer \
+  --name web-app-alb \
+  --subnets $SUBNET_IDS \
+  --security-groups $SG_ID
+
+# Get ALB ARN and DNS
+export ALB_ARN=$(aws elbv2 describe-load-balancers \
+  --names web-app-alb \
+  --query "LoadBalancers[0].LoadBalancerArn" \
+  --output text)
+
+export ALB_DNS=$(aws elbv2 describe-load-balancers \
+  --names web-app-alb \
+  --query "LoadBalancers[0].DNSName" \
+  --output text)
+
+echo "ALB DNS: $ALB_DNS"
+
+# Create listener (forwards traffic to target group)
+aws elbv2 create-listener \
+  --load-balancer-arn $ALB_ARN \
+  --protocol HTTP \
+  --port 80 \
+  --default-actions Type=forward,TargetGroupArn=$TG_ARN</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What's an ARN?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> ARN (Amazon Resource Name) is AWS's unique identifier format for resources. It's like a full address that precisely identifies any AWS resource across all accounts and regions.</p>
+
+            <p><strong>Why we need it:</strong> Resource names (like "web-app-alb") can be duplicated across accounts or regions. ARNs are globally unique, ensuring commands operate on exactly the resource you intend.</p>
+
+            <p><strong>Key details:</strong> Format is <code>arn:partition:service:region:account:resource</code>. Example: <code>arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/web-app-alb/50dc6c495c0c9188</code>. The long ID at the end makes it unique even if you create another load balancer with the same name.</p>
+
+            <p><strong>Common gotcha:</strong> Some ARN parts can be empty (like region for global services like IAM). Always copy ARNs exactly - they're case-sensitive and include special characters.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What's a Listener?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A Listener is a process that watches for incoming connections on a specific port and protocol, then routes them based on rules you define. Think of it like a switchboard operator who answers calls on a phone line and directs them to the right person.</p>
+
+            <p><strong>Why we need it:</strong> The load balancer needs to know what to do with incoming traffic. This listener says "for traffic arriving on port 80 (HTTP), forward it to the target group containing our servers."</p>
+
+            <p><strong>Key details:</strong> You can have multiple listeners on one load balancer (like port 80 for HTTP and port 443 for HTTPS). Listeners can have complex rules - forward based on URL path, host headers, or HTTP methods. The action type "forward" sends traffic to target groups, but you can also "redirect" (HTTP to HTTPS) or "return-fixed-response" (for maintenance pages).</p>
+
+            <p><strong>Common gotcha:</strong> The listener port is what users connect to (usually 80 or 443), which is different from your application port (3000 in this case). The load balancer listens on 80, then forwards to port 3000 on your instances.</p>
+          </div>
+        </div>
+
+        <h3>Step 13: Register Instances with Target Group</h3>
+
+        
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">ALB</span></div><code class="language-bash"># Register your existing instance
+aws elbv2 register-targets \
+  --target-group-arn $TG_ARN \
+  --targets Id=$INSTANCE_ID
+
+# Wait a minute, then test
+sleep 60
+
+# Test ALB
+curl http://$ALB_DNS</code></pre>
+
+        <p><strong>Your app is now behind a load balancer!</strong></p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-02-4.html" class="btn btn-secondary">← Previous: Deploy Application</a>
+          <a href="lesson-02-6.html" class="btn btn-primary">Next: Auto Scaling →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-06-2.html
+lessonNumber: 6
+lessonTitle: "Data Pipelines"
+duration: "~7 hours"
+cost: "$3-4"
+stepNumber: 2
+totalSteps: 6
+progress: 33.33
+title: "Lesson 6: RDS PostgreSQL Database - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-06.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Set Up Networking (VPC)</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-06-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">RDS PostgreSQL Database</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">ElastiCache Redis</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">S3 Bucket for Data Upload</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Lambda Data Processor</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Query API with Caching</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 6 - Part 2</span>
+        <h1>RDS PostgreSQL Database</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 2: RDS PostgreSQL Database (1.5 hours)</h2>
+
+        <h3>Step 3: Create DB Subnet Group</h3>
+        <pre><code class="language-bash"># Create subnet group (required for RDS)
+aws rds create-db-subnet-group \
+  --db-subnet-group-name data-pipeline-subnet-group \
+  --db-subnet-group-description "Subnet group for data pipeline RDS" \
+  --subnet-ids $SUBNET_1 $SUBNET_2</code></pre>
+
+        <h3>Step 4: Generate Database Password</h3>
+        <pre><code class="language-bash"># Generate random password
+export DB_PASSWORD=$(openssl rand -base64 32)
+echo "DB Password: $DB_PASSWORD"
+# SAVE THIS PASSWORD! You'll need it.</code></pre>
+
+        <h3>Step 5: Create RDS Instance</h3>
+        <pre><code class="language-bash"># Create PostgreSQL instance
+aws rds create-db-instance \
+  --db-instance-identifier data-pipeline-db \
+  --db-instance-class db.t3.micro \
+  --engine postgres \
+  --engine-version 15.4 \
+  --master-username admin \
+  --master-user-password "$DB_PASSWORD" \
+  --allocated-storage 20 \
+  --vpc-security-group-ids $RDS_SG \
+  --db-subnet-group-name data-pipeline-subnet-group \
+  --backup-retention-period 1 \
+  --no-multi-az \
+  --publicly-accessible
+
+# This takes 5-10 minutes
+echo "Waiting for RDS instance to be available..."
+aws rds wait db-instance-available --db-instance-identifier data-pipeline-db
+
+# Get endpoint
+export DB_ENDPOINT=$(aws rds describe-db-instances \
+  --db-instance-identifier data-pipeline-db \
+  --query "DBInstances[0].Endpoint.Address" \
+  --output text)
+
+echo "Database Endpoint: $DB_ENDPOINT"</code></pre>
+
+        <h3>Step 6: Store Credentials in Secrets Manager</h3>
+        <pre><code class="language-bash"># Create secret for database credentials
+aws secretsmanager create-secret \
+  --name data-pipeline/db-credentials \
+  --secret-string "{\"username\":\"admin\",\"password\":\"$DB_PASSWORD\",\"host\":\"$DB_ENDPOINT\",\"port\":5432,\"database\":\"postgres\"}"
+
+export SECRET_ARN=$(aws secretsmanager describe-secret \
+  --secret-id data-pipeline/db-credentials \
+  --query ARN \
+  --output text)
+
+echo "Secret ARN: $SECRET_ARN"</code></pre>
+
+        <h3>Step 7: Initialize Database Schema</h3>
+        <p><strong>Install PostgreSQL client if needed:</strong></p>
+
+        <pre><code class="language-bash"># macOS
+brew install postgresql
+
+# Ubuntu/Debian
+sudo apt-get install postgresql-client</code></pre>
+
+        <p><strong>Connect and create schema:</strong></p>
+
+        <pre><code># Connect to database
+psql -h $DB_ENDPOINT -U admin -d postgres
+
+# Enter password when prompted</code></pre>
+
+        <p><strong>In psql:</strong></p>
+
+        <pre><code class="language-sql">-- Create table for processed data
+CREATE TABLE sales_data (
+  id SERIAL PRIMARY KEY,
+  date DATE NOT NULL,
+  product VARCHAR(255) NOT NULL,
+  quantity INTEGER NOT NULL,
+  revenue DECIMAL(10,2) NOT NULL,
+  region VARCHAR(100) NOT NULL,
+  processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create index for faster queries
+CREATE INDEX idx_date ON sales_data(date);
+CREATE INDEX idx_product ON sales_data(product);
+CREATE INDEX idx_region ON sales_data(region);
+
+-- Verify
+\dt
+\d sales_data
+
+-- Exit
+\q</code></pre>
+
+        <p><strong>What just happened?</strong></p>
+        <ul>
+          <li>Created a managed PostgreSQL database in RDS</li>
+          <li>Stored credentials securely in Secrets Manager</li>
+          <li>Initialized the database schema with a sales_data table</li>
+          <li>Added indexes for query performance</li>
+        </ul>
+
+        <p><strong>Pro tip</strong>: RDS handles backups, patches, and replication for you. It's like having a DBA without hiring one!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-06.html" class="btn btn-secondary">← Previous: Set Up Networking</a>
+          <a href="lesson-06-3.html" class="btn btn-primary">Next: ElastiCache Redis →</a>
+        </div>
+      </div>

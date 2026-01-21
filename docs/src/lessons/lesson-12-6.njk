@@ -1,0 +1,141 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-12-6.html
+lessonNumber: 12
+lessonTitle: "Victory Lap - Build Something Amazing!"
+duration: "~10-20 hours"
+cost: "$10-20"
+stepNumber: 6
+totalSteps: 8
+progress: 75
+title: "Lesson 12: CI/CD Pipeline - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-12.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Capstone Overview</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Infrastructure Setup</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">Processing Pipeline</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">API Layer</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Frontend Integration</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-12-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">CI/CD Pipeline</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Monitoring &amp; Cost Optimization</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-8.html">
+  <span class="step-number">8</span>
+  <span class="step-title">Deliverables &amp; Next Steps</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 12 - Part 6</span>
+        <h1>CI/CD Pipeline</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 5: CI/CD Pipeline (2 hours)</h2>
+
+        <h3>Step 6: Create GitHub Actions Workflow</h3>
+        <p>Create <code>.github/workflows/deploy.yml</code>:</p>
+
+        <pre><code class="language-bash">name: Deploy to AWS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          cd api
+          npm install
+
+      - name: Run tests
+        run: |
+          cd api
+          npm test
+
+      - name: Deploy with Terraform
+        run: |
+          cd terraform
+          terraform init
+          terraform apply -auto-approve
+
+      - name: Deploy Lambda functions
+        run: |
+          for func in thumbnail-generator extract-metadata update-catalog; do
+            cd $func
+            zip -r function.zip .
+            aws lambda update-function-code \
+              --function-name $func \
+              --zip-file fileb://function.zip
+            cd ..
+          done
+
+      - name: Deploy frontend
+        run: |
+          cd frontend
+          aws s3 sync . s3://YOUR-FRONTEND-BUCKET
+          aws cloudfront create-invalidation \
+            --distribution-id YOUR-DISTRIBUTION-ID \
+            --paths "/*"</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-12-5.html" class="btn btn-secondary">← Previous: Frontend Integration</a>
+          <a href="lesson-12-7.html" class="btn btn-primary">Next: Monitoring &amp; Cost Optimization →</a>
+        </div>
+      </div>

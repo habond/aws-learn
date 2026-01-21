@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 6: ElastiCache Redis - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 6</h2>
+        <div class="lesson-title">Data Pipelines</div>
+        <div class="lesson-meta">
+          <span>~7 hours</span>
+          <span>$3-4</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 50%;"></div>
+      </div>
+      <div class="progress-text">Step 3 of 6</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-06.html">
+<span class="step-number">1</span>
+<span class="step-title">Set Up Networking (VPC)</span>
+</a>
+</li>
+<li>
+<a href="lesson-06-2.html">
+<span class="step-number">2</span>
+<span class="step-title">RDS PostgreSQL Database</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-06-3.html">
+<span class="step-number">3</span>
+<span class="step-title">ElastiCache Redis</span>
+</a>
+</li>
+<li>
+<a href="lesson-06-4.html">
+<span class="step-number">4</span>
+<span class="step-title">S3 Bucket for Data Upload</span>
+</a>
+</li>
+<li>
+<a href="lesson-06-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Lambda Data Processor</span>
+</a>
+</li>
+<li>
+<a href="lesson-06-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Query API with Caching</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li class="current">
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 6 - Part 3</span>
+        <h1>ElastiCache Redis</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 3: ElastiCache Redis (1 hour)</h2>
+
+        <h3>Step 8: Create Redis Subnet Group</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">ElastiCache</span></div><code class="language-bash"># Create subnet group for Redis
+aws elasticache create-cache-subnet-group \
+  --cache-subnet-group-name data-pipeline-redis-subnet \
+  --cache-subnet-group-description "Subnet group for data pipeline Redis" \
+  --subnet-ids $SUBNET_1 $SUBNET_2</code></pre>
+
+        <h3>Step 9: Create Redis Cluster</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">ElastiCache</span></div><code class="language-bash"># Create Redis cluster
+aws elasticache create-cache-cluster \
+  --cache-cluster-id data-pipeline-redis \
+  --cache-node-type cache.t3.micro \
+  --engine redis \
+  --engine-version 7.0 \
+  --num-cache-nodes 1 \
+  --cache-subnet-group-name data-pipeline-redis-subnet \
+  --security-group-ids $REDIS_SG
+
+# Wait for cluster to be available (takes 3-5 minutes)
+echo "Waiting for Redis cluster to be available..."
+aws elasticache wait cache-cluster-available --cache-cluster-id data-pipeline-redis
+
+# Get endpoint
+export REDIS_ENDPOINT=$(aws elasticache describe-cache-clusters \
+  --cache-cluster-id data-pipeline-redis \
+  --show-cache-node-info \
+  --query "CacheClusters[0].CacheNodes[0].Endpoint.Address" \
+  --output text)
+
+echo "Redis Endpoint: $REDIS_ENDPOINT"</code></pre>
+
+        <p><strong>What just happened?</strong></p>
+        <ul>
+          <li>Created a managed Redis cache cluster in ElastiCache</li>
+          <li>Configured it to be accessible from our Lambda functions</li>
+          <li>Obtained the Redis endpoint for connection</li>
+        </ul>
+
+        <p><strong>Why Redis?</strong></p>
+        <ul>
+          <li><strong>Speed</strong>: In-memory data store, microsecond latency</li>
+          <li><strong>Cache invalidation</strong>: Easy to clear when data updates</li>
+          <li><strong>TTL support</strong>: Automatic expiration of old data</li>
+          <li><strong>Simple data structures</strong>: Perfect for caching query results</li>
+        </ul>
+
+        <p><strong>Pro tip</strong>: Redis is great for caching expensive database queries. Cache hits can reduce RDS load by 90%+ and speed up responses by 10-100x!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-06-2.html" class="btn btn-secondary">← Previous: RDS PostgreSQL</a>
+          <a href="lesson-06-4.html" class="btn btn-primary">Next: S3 Bucket for Data Upload →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

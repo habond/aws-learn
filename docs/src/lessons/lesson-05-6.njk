@@ -1,0 +1,158 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-05-6.html
+lessonNumber: 5
+lessonTitle: "Containers Are Taking Over"
+duration: "~8 hours"
+cost: "$2-3"
+stepNumber: 6
+totalSteps: 7
+progress: 85.71
+title: "Lesson 5: Scaling and Updates - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-05.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Docker Basics</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Push to ECR</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">ECS Cluster with Fargate</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">Application Load Balancer</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">ECS Service</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-05-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Scaling and Updates</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Monitoring + Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 5 - Part 6</span>
+        <h1>Scaling and Updates</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 6: Scaling and Updates (1 hour)</h2>
+
+        <h3>Step 19: Scale Service</h3>
+        <pre><code class="language-bash"># Scale to 4 tasks
+aws ecs update-service \
+  --cluster task-manager-cluster \
+  --service task-manager-service \
+  --desired-count 4
+
+# Watch tasks starting
+aws ecs list-tasks --cluster task-manager-cluster
+
+# Check service
+aws ecs describe-services \
+  --cluster task-manager-cluster \
+  --services task-manager-service \
+  --query 'services[0].{Running:runningCount,Desired:desiredCount}'</code></pre>
+
+        <h3>Step 20: Update Application</h3>
+        <p>Make a change to <code>index.js</code>:</p>
+        <pre><code class="language-javascript">// Add at the top
+const VERSION = '2.0.0';
+
+// Update health check
+app.get('/health', (req, res) =&gt; {
+  res.json({
+    status: 'healthy',
+    version: VERSION,
+    timestamp: new Date().toISOString()
+  });
+});</code></pre>
+
+        <p>Deploy update:</p>
+        <pre><code class="language-bash"># Rebuild image
+docker build -t task-manager:v2 .
+
+# Tag and push
+docker tag task-manager:v2 $ECR_REPO:v2.0.0
+docker tag task-manager:v2 $ECR_REPO:latest
+docker push $ECR_REPO:v2.0.0
+docker push $ECR_REPO:latest
+
+# Force new deployment (pulls latest image)
+aws ecs update-service \
+  --cluster task-manager-cluster \
+  --service task-manager-service \
+  --force-new-deployment
+
+# Watch deployment
+aws ecs wait services-stable \
+  --cluster task-manager-cluster \
+  --services task-manager-service
+
+# Test new version
+curl http://$ALB_DNS/health</code></pre>
+
+        <p><strong>Rolling deployment complete!</strong> Old containers replaced with new ones.</p>
+
+        <h3>Step 21: Enable Auto Scaling</h3>
+        <pre><code class="language-bash"># Register scalable target
+aws application-autoscaling register-scalable-target \
+  --service-namespace ecs \
+  --resource-id service/task-manager-cluster/task-manager-service \
+  --scalable-dimension ecs:service:DesiredCount \
+  --min-capacity 2 \
+  --max-capacity 10
+
+# Create scaling policy (target tracking based on CPU)
+aws application-autoscaling put-scaling-policy \
+  --service-namespace ecs \
+  --resource-id service/task-manager-cluster/task-manager-service \
+  --scalable-dimension ecs:service:DesiredCount \
+  --policy-name cpu-scaling-policy \
+  --policy-type TargetTrackingScaling \
+  --target-tracking-scaling-policy-configuration file://&lt;(cat &lt;&lt;EOF
+{
+  "TargetValue": 70.0,
+  "PredefinedMetricSpecification": {
+    "PredefinedMetricType": "ECSServiceAverageCPUUtilization"
+  },
+  "ScaleOutCooldown": 60,
+  "ScaleInCooldown": 60
+}
+EOF
+)</code></pre>
+
+        <p><strong>Your service now auto-scales based on CPU!</strong></p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-05-5.html" class="btn btn-secondary">← Previous: ECS Service</a>
+          <a href="lesson-05-7.html" class="btn btn-primary">Next: Monitoring + Cleanup →</a>
+        </div>
+      </div>

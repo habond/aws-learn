@@ -1,0 +1,257 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-01-4.html
+lessonNumber: 1
+lessonTitle: "Your First Internet Empire"
+duration: "~6 hours"
+cost: "$1-2"
+stepNumber: 4
+totalSteps: 8
+progress: 50
+title: "Lesson 1: CloudFront CDN - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-01.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Overview + AWS Setup</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Build Your Website</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">S3 Storage</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-01-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">CloudFront CDN</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Custom Domain</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">CloudWatch Monitoring</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Make Updates</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-8.html">
+  <span class="step-number">8</span>
+  <span class="step-title">CLI Practice + Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 1 - Part 4</span>
+        <h1>CloudFront - Make It Fast Globally</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 4: CloudFront - Make It Fast Globally (2 hours)</h2>
+
+        
+
+        <h3>Step 10: Create CloudFront Distribution</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is a CloudFront Distribution?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A distribution is CloudFront's configuration that tells it where to get your files (origin), how to cache them, which domains to use, and security settings. Think of it as the control panel for your CDN.</p>
+
+            <p><strong>Why we need it:</strong> You can't just "turn on CloudFront" - you need to tell it: what's your origin (S3 bucket), how long to cache files, which SSL certificate to use, whether to allow HTTP or force HTTPS, etc. One distribution can serve your entire website.</p>
+
+            <p><strong>Key details:</strong> Each distribution gets a random domain like d1234abc.cloudfront.net. You can add your custom domain as an alternate name (CNAME). Distributions take 10-15 minutes to deploy because AWS is configuring 400+ edge locations worldwide.</p>
+
+            <p><strong>Common gotcha:</strong> You can't delete a distribution immediately - you must first disable it, wait for that to deploy (15 min), then delete. This catches everyone off guard during cleanup. Also, changes to distributions take time to propagate to all edge locations.</p>
+          </div>
+        </div>
+
+        <p><strong>Via Console</strong> (easier for first time):</p>
+        <ol>
+          <li>Go to CloudFront → Create Distribution</li>
+          <li><strong>Origin domain</strong>: Click and select your S3 bucket</li>
+          <li><strong>Origin path</strong>: Leave empty</li>
+          <li><strong>Name</strong>: <code>my-awesome-site</code></li>
+          <li><strong>Viewer protocol policy</strong>: Redirect HTTP to HTTPS</li>
+          <li><strong>Allowed HTTP methods</strong>: GET, HEAD</li>
+          <li><strong>Cache policy</strong>: CachingOptimized</li>
+          <li><strong>Price class</strong>: Use all edge locations (for learning)</li>
+          <li><strong>Alternate domain names (CNAMEs)</strong>: Leave empty for now</li>
+          <li><strong>Default root object</strong>: <code>index.html</code></li>
+          <li>Click "Create Distribution"</li>
+        </ol>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is an Origin in CloudFront?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The origin is where CloudFront fetches files from when they're not cached. It's the "source of truth" for your content. Common origins: S3 buckets, HTTP servers, load balancers.</p>
+
+            <p><strong>Why we need it:</strong> CloudFront doesn't store your files - it caches copies. When someone requests a file not in the cache, CloudFront asks the origin "give me this file", caches it, then serves it. The origin is your master copy.</p>
+
+            <p><strong>Key details:</strong> You can have multiple origins in one distribution and route to different ones based on URL path. For example: /images/* goes to S3, /api/* goes to your server. Origin path lets you use a subdirectory (like /prod) as the root.</p>
+
+            <p><strong>Common gotcha:</strong> Using the S3 website endpoint vs the S3 REST endpoint as origin behaves differently. Website endpoint (bucket.s3-website-region.amazonaws.com) respects index.html settings. REST endpoint (bucket.s3.amazonaws.com) doesn't. Choose carefully!</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is Viewer Protocol Policy (HTTP vs HTTPS)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> This controls whether CloudFront accepts HTTP (unencrypted), HTTPS (encrypted), or both. Options: HTTP and HTTPS, HTTPS only, or Redirect HTTP to HTTPS (most common).</p>
+
+            <p><strong>Why we need it:</strong> HTTPS encrypts traffic so hackers can't read it. Modern browsers warn users about non-HTTPS sites. "Redirect HTTP to HTTPS" means if someone types http://yoursite.com, they automatically get redirected to https://yoursite.com.</p>
+
+            <p><strong>Key details:</strong> CloudFront provides free HTTPS with automatic certificate (*.cloudfront.net). For custom domains, you need an SSL certificate from ACM (also free). HTTPS traffic costs the same as HTTP - no extra charges.</p>
+
+            <p><strong>Common gotcha:</strong> Mixed content errors happen when your HTTPS site loads resources (images, CSS) via HTTP. Browsers block this. Always use relative URLs (/style.css) or HTTPS absolute URLs (https://...) in your code, never http://.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is a Cache Policy and how does caching work?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A cache policy defines how long CloudFront stores files before checking the origin for updates (TTL - Time To Live). "CachingOptimized" caches based on file headers. Files stay cached from seconds to days.</p>
+
+            <p><strong>Why we need it:</strong> Every request to your origin costs time and money. If 1000 people visit your site, CloudFront fetches from S3 once, then serves cached copies to the other 999 people. This makes your site faster and cheaper (S3 charges per request).</p>
+
+            <p><strong>Key details:</strong> Different files should cache differently: images/CSS cache for hours or days (they rarely change), HTML caches for minutes (content updates frequently). CloudFront respects Cache-Control headers from your origin if present.</p>
+
+            <p><strong>Common gotcha:</strong> You update index.html, but users still see the old version for hours because it's cached. You must invalidate the cache (costs $0.001 per path) or wait for TTL to expire. This is why HTML should have short TTLs (5-10 minutes).</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Edge Locations?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Edge locations are CloudFront's cache servers distributed in 400+ cities worldwide. They're different from AWS regions - there are only 30 regions but hundreds of edge locations.</p>
+
+            <p><strong>Why we need it:</strong> A user in Sydney hitting your Virginia S3 bucket gets 250ms latency. If the file is cached at Sydney's edge location, latency drops to 5ms - that's 50x faster! Edge locations are placed in major cities close to users.</p>
+
+            <p><strong>Key details:</strong> When you create a distribution, AWS pushes your config to all edge locations. First request in each location is a "cache miss" (slow, fetches from origin). Subsequent requests are "cache hits" (fast, served locally).</p>
+
+            <p><strong>Common gotcha:</strong> "Why isn't my site fast?" - If you're testing from Virginia and your origin is in Virginia, CloudFront doesn't help much. Test from a distant location or use a VPN to see the real benefit. Also, cache hits only help popular files - unpopular ones always fetch from origin.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are CNAMEs (Alternate Domain Names)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> CNAMEs let you use your custom domain (www.mysite.com) instead of CloudFront's ugly domain (d1234.cloudfront.net). You add your domain to the distribution, then point your DNS to CloudFront.</p>
+
+            <p><strong>Why we need it:</strong> Nobody wants to share "d1x2y3z4.cloudfront.net" with friends. CNAMEs let you use your brand. You can add multiple CNAMEs to one distribution (like mysite.com and www.mysite.com).</p>
+
+            <p><strong>Key details:</strong> To use CNAMEs, you need: 1) Add the domain to CloudFront distribution, 2) Get an SSL certificate in ACM for the domain, 3) Point your DNS (Route 53) to the CloudFront domain. All three must match or it won't work.</p>
+
+            <p><strong>Common gotcha:</strong> You can't use the same CNAME on two distributions - AWS will reject it. If you get "CNAME already in use", another distribution (maybe deleted?) is using it. Also, SSL certificates for CloudFront MUST be in us-east-1 region, not your bucket's region.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is Default Root Object?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The default root object is the file CloudFront serves when someone visits the root of your domain (yoursite.com/). Typically index.html.</p>
+
+            <p><strong>Why we need it:</strong> Without it, visiting yoursite.com/ returns a 403 error or directory listing instead of your homepage. Setting it to index.html means yoursite.com automatically loads yoursite.com/index.html.</p>
+
+            <p><strong>Key details:</strong> This only applies to the root (yoursite.com/), not subdirectories. If you have /blog/, you need to request /blog/index.html explicitly or configure your origin (S3 website hosting) to handle it.</p>
+
+            <p><strong>Common gotcha:</strong> Default root object doesn't work for subdirectories - yoursite.com/blog/ won't automatically serve blog/index.html. This is why using S3 website hosting as origin is better than S3 REST API - website hosting handles subdirectory index.html automatically.</p>
+          </div>
+        </div>
+
+        <p><strong>This takes 10-15 minutes to deploy</strong> ☕ Good time for a coffee break!</p>
+
+        <h3>Step 11: Test CloudFront</h3>
+        <p>Once status is "Deployed":</p>
+
+        <pre><code># Your CloudFront URL
+# Format: https://d1234567890abc.cloudfront.net</code></pre>
+
+        <p><strong>Visit it!</strong> Your site is now served from AWS's global CDN!</p>
+
+        <p><strong>Try this</strong>:</p>
+        <ul>
+          <li>Open DevTools → Network tab</li>
+          <li>Reload the page</li>
+          <li>Check response time (should be faster!)</li>
+          <li>Look for <code>x-cache: Hit from cloudfront</code> header</li>
+          <li>Reload again - should be even faster (cache hit!)</li>
+        </ul>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What do x-cache headers mean (Hit vs Miss)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The x-cache header in HTTP responses tells you whether CloudFront served the file from cache (Hit) or fetched it from the origin (Miss). You can see it in browser DevTools under Network → Headers.</p>
+
+            <p><strong>Why we need it:</strong> It's how you verify CloudFront is actually working! "Hit from cloudfront" means fast, cached delivery. "Miss from cloudfront" means CloudFront had to fetch from S3. First request is always a miss, subsequent ones should be hits.</p>
+
+            <p><strong>Key details:</strong> Headers you'll see: "Hit from cloudfront" (served from cache), "Miss from cloudfront" (fetched from origin), "RefreshHit from cloudfront" (cache expired, origin said file unchanged). Each edge location has its own cache, so same file can be Hit in one location and Miss in another.</p>
+
+            <p><strong>Common gotcha:</strong> Testing on the same file over and over shows "Hit" every time - you think it's working great! But different files might not cache properly. Test multiple files. Also, if you're behind a corporate VPN or proxy, you might see their cache hits instead of CloudFront's.</p>
+          </div>
+        </div>
+
+        <h3>Step 12: Measure the Difference</h3>
+        <p><strong>Fun experiment</strong>:</p>
+
+        <pre><code class="language-bash"># Test S3 directly (from your location)
+curl -o /dev/null -s -w "Time: %{time_total}s\n" \
+  http://YOUR-BUCKET-NAME.s3-website-us-east-1.amazonaws.com
+
+# Test CloudFront
+curl -o /dev/null -s -w "Time: %{time_total}s\n" \
+  https://YOUR-CLOUDFRONT-URL.cloudfront.net</code></pre>
+
+        <p>CloudFront should be faster! That's the CDN magic.</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-01-3.html" class="btn btn-secondary">← Previous: S3 Storage</a>
+          <a href="lesson-01-5.html" class="btn btn-primary">Next: Custom Domain →</a>
+        </div>
+      </div>

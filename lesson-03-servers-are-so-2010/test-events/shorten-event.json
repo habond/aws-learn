@@ -1,0 +1,8 @@
+{
+  "body": "{\"url\": \"https://aws.amazon.com\", \"customCode\": \"aws\"}",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "httpMethod": "POST",
+  "path": "/shorten"
+}

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 7: SQS Queues - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 7</h2>
+        <div class="lesson-title">Event-Driven Chaos</div>
+        <div class="lesson-meta">
+          <span>~8 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 40%;"></div>
+      </div>
+      <div class="progress-text">Step 2 of 5</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-07.html">
+<span class="step-number">1</span>
+<span class="step-title">SNS Topics</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-07-2.html">
+<span class="step-number">2</span>
+<span class="step-title">SQS Queues</span>
+</a>
+</li>
+<li>
+<a href="lesson-07-3.html">
+<span class="step-number">3</span>
+<span class="step-title">EventBridge</span>
+</a>
+</li>
+<li>
+<a href="lesson-07-4.html">
+<span class="step-number">4</span>
+<span class="step-title">Step Functions</span>
+</a>
+</li>
+<li>
+<a href="lesson-07-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Complete Integration</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li class="current">
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 7 - Part 2</span>
+        <h1>SQS Queues (Simple Queue Service)</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 2: SQS Queues (Simple Queue Service) (1 hour)</h2>
+
+        <h3>Step 4: Create SQS Queues</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">SQS</span></div><code class="language-bash"># Main processing queue
+aws sqs create-queue --queue-name order-processing-queue
+
+export PROCESSING_QUEUE_URL=$(aws sqs get-queue-url \
+  --queue-name order-processing-queue \
+  --query 'QueueUrl' \
+  --output text)
+
+export PROCESSING_QUEUE_ARN=$(aws sqs get-queue-attributes \
+  --queue-url $PROCESSING_QUEUE_URL \
+  --attribute-names QueueArn \
+  --query 'Attributes.QueueArn' \
+  --output text)
+
+# Dead letter queue for failed messages
+aws sqs create-queue \
+  --queue-name order-processing-dlq \
+  --attributes '{
+    "MessageRetentionPeriod": "1209600"
+  }'
+
+export DLQ_URL=$(aws sqs get-queue-url \
+  --queue-name order-processing-dlq \
+  --query 'QueueUrl' \
+  --output text)
+
+export DLQ_ARN=$(aws sqs get-queue-attributes \
+  --queue-url $DLQ_URL \
+  --attribute-names QueueArn \
+  --query 'Attributes.QueueArn' \
+  --output text)
+
+# Configure DLQ on processing queue
+aws sqs set-queue-attributes \
+  --queue-url $PROCESSING_QUEUE_URL \
+  --attributes '{
+    "RedrivePolicy": "{\"deadLetterTargetArn\":\"'"$DLQ_ARN"'\",\"maxReceiveCount\":\"3\"}"
+  }'</code></pre>
+
+        <h3>Step 5: Subscribe SQS to SNS (Fan-out Pattern)</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">SNS</span><span class="code-service-badge">SQS</span></div><code class="language-bash"># Allow SNS to send to SQS
+aws sqs set-queue-attributes \
+  --queue-url $PROCESSING_QUEUE_URL \
+  --attributes '{
+    "Policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"sns.amazonaws.com\"},\"Action\":\"sqs:SendMessage\",\"Resource\":\"'"$PROCESSING_QUEUE_ARN"'\",\"Condition\":{\"ArnEquals\":{\"aws:SourceArn\":\"'"$ORDER_TOPIC_ARN"'\"}}}]}"
+  }'
+
+# Subscribe SQS to SNS
+aws sns subscribe \
+  --topic-arn $ORDER_TOPIC_ARN \
+  --protocol sqs \
+  --notification-endpoint $PROCESSING_QUEUE_ARN</code></pre>
+
+        <h3>Step 6: Test Fan-out Pattern</h3>
+        <pre><code class="language-python"># Publish to SNS
+aws sns publish \
+  --topic-arn $ORDER_TOPIC_ARN \
+  --message '{"orderId":"12345","customer":"John","amount":99.99}'
+
+# Receive from SQS (message should appear in queue)
+aws sqs receive-message --queue-url $PROCESSING_QUEUE_URL
+
+# Delete message after processing
+aws sqs delete-message \
+  --queue-url $PROCESSING_QUEUE_URL \
+  --receipt-handle "RECEIPT_HANDLE_FROM_ABOVE"</code></pre>
+
+        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+          <strong>Key Concept - Fan-out Pattern:</strong>
+          <p>SNS publishes once, and multiple subscribers (like SQS queues, Lambda functions, email, SMS) receive the message. This enables parallel processing and decoupled systems.</p>
+        </div>
+
+        <div style="background: #d1ecf1; border-left: 4px solid #0c5460; padding: 15px; margin: 20px 0;">
+          <strong>Dead Letter Queues (DLQ):</strong>
+          <p>When a message fails to process after 3 attempts (maxReceiveCount), it's moved to the DLQ. This prevents infinite retry loops and lets you inspect problematic messages.</p>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-07.html" class="btn btn-secondary">← Previous: SNS Topics</a>
+          <a href="lesson-07-3.html" class="btn btn-primary">Next: EventBridge →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

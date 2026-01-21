@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 3: Lambda Functions - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 3</h2>
+        <div class="lesson-title">Servers Are So 2010 (Go Serverless!)</div>
+        <div class="lesson-meta">
+          <span>~6 hours</span>
+          <span>~$0.50</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 40%;"></div>
+      </div>
+      <div class="progress-text">Step 2 of 5</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-03.html">
+<span class="step-number">1</span>
+<span class="step-title">DynamoDB Database</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-03-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Lambda Functions</span>
+</a>
+</li>
+<li>
+<a href="lesson-03-3.html">
+<span class="step-number">3</span>
+<span class="step-title">API Gateway</span>
+</a>
+</li>
+<li>
+<a href="lesson-03-4.html">
+<span class="step-number">4</span>
+<span class="step-title">Test Your API</span>
+</a>
+</li>
+<li>
+<a href="lesson-03-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Monitoring &amp; Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li class="current">
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 3 - Part 2</span>
+        <h1>Lambda Functions</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 2: Lambda Functions (2 hours)</h2>
+
+        <h3>Step 3: Create Lambda Execution Role</h3>
+        <p>Lambda needs permission to write logs and access DynamoDB.</p>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is a Trust Policy?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A trust policy defines WHO can assume an IAM role. It's like a bouncer's guest list - it specifies which AWS services or accounts are allowed to use this role. For Lambda, we let the "lambda.amazonaws.com" service assume the role.</p>
+
+            <p><strong>Why we need it:</strong> AWS uses roles for security instead of hardcoded credentials. When Lambda assumes a role, it gets temporary credentials that automatically expire. The trust policy prevents unauthorized services from stealing your role's permissions.</p>
+
+            <p><strong>Key details:</strong> Trust policies are separate from permission policies. Trust policy = who can use this role. Permission policies = what the role can do. Both are required. Trust policies use the same JSON format as other IAM policies.</p>
+
+            <p><strong>Common gotcha:</strong> Beginners confuse trust policies with permissions. Setting trust policy doesn't grant permissions - it only allows someone to assume the role. You still need to attach permission policies to define what actions the role can perform.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What Does sts:AssumeRole Do?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> AssumeRole is the API call that lets an entity (like Lambda) temporarily become another role and gain its permissions. STS (Security Token Service) issues temporary credentials (access key, secret key, session token) that expire after a set time.</p>
+
+            <p><strong>Why we need it:</strong> Direct credentials are dangerous - they don't expire and can be leaked. AssumeRole creates temporary credentials that automatically rotate, limiting damage if compromised. Lambda assumes your role on every invocation and gets fresh credentials.</p>
+
+            <p><strong>Key details:</strong> Temporary credentials typically last 1 hour for Lambda (configurable). They include a session token that must be included with requests. When credentials expire, Lambda automatically calls AssumeRole again to get new ones.</p>
+
+            <p><strong>Common gotcha:</strong> If you see "not authorized to perform sts:AssumeRole" errors, check your trust policy - the service trying to assume the role isn't in the allowed list. Also ensure the service name is exact (lambda.amazonaws.com, not just lambda).</p>
+          </div>
+        </div>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">IAM</span></div><code class="language-bash"># Create trust policy for Lambda
+cat &gt; lambda-trust-policy.json &lt;&lt; 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+
+# Create IAM role
+aws iam create-role \
+  --role-name lambda-url-shortener-role \
+  --assume-role-policy-document file://lambda-trust-policy.json
+
+# Attach basic Lambda execution policy (for CloudWatch Logs)
+aws iam attach-role-policy \
+  --role-name lambda-url-shortener-role \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+# Create DynamoDB policy
+cat &gt; lambda-dynamodb-policy.json &lt;&lt; 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:PutItem",
+        "dynamodb:GetItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:Scan",
+        "dynamodb:Query"
+      ],
+      "Resource": "arn:aws:dynamodb:*:*:table/url-shortener"
+    }
+  ]
+}
+EOF
+
+# Create and attach DynamoDB policy
+aws iam put-role-policy \
+  --role-name lambda-url-shortener-role \
+  --policy-name DynamoDBAccess \
+  --policy-document file://lambda-dynamodb-policy.json
+
+# Get role ARN (we'll need this!)
+export LAMBDA_ROLE_ARN=$(aws iam get-role \
+  --role-name lambda-url-shortener-role \
+  --query 'Role.Arn' \
+  --output text)
+
+echo "Lambda Role ARN: $LAMBDA_ROLE_ARN"</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>AWS-Managed vs Customer-Managed Policies?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> AWS-managed policies are pre-built by AWS (like AWSLambdaBasicExecutionRole) and maintained by them. Customer-managed policies are JSON policies you create for your specific needs. AWS-managed policies have an "aws" in the ARN; yours have your account ID.</p>
+
+            <p><strong>Why we need it:</strong> AWS-managed policies save time for common use cases and automatically update with new AWS features. Customer-managed policies give you precise control for custom requirements. You'll use both - managed for standard stuff, custom for specific needs.</p>
+
+            <p><strong>Key details:</strong> You can't edit AWS-managed policies, only attach/detach them. They're shared across all accounts. Customer-managed policies are specific to your account and fully customizable. Inline policies are embedded directly in a role (not reusable).</p>
+
+            <p><strong>Common gotcha:</strong> AWS-managed policies are often too broad for production security. AWSLambdaBasicExecutionRole lets Lambda write to ANY log group. For production, create customer-managed policies with least-privilege permissions scoped to specific resources.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is AWSLambdaBasicExecutionRole?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> An AWS-managed policy that grants Lambda permission to create CloudWatch log groups, create log streams, and write log events. These are the minimum permissions every Lambda needs to send logs so you can debug it.</p>
+
+            <p><strong>Why we need it:</strong> Without this policy, your Lambda runs blind - you can't see console.log() output or error messages. CloudWatch Logs is essential for debugging serverless apps since you don't have server access or terminal output.</p>
+
+            <p><strong>Key details:</strong> This policy allows logs:CreateLogGroup, logs:CreateLogStream, and logs:PutLogEvents on all resources (*). Lambda automatically creates a log group named /aws/lambda/[function-name] when it first runs.</p>
+
+            <p><strong>Common gotcha:</strong> Forgetting this policy means your Lambda appears to work but you see no logs. Errors happen silently. Always attach this policy first when troubleshooting "my Lambda isn't working" issues.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>put-role-policy vs attach-role-policy?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> attach-role-policy attaches an existing managed policy (AWS-managed or customer-managed) to a role. put-role-policy creates an inline policy embedded directly in the role. Attached policies are reusable; inline policies exist only within that role.</p>
+
+            <p><strong>Why we need it:</strong> Managed policies can be attached to multiple roles and updated centrally. Inline policies are for role-specific permissions that you won't reuse. AWS recommends managed policies for maintainability, but inline policies are convenient for one-off custom permissions.</p>
+
+            <p><strong>Key details:</strong> Inline policies are deleted when you delete the role. Managed policies persist independently. You can have multiple inline policies and attach up to 10 managed policies per role. Inline policies count toward the role's size limit (10KB).</p>
+
+            <p><strong>Common gotcha:</strong> Using inline policies for common permissions creates maintenance nightmares - you must update each role individually. Always use managed policies for shared permissions. Reserve inline policies for truly unique, role-specific rules.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Resource ARN Patterns with Wildcards?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> ARNs (Amazon Resource Names) uniquely identify AWS resources. Wildcards (*) let you grant permissions to multiple resources. "arn:aws:dynamodb:*:*:table/url-shortener" means "the url-shortener table in any region and any account I have access to."</p>
+
+            <p><strong>Why we need it:</strong> Hardcoding specific regions or account IDs makes your infrastructure brittle. Wildcards make permissions portable across regions and accounts. The pattern still restricts access to only the resources you specify - not everything.</p>
+
+            <p><strong>Key details:</strong> Each * replaces one component. Region wildcards (*:*) work across all regions. Account wildcards apply to cross-account access. You can wildcard the resource name too: "table/*" means all tables. Be as specific as possible for security.</p>
+
+            <p><strong>Common gotcha:</strong> Using "*" for everything ("Resource": "*") is tempting but creates huge security risks. Always scope to specific resource types and names. "arn:aws:dynamodb:*:*:table/url-shortener" is fine; "arn:aws:*:*:*:*" is dangerous.</p>
+          </div>
+        </div>
+
+        <h3>Step 4: Create Shorten URL Function</h3>
+        <p>Create <code>functions/shorten/index.js</code>:</p>
+
+        <pre><code class="language-javascript">const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, PutCommand } = require('@aws-sdk/lib-dynamodb');
+
+const client = new DynamoDBClient({});
+const ddb = DynamoDBDocumentClient.from(client);
+
+function generateShortCode() {
+  return Math.random().toString(36).substring(2, 8);
+}
+
+exports.handler = async (event) =&gt; {
+  console.log('Event:', JSON.stringify(event));
+
+  try {
+    const body = JSON.parse(event.body);
+    const { url, customCode } = body;
+
+    if (!url) {
+      return {
+        statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'URL is required' })
+      };
+    }
+
+    const shortCode = customCode || generateShortCode();
+
+    const item = {
+      shortCode,
+      originalUrl: url,
+      createdAt: Date.now(),
+      clicks: 0
+    };
+
+    await ddb.send(new PutCommand({
+      TableName: 'url-shortener',
+      Item: item,
+      ConditionExpression: 'attribute_not_exists(shortCode)'
+    }));
+
+    return {
+      statusCode: 201,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        shortCode,
+        shortUrl: `https://your-api.com/${shortCode}`,
+        originalUrl: url
+      })
+    };
+  } catch (error) {
+    console.error('Error:', error);
+
+    if (error.name === 'ConditionalCheckFailedException') {
+      return {
+        statusCode: 409,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'Short code already exists' })
+      };
+    }
+
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Internal server error' })
+    };
+  }
+};</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Understanding the Lambda Event Structure</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The event object contains all information about the request. With API Gateway's AWS_PROXY integration, event.body contains the POST data as a string, event.pathParameters has URL parameters like {id}, and event.headers has HTTP headers.</p>
+
+            <p><strong>Why we need it:</strong> Lambda is generic - it can be triggered by many sources (API Gateway, S3, DynamoDB streams, etc.). The event structure tells your function what triggered it and provides the data. API Gateway shapes this event to look like an HTTP request.</p>
+
+            <p><strong>Key details:</strong> The event is always a JavaScript object. With API Gateway, you also get event.httpMethod, event.queryStringParameters, event.requestContext (with request metadata), and more. Everything you need to handle the HTTP request.</p>
+
+            <p><strong>Common gotcha:</strong> event.body is always a STRING, not an object. You must JSON.parse() it. Forgetting this causes "undefined" errors when trying to access body.url. Similarly, your response body must be a string, so you JSON.stringify() the response object.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Why JSON.parse(event.body)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> API Gateway passes the HTTP request body as a raw string in event.body. JSON.parse() converts that string into a JavaScript object so you can access properties like body.url or body.customCode.</p>
+
+            <p><strong>Why we need it:</strong> HTTP bodies are text, not structured data. JSON is the standard way to send structured data over HTTP. The client sends JSON text; your Lambda receives that text; JSON.parse() turns it back into a usable object.</p>
+
+            <p><strong>Key details:</strong> If parsing fails (invalid JSON), it throws an error. Always wrap JSON.parse() in a try-catch. You could also configure API Gateway to parse JSON automatically with request templates, but AWS_PROXY integration doesn't do this by default.</p>
+
+            <p><strong>Common gotcha:</strong> Clients must send "Content-Type: application/json" header and valid JSON. If they send malformed JSON, your Lambda crashes unless you catch the parse error. Always validate and handle parse failures gracefully.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Lambda Response Format - Why This Structure?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Lambda must return an object with statusCode (HTTP status like 200 or 404), headers (response headers as an object), and body (response data as a string). API Gateway uses this to construct the HTTP response sent to the client.</p>
+
+            <p><strong>Why we need it:</strong> API Gateway's AWS_PROXY integration expects this exact format. The statusCode determines success/error, headers control caching and content type, and body contains the actual data. This format maps directly to HTTP response structure.</p>
+
+            <p><strong>Key details:</strong> statusCode must be a number (200, 201, 400, 500, etc.). body must be a string - use JSON.stringify() for objects. Common headers include Content-Type, Access-Control-Allow-Origin (CORS), and Cache-Control. You can omit headers if not needed.</p>
+
+            <p><strong>Common gotcha:</strong> Returning just an object (without statusCode, headers, body) causes a 502 error - API Gateway doesn't know how to format the response. Also, forgetting to JSON.stringify() the body causes it to appear as [object Object] to clients.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is ConditionExpression?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> ConditionExpression adds a conditional check to DynamoDB operations. "attribute_not_exists(shortCode)" means "only write this item if shortCode doesn't already exist." If the condition fails, DynamoDB rejects the operation.</p>
+
+            <p><strong>Why we need it:</strong> Without conditions, PutItem overwrites existing items silently. If a user tries to create a custom short code that's already taken, you'd lose the original data. ConditionExpression prevents this by making the write atomic and conditional.</p>
+
+            <p><strong>Key details:</strong> DynamoDB evaluates the condition BEFORE performing the operation. If it fails, you get a ConditionalCheckFailedException. Other useful conditions: attribute_exists, attribute comparison operators (=, &lt;, &gt;=), and logical operators (AND, OR, NOT).</p>
+
+            <p><strong>Common gotcha:</strong> Beginners forget that PutItem overwrites by default - they expect it to fail on duplicates like SQL INSERT. Always use ConditionExpression with PutItem to prevent accidental overwrites, or use UpdateItem with upsert behavior instead.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is ConditionalCheckFailedException?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> An error thrown by DynamoDB when a ConditionExpression fails. In our code, it means the shortCode already exists - someone else created it first. The error name property is "ConditionalCheckFailedException".</p>
+
+            <p><strong>Why we need it:</strong> This error lets you distinguish between "item already exists" and other errors (network failures, permission issues, etc.). You can return a specific HTTP 409 Conflict status for duplicates, versus 500 Internal Server Error for other problems.</p>
+
+            <p><strong>Key details:</strong> Always check error.name === "ConditionalCheckFailedException" not error.code. This error means the operation was rejected due to your condition - the item wasn't modified. It's not a critical error; it's expected behavior for conflict detection.</p>
+
+            <p><strong>Common gotcha:</strong> Not handling this error makes duplicate requests crash your Lambda. Users see "500 Internal Server Error" instead of a helpful "this short code is already taken" message. Always catch and handle this error explicitly.</p>
+          </div>
+        </div>
+
+        <p>Create <code>functions/shorten/package.json</code>:</p>
+
+        <pre><code class="language-bash">{
+  "name": "shorten-function",
+  "version": "1.0.0",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0"
+  }
+}</code></pre>
+
+        <h3>Step 5: Package and Deploy Shorten Function</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">Lambda</span></div><code class="language-bash"># Create function directory
+mkdir -p functions/shorten
+cd functions/shorten
+
+# Install dependencies
+npm install
+
+# Package function
+zip -r function.zip .
+
+# Deploy to Lambda
+aws lambda create-function \
+  --function-name url-shorten \
+  --runtime nodejs20.x \
+  --role $LAMBDA_ROLE_ARN \
+  --handler index.handler \
+  --zip-file fileb://function.zip \
+  --timeout 10 \
+  --memory-size 256
+
+# Test it!
+aws lambda invoke \
+  --function-name url-shorten \
+  --cli-binary-format raw-in-base64-out \
+  --payload '{"body": "{\"url\": \"https://aws.amazon.com\"}"}' \
+  response.json
+
+cat response.json</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Lambda Runtime - What Are My Options?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The runtime is the language environment Lambda uses to execute your code. Options include Node.js, Python, Java, Go, .NET, Ruby, and custom runtimes. "nodejs20.x" means Node.js version 20.x - AWS manages the environment for you.</p>
+
+            <p><strong>Why we need it:</strong> Different languages have different strengths. Node.js is fast and has cold start advantages. Python is great for data processing. Java offers enterprise features. The runtime determines which language your function code must be written in.</p>
+
+            <p><strong>Key details:</strong> AWS maintains the runtime - you just specify the version. Runtimes are eventually deprecated (given ~1 year notice). Each runtime has different package sizes, cold start times, and available libraries. All runtimes provide the AWS SDK by default.</p>
+
+            <p><strong>Common gotcha:</strong> Older runtimes (like nodejs16.x) go into maintenance mode and eventually EOL (end of life). Always use the latest supported version. Also, runtime versions lock you to specific language versions - nodejs20.x doesn't let you use Node 18 features not in Node 20.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Handler - filename.functionName Format?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The handler tells Lambda which function to run. "index.handler" means "look for a file named index.js (or index.py for Python) and execute the exported function named handler." It's the entry point for your code.</p>
+
+            <p><strong>Why we need it:</strong> Your zip file might contain many files and functions. The handler specifies exactly which one Lambda should call. When a request arrives, Lambda loads the specified file and invokes that function with the event data.</p>
+
+            <p><strong>Key details:</strong> Format is always "filename.exportName" (without file extension). For nested files use "folder/file.function". In JavaScript: exports.handler = async (event) =&gt; {...}. In Python: def handler(event, context):. The function must be exported.</p>
+
+            <p><strong>Common gotcha:</strong> Mismatched handler names cause "Handler 'index.handler' not found" errors. Check that your filename matches (case-sensitive!), the function is properly exported, and there are no syntax errors preventing the file from loading.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Timeout - Defaults and Limits?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Timeout is the maximum time (in seconds) Lambda will let your function run before forcibly terminating it. Default is 3 seconds, maximum is 900 seconds (15 minutes). Our function uses 10 seconds, plenty for quick database operations.</p>
+
+            <p><strong>Why we need it:</strong> Without timeouts, buggy code (infinite loops, hung network calls) could run forever and rack up massive bills. Timeouts protect you from runaway functions. They also force you to design functions that complete quickly or break work into chunks.</p>
+
+            <p><strong>Key details:</strong> Choose the lowest timeout that reliably works - it affects cost since you pay per second. Lambda warns you in logs when you're approaching timeout. You can increase timeout later if needed. Most API functions should complete in under 30 seconds.</p>
+
+            <p><strong>Common gotcha:</strong> API Gateway has its own 30-second timeout that can't be changed. Even if your Lambda timeout is 60 seconds, API Gateway will return 504 Gateway Timeout at 30 seconds. Design APIs to respond quickly or use async processing.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Memory Size - How Does It Affect CPU?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Memory (128-10240 MB) determines both RAM and CPU allocated to your function. Higher memory = more CPU power. At 1792 MB you get one full vCPU; above that you get proportionally more. Memory is your primary performance tuner.</p>
+
+            <p><strong>Why we need it:</strong> CPU isn't configurable separately - AWS couples it to memory. If your function is CPU-bound (complex calculations), increasing memory speeds it up even if you don't need the RAM. This can actually reduce cost since you finish faster.</p>
+
+            <p><strong>Key details:</strong> Minimum 128 MB, maximum 10,240 MB. Pricing scales linearly with memory - 256 MB costs 2x more than 128 MB per second. But 2x memory often completes in &lt;50% time, making it cheaper overall. Always test to find the sweet spot.</p>
+
+            <p><strong>Common gotcha:</strong> Beginners set memory to minimum (128 MB) to save money, but functions run slowly and actually cost MORE. Use AWS Lambda Power Tuning to find optimal memory. Often 512-1024 MB is the best price/performance balance.</p>
+          </div>
+        </div>
+
+        <p><strong>You just ran your first Lambda function!</strong></p>
+
+        <h3>Step 6: Create Redirect Function</h3>
+        <p>Create <code>functions/redirect/index.js</code>:</p>
+
+        <pre><code class="language-javascript">const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, GetCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
+
+const client = new DynamoDBClient({});
+const ddb = DynamoDBDocumentClient.from(client);
+
+exports.handler = async (event) =&gt; {
+  const shortCode = event.pathParameters?.shortCode;
+
+  if (!shortCode) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: 'Short code is required' })
+    };
+  }
+
+  try {
+    // Get URL from DynamoDB
+    const result = await ddb.send(new GetCommand({
+      TableName: 'url-shortener',
+      Key: { shortCode }
+    }));
+
+    if (!result.Item) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: 'Short URL not found' })
+      };
+    }
+
+    // Increment click counter
+    await ddb.send(new UpdateCommand({
+      TableName: 'url-shortener',
+      Key: { shortCode },
+      UpdateExpression: 'SET clicks = clicks + :inc',
+      ExpressionAttributeValues: { ':inc': 1 }
+    }));
+
+    // Redirect
+    return {
+      statusCode: 301,
+      headers: {
+        'Location': result.Item.originalUrl
+      }
+    };
+  } catch (error) {
+    console.error('Error:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Internal server error' })
+    };
+  }
+};</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>UpdateExpression - DynamoDB Syntax?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> UpdateExpression is DynamoDB's syntax for modifying items. "SET clicks = clicks + :inc" means "set the clicks attribute to its current value plus 1." The :inc is a placeholder that gets replaced by ExpressionAttributeValues.</p>
+
+            <p><strong>Why we need it:</strong> DynamoDB doesn't support SQL UPDATE syntax. UpdateExpression provides a safe way to modify specific attributes without overwriting the entire item. It supports atomic operations like incrementing counters, which prevents race conditions when multiple requests update simultaneously.</p>
+
+            <p><strong>Key details:</strong> Common operations: SET (assign/update), REMOVE (delete attribute), ADD (numeric increment), DELETE (remove from set). Expressions can reference existing values and do math. DynamoDB applies updates atomically - no locking needed.</p>
+
+            <p><strong>Common gotcha:</strong> Trying to increment non-existent attributes fails. Initialize counters to 0 when creating items. Also, attribute names that are DynamoDB reserved words (like "name" or "status") require ExpressionAttributeNames with placeholders like #n.</p>
+          </div>
+        </div>
+
+        <h3>Step 7: Deploy Redirect Function</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">Lambda</span></div><code class="language-bash">cd ../redirect
+# Copy package.json from shorten function
+cp ../shorten/package.json .
+
+npm install
+zip -r function.zip .
+
+aws lambda create-function \
+  --function-name url-redirect \
+  --runtime nodejs20.x \
+  --role $LAMBDA_ROLE_ARN \
+  --handler index.handler \
+  --zip-file fileb://function.zip \
+  --timeout 10 \
+  --memory-size 256</code></pre>
+
+        <h3>Step 8: Create Stats Function</h3>
+        <p>Create <code>functions/stats/index.js</code>:</p>
+
+        <pre><code class="language-javascript">const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, GetCommand } = require('@aws-sdk/lib-dynamodb');
+
+const client = new DynamoDBClient({});
+const ddb = DynamoDBDocumentClient.from(client);
+
+exports.handler = async (event) =&gt; {
+  const shortCode = event.pathParameters?.shortCode;
+
+  try {
+    const result = await ddb.send(new GetCommand({
+      TableName: 'url-shortener',
+      Key: { shortCode }
+    }));
+
+    if (!result.Item) {
+      return {
+        statusCode: 404,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'Short URL not found' })
+      };
+    }
+
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        shortCode: result.Item.shortCode,
+        originalUrl: result.Item.originalUrl,
+        clicks: result.Item.clicks,
+        createdAt: result.Item.createdAt
+      })
+    };
+  } catch (error) {
+    console.error('Error:', error);
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Internal server error' })
+    };
+  }
+};</code></pre>
+
+        <p>Deploy it:</p>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">Lambda</span></div><code class="language-bash">cd ../stats
+cp ../shorten/package.json .
+npm install
+zip -r function.zip .
+
+aws lambda create-function \
+  --function-name url-stats \
+  --runtime nodejs20.x \
+  --role $LAMBDA_ROLE_ARN \
+  --handler index.handler \
+  --zip-file fileb://function.zip \
+  --timeout 10 \
+  --memory-size 256</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-03.html" class="btn btn-secondary">← Previous: DynamoDB Database</a>
+          <a href="lesson-03-3.html" class="btn btn-primary">Next: API Gateway →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

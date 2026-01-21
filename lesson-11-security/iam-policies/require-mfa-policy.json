@@ -1,0 +1,33 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAllActionsWithMFA",
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "aws:MultiFactorAuthPresent": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DenyDestructiveActionsWithoutMFA",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:TerminateInstances",
+        "rds:DeleteDBInstance",
+        "s3:DeleteBucket",
+        "dynamodb:DeleteTable",
+        "lambda:DeleteFunction"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "BoolIfExists": {
+          "aws:MultiFactorAuthPresent": "false"
+        }
+      }
+    }
+  ]
+}

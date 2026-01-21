@@ -1,0 +1,149 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-08-2.html
+lessonNumber: 8
+lessonTitle: "Big Data Analytics"
+duration: "~7 hours"
+cost: "$3-5"
+stepNumber: 2
+totalSteps: 5
+progress: 40
+title: "Lesson 8: Kinesis Firehose to S3 - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-08.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Overview + Kinesis Data Streams</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-08-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Kinesis Firehose to S3</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-08-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">AWS Glue (Data Catalog)</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-08-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">Athena Queries</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-08-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Real-time Processing with Lambda</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 8 - Part 2</span>
+        <h1>Kinesis Firehose to S3</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 2: Kinesis Firehose to S3 (1 hour)</h2>
+
+        <h3>Step 4: Create S3 Bucket for Data Lake</h3>
+        <pre><code class="language-bash">export BUCKET_NAME="sensor-data-lake-$(aws sts get-caller-identity --query Account --output text)"
+
+aws s3 mb s3://$BUCKET_NAME
+
+echo "Data Lake Bucket: $BUCKET_NAME"</code></pre>
+
+        <h3>Step 5: Create Firehose Delivery Stream</h3>
+        <pre><code class="language-bash"># Create Firehose IAM role
+cat &gt; firehose-trust-policy.json &lt;&lt; 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "firehose.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+
+aws iam create-role \
+  --role-name firehose-delivery-role \
+  --assume-role-policy-document file://firehose-trust-policy.json
+
+# Create policy for S3 and Kinesis access
+cat &gt; firehose-policy.json &lt;&lt; EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::$BUCKET_NAME",
+        "arn:aws:s3:::$BUCKET_NAME/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kinesis:DescribeStream",
+        "kinesis:GetShardIterator",
+        "kinesis:GetRecords"
+      ],
+      "Resource": "$STREAM_ARN"
+    }
+  ]
+}
+EOF
+
+aws iam put-role-policy \
+  --role-name firehose-delivery-role \
+  --policy-name FirehoseDeliveryPolicy \
+  --policy-document file://firehose-policy.json
+
+export FIREHOSE_ROLE_ARN=$(aws iam get-role \
+  --role-name firehose-delivery-role \
+  --query 'Role.Arn' \
+  --output text)
+
+# Wait for role propagation
+sleep 10
+
+# Create delivery stream
+aws firehose create-delivery-stream \
+  --delivery-stream-name sensor-data-delivery \
+  --delivery-stream-type KinesisStreamAsSource \
+  --kinesis-stream-source-configuration \
+    "KinesisStreamARN=$STREAM_ARN,RoleARN=$FIREHOSE_ROLE_ARN" \
+  --extended-s3-destination-configuration \
+    "RoleARN=$FIREHOSE_ROLE_ARN,BucketARN=arn:aws:s3:::$BUCKET_NAME,Prefix=sensor-data/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/,ErrorOutputPrefix=error/,BufferingHints={SizeInMBs=5,IntervalInSeconds=60},CompressionFormat=GZIP"</code></pre>
+
+        <h3>Step 6: Wait and Check S3</h3>
+        <pre><code class="language-bash"># Wait a few minutes for data to buffer and arrive in S3
+sleep 120
+
+# Check S3 for data
+aws s3 ls s3://$BUCKET_NAME/sensor-data/ --recursive</code></pre>
+
+        <p><strong>Data is flowing into your data lake!</strong></p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-08.html" class="btn btn-secondary">← Previous: Kinesis Data Streams</a>
+          <a href="lesson-08-3.html" class="btn btn-primary">Next: AWS Glue (Data Catalog) →</a>
+        </div>
+      </div>

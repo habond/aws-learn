@@ -1,0 +1,165 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-07-3.html
+lessonNumber: 7
+lessonTitle: "Event-Driven Chaos"
+duration: "~8 hours"
+cost: "$2-3"
+stepNumber: 3
+totalSteps: 5
+progress: 60
+title: "Lesson 7: EventBridge - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-07.html">
+  <span class="step-number">1</span>
+  <span class="step-title">SNS Topics</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-07-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">SQS Queues</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-07-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">EventBridge</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-07-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">Step Functions</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-07-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Complete Integration</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 7 - Part 3</span>
+        <h1>EventBridge (Event Bus)</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 3: EventBridge (Event Bus) (1.5 hours)</h2>
+
+        <h3>Step 7: Create Custom Event Bus</h3>
+        <pre><code class="language-bash"># Create event bus
+aws events create-event-bus --name order-event-bus
+
+# Create rule for new orders
+aws events put-rule \
+  --name new-order-rule \
+  --event-bus-name order-event-bus \
+  --event-pattern '{
+    "source": ["order.service"],
+    "detail-type": ["Order Placed"]
+  }'
+
+# Get rule ARN
+export RULE_ARN=$(aws events describe-rule \
+  --name new-order-rule \
+  --event-bus-name order-event-bus \
+  --query 'Arn' \
+  --output text)</code></pre>
+
+        <h3>Step 8: Create Lambda for EventBridge Target</h3>
+        <p>Create <code>event-processor/index.js</code>:</p>
+        <pre><code class="language-javascript">exports.handler = async (event) =&gt; {
+  console.log('Received event:', JSON.stringify(event, null, 2));
+
+  const detail = event.detail;
+
+  console.log(`Processing order ${detail.orderId} for customer ${detail.customer}`);
+
+  // Your processing logic here
+  // - Validate order
+  // - Check inventory
+  // - Calculate shipping
+  // etc.
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      message: 'Event processed',
+      orderId: detail.orderId
+    })
+  };
+};</code></pre>
+
+        <p>Deploy:</p>
+        <pre><code class="language-bash">cd event-processor
+zip function.zip index.js
+
+# Create Lambda role (reuse from previous lessons or create new)
+# Assuming role exists from previous lessons
+export LAMBDA_ROLE_ARN=$(aws iam get-role \
+  --role-name lambda-url-shortener-role \
+  --query 'Role.Arn' \
+  --output text 2&gt;/dev/null || echo "CREATE_ROLE_FIRST")
+
+aws lambda create-function \
+  --function-name order-event-processor \
+  --runtime nodejs20.x \
+  --role $LAMBDA_ROLE_ARN \
+  --handler index.handler \
+  --zip-file fileb://function.zip \
+  --timeout 10</code></pre>
+
+        <h3>Step 9: Add Lambda as EventBridge Target</h3>
+        <pre><code class="language-bash"># Give EventBridge permission to invoke Lambda
+aws lambda add-permission \
+  --function-name order-event-processor \
+  --statement-id eventbridge-invoke \
+  --action lambda:InvokeFunction \
+  --principal events.amazonaws.com \
+  --source-arn $RULE_ARN
+
+# Add Lambda as target
+aws events put-targets \
+  --rule new-order-rule \
+  --event-bus-name order-event-bus \
+  --targets "Id"="1","Arn"="$(aws lambda get-function --function-name order-event-processor --query 'Configuration.FunctionArn' --output text)"</code></pre>
+
+        <h3>Step 10: Test EventBridge</h3>
+        <pre><code class="language-bash"># Send event to EventBridge
+aws events put-events \
+  --entries '[
+    {
+      "Source": "order.service",
+      "DetailType": "Order Placed",
+      "Detail": "{\"orderId\":\"ORD-001\",\"customer\":\"Jane Doe\",\"amount\":149.99,\"items\":[{\"product\":\"Widget\",\"quantity\":2}]}",
+      "EventBusName": "order-event-bus"
+    }
+  ]'
+
+# Check Lambda logs
+sleep 5
+aws logs tail /aws/lambda/order-event-processor --follow</code></pre>
+
+        <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0;">
+          <strong>EventBridge vs SNS:</strong>
+          <p><strong>SNS</strong>: Simple pub/sub for notifications. Fast, straightforward.</p>
+          <p><strong>EventBridge</strong>: Smart event routing with pattern matching, filtering, and transformation. Can route to 20+ AWS services and SaaS applications.</p>
+        </div>
+
+        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+          <strong>Event Pattern Matching:</strong>
+          <p>EventBridge uses event patterns to filter events. Only events matching the pattern trigger targets. This is powerful for building complex routing logic without code.</p>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-07-2.html" class="btn btn-secondary">← Previous: SQS Queues</a>
+          <a href="lesson-07-4.html" class="btn btn-primary">Next: Step Functions →</a>
+        </div>
+      </div>

@@ -1,0 +1,185 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-11-4.html
+lessonNumber: 11
+lessonTitle: "Security Deep Dive"
+duration: "~8 hours"
+cost: "$2-3"
+stepNumber: 4
+totalSteps: 7
+progress: 57.1
+title: "Lesson 11: Security Deep Dive - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-11.html">
+  <span class="step-number">1</span>
+  <span class="step-title">IAM Deep Dive</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Data Encryption with KMS</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">GuardDuty Threat Detection</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-11-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">WAF Protection</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">CloudTrail Auditing</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Security Hub</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Secrets Rotation &amp; Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 11 - Part 4</span>
+        <h1>WAF (Web Application Firewall)</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 4: WAF (Web Application Firewall) (1.5 hours)</h2>
+
+        <h3>Step 12: Create WAF Web ACL</h3>
+        <pre><code class="language-bash"># Create web ACL
+aws wafv2 create-web-acl \
+  --name api-protection-acl \
+  --scope REGIONAL \
+  --region us-east-1 \
+  --default-action Allow={} \
+  --rules '[
+    {
+      "Name": "RateLimitRule",
+      "Priority": 1,
+      "Statement": {
+        "RateBasedStatement": {
+          "Limit": 2000,
+          "AggregateKeyType": "IP"
+        }
+      },
+      "Action": {
+        "Block": {}
+      },
+      "VisibilityConfig": {
+        "SampledRequestsEnabled": true,
+        "CloudWatchMetricsEnabled": true,
+        "MetricName": "RateLimitRule"
+      }
+    },
+    {
+      "Name": "BlockSQLInjection",
+      "Priority": 2,
+      "Statement": {
+        "SqliMatchStatement": {
+          "FieldToMatch": {
+            "QueryString": {}
+          },
+          "TextTransformations": [
+            {
+              "Priority": 0,
+              "Type": "URL_DECODE"
+            }
+          ]
+        }
+      },
+      "Action": {
+        "Block": {}
+      },
+      "VisibilityConfig": {
+        "SampledRequestsEnabled": true,
+        "CloudWatchMetricsEnabled": true,
+        "MetricName": "BlockSQLInjection"
+      }
+    }
+  ]' \
+  --visibility-config \
+    SampledRequestsEnabled=true,CloudWatchMetricsEnabled=true,MetricName=ApiProtectionACL
+
+export WEB_ACL_ARN=$(aws wafv2 list-web-acls \
+  --scope REGIONAL \
+  --region us-east-1 \
+  --query "WebACLs[?Name=='api-protection-acl'].ARN" \
+  --output text)
+
+echo "Web ACL ARN: $WEB_ACL_ARN"</code></pre>
+
+        <h3>Step 13: Associate WAF with API Gateway</h3>
+        <pre><code class="language-bash"># Get API Gateway stage ARN
+export API_STAGE_ARN="arn:aws:apigateway:us-east-1::/restapis/$API_ID/stages/prod"
+
+# Associate WAF with API Gateway
+aws wafv2 associate-web-acl \
+  --web-acl-arn $WEB_ACL_ARN \
+  --resource-arn $API_STAGE_ARN \
+  --region us-east-1</code></pre>
+
+        <div style="background: var(--warning-bg); border-left: 4px solid var(--warning-color); padding: 15px; margin: 20px 0;">
+          <strong>Note:</strong> Make sure you have an API Gateway from a previous lesson. If you don't have an API_ID set, you can find it with: <code>aws apigateway get-rest-apis --query 'items[0].id' --output text</code>
+        </div>
+
+        <h3>Step 14: Add AWS Managed WAF Rules</h3>
+        <pre><code class="language-bash"># Add AWS managed rule groups
+aws wafv2 update-web-acl \
+  --name api-protection-acl \
+  --scope REGIONAL \
+  --region us-east-1 \
+  --id $(echo $WEB_ACL_ARN | cut -d'/' -f3) \
+  --lock-token $(aws wafv2 get-web-acl --name api-protection-acl --scope REGIONAL --region us-east-1 --id $(echo $WEB_ACL_ARN | cut -d'/' -f3) --query 'LockToken' --output text) \
+  --default-action Allow={} \
+  --visibility-config \
+    SampledRequestsEnabled=true,CloudWatchMetricsEnabled=true,MetricName=ApiProtectionACL \
+  --rules '[
+    {
+      "Name": "AWSManagedRulesCommonRuleSet",
+      "Priority": 0,
+      "Statement": {
+        "ManagedRuleGroupStatement": {
+          "VendorName": "AWS",
+          "Name": "AWSManagedRulesCommonRuleSet"
+        }
+      },
+      "OverrideAction": {
+        "None": {}
+      },
+      "VisibilityConfig": {
+        "SampledRequestsEnabled": true,
+        "CloudWatchMetricsEnabled": true,
+        "MetricName": "AWSManagedRulesCommonRuleSet"
+      }
+    }
+  ]'</code></pre>
+
+        <div style="background: var(--info-bg); border-left: 4px solid var(--info-color); padding: 15px; margin: 20px 0;">
+          <strong>What's happening?</strong> WAF sits in front of your API and blocks malicious requests before they reach your application. The rate limit rule prevents DDoS attacks, the SQL injection rule protects your database, and AWS managed rules provide protection against common web exploits.
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-11-3.html" class="btn btn-secondary">← Previous: GuardDuty Threat Detection</a>
+          <a href="lesson-11-5.html" class="btn btn-primary">Next: CloudTrail Auditing →</a>
+        </div>
+      </div>

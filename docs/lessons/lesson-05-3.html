@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 5: ECS Cluster with Fargate - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 5</h2>
+        <div class="lesson-title">Containers Are Taking Over</div>
+        <div class="lesson-meta">
+          <span>~8 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 42.86%;"></div>
+      </div>
+      <div class="progress-text">Step 3 of 7</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-05.html">
+<span class="step-number">1</span>
+<span class="step-title">Docker Basics</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Push to ECR</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-05-3.html">
+<span class="step-number">3</span>
+<span class="step-title">ECS Cluster with Fargate</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-4.html">
+<span class="step-number">4</span>
+<span class="step-title">Application Load Balancer</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-5.html">
+<span class="step-number">5</span>
+<span class="step-title">ECS Service</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Scaling and Updates</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Monitoring + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li class="current">
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 5 - Part 3</span>
+        <h1>ECS Cluster with Fargate</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 3: ECS Cluster with Fargate (2 hours)</h2>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are ECS and Fargate?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> ECS (Elastic Container Service) is AWS's container orchestration service - it manages running containers, health checks, scaling, and load balancing. Fargate is a launch type for ECS that runs containers without you managing servers. With Fargate, you just say "run this container" and AWS handles the underlying infrastructure.</p>
+
+            <p><strong>Why we need it:</strong> Running a container once is easy (docker run). But production needs automated restarts if containers crash, load balancing across multiple containers, rolling deployments, and auto-scaling. ECS provides all this orchestration. Fargate adds serverless convenience - no EC2 instances to patch or manage.</p>
+
+            <p><strong>Key details:</strong> An ECS cluster is a logical grouping of tasks and services. A task definition is the blueprint (which image, how much CPU/memory, environment variables). A task is a running instance of that definition. A service ensures a specified number of tasks are always running and handles load balancing.</p>
+
+            <p><strong>Common gotcha:</strong> Fargate costs are based on CPU and memory allocated, not used. If you allocate 1GB memory but only use 500MB, you pay for 1GB. Also, Fargate tasks need awsvpc network mode, which gives each task its own elastic network interface - this is different from traditional Docker networking.</p>
+          </div>
+        </div>
+
+        <h3>Step 8: Create ECS Cluster</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">ECS</span></div><code class="language-bash"># Create cluster
+aws ecs create-cluster --cluster-name task-manager-cluster
+
+# Verify cluster
+aws ecs describe-clusters --clusters task-manager-cluster</code></pre>
+
+        <h3>Step 9: Create Task Execution Role</h3>
+        <p>ECS needs permissions to pull images from ECR and write logs.</p>
+        <pre><div class="code-block-badges"><span class="code-service-badge">IAM</span></div><code class="language-bash"># Create trust policy
+cat &gt; ecs-task-trust-policy.json &lt;&lt; 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+
+# Create execution role
+aws iam create-role \
+  --role-name ecsTaskExecutionRole \
+  --assume-role-policy-document file://ecs-task-trust-policy.json
+
+# Attach AWS managed policy
+aws iam attach-role-policy \
+  --role-name ecsTaskExecutionRole \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+# Get role ARN
+export EXECUTION_ROLE_ARN=$(aws iam get-role \
+  --role-name ecsTaskExecutionRole \
+  --query 'Role.Arn' \
+  --output text)
+
+echo "Execution Role ARN: $EXECUTION_ROLE_ARN"</code></pre>
+
+        <h3>Step 10: Create CloudWatch Log Group</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">CloudWatch Logs</span></div><code class="language-bash"># Create log group for container logs
+aws logs create-log-group --log-group-name /ecs/task-manager
+
+# Verify
+aws logs describe-log-groups --log-group-name-prefix /ecs/task-manager</code></pre>
+
+        <h3>Step 11: Create Task Definition</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is an ECS Task Definition?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A task definition is a JSON blueprint that describes how to run your containerized application. It specifies which Docker image to use, how much CPU and memory to allocate, networking mode, environment variables, logging configuration, and health checks.</p>
+
+            <p><strong>Why we need it:</strong> Without a task definition, ECS doesn't know how to run your container. It's like a recipe that ECS follows every time it launches your application. Task definitions are versioned - each change creates a new revision, allowing rollbacks if something breaks.</p>
+
+            <p><strong>Key details:</strong> requiresCompatibilities tells ECS this runs on Fargate (vs EC2). awsvpc network mode gives each task its own network interface. executionRoleArn allows ECS to pull images and write logs. The containerDefinitions array can include multiple containers that run together (like app + sidecar).</p>
+
+            <p><strong>Common gotcha:</strong> CPU and memory values have specific valid combinations in Fargate (e.g., 256 CPU units can only be paired with 512MB, 1GB, or 2GB memory). If you pick an invalid combo, task launch will fail with a cryptic error. Check AWS documentation for valid combinations.</p>
+          </div>
+        </div>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">ECS</span><span class="code-service-badge">STS</span></div><code class="language-bash"># Get AWS account ID
+export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+# Create task definition
+cat &gt; task-definition.json &lt;&lt; EOF
+{
+  "family": "task-manager",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "${EXECUTION_ROLE_ARN}",
+  "containerDefinitions": [
+    {
+      "name": "task-manager",
+      "image": "${ECR_REPO}:latest",
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "PORT",
+          "value": "3000"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/task-manager",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 10
+      }
+    }
+  ]
+}
+EOF
+
+# Register task definition
+aws ecs register-task-definition --cli-input-json file://task-definition.json
+
+# Verify
+aws ecs describe-task-definition --task-definition task-manager</code></pre>
+
+        <h3>Step 12: Create Security Group for ECS Tasks</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">EC2</span></div><code class="language-bash"># Get default VPC
+export VPC_ID=$(aws ec2 describe-vpcs \
+  --filters "Name=isDefault,Values=true" \
+  --query "Vpcs[0].VpcId" \
+  --output text)
+
+# Create security group
+aws ec2 create-security-group \
+  --group-name task-manager-ecs-sg \
+  --description "Security group for Task Manager ECS tasks" \
+  --vpc-id ${VPC_ID}
+
+# Get security group ID
+export ECS_SG_ID=$(aws ec2 describe-security-groups \
+  --filters "Name=group-name,Values=task-manager-ecs-sg" \
+  --query "SecurityGroups[0].GroupId" \
+  --output text)
+
+# Allow inbound traffic on port 3000 from anywhere (we'll restrict this with ALB later)
+aws ec2 authorize-security-group-ingress \
+  --group-id ${ECS_SG_ID} \
+  --protocol tcp \
+  --port 3000 \
+  --cidr 0.0.0.0/0
+
+echo "ECS Security Group: ${ECS_SG_ID}"</code></pre>
+
+        <h3>Step 13: Run Task</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">EC2</span><span class="code-service-badge">ECS</span></div><code class="language-bash"># Get subnet IDs
+export SUBNET_IDS=$(aws ec2 describe-subnets \
+  --filters "Name=vpc-id,Values=${VPC_ID}" \
+  --query "Subnets[0:2].SubnetId" \
+  --output text | tr '\t' ',')
+
+# Run task
+aws ecs run-task \
+  --cluster task-manager-cluster \
+  --task-definition task-manager \
+  --launch-type FARGATE \
+  --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_IDS}],securityGroups=[${ECS_SG_ID}],assignPublicIp=ENABLED}"
+
+# Get task ID
+export TASK_ARN=$(aws ecs list-tasks \
+  --cluster task-manager-cluster \
+  --query 'taskArns[0]' \
+  --output text)
+
+# Wait for task to be running
+aws ecs wait tasks-running \
+  --cluster task-manager-cluster \
+  --tasks ${TASK_ARN}
+
+# Get task details including public IP
+aws ecs describe-tasks \
+  --cluster task-manager-cluster \
+  --tasks ${TASK_ARN}
+
+# Extract public IP (this is a bit complex)
+export TASK_IP=$(aws ecs describe-tasks \
+  --cluster task-manager-cluster \
+  --tasks ${TASK_ARN} \
+  --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' \
+  --output text | xargs -I {} aws ec2 describe-network-interfaces \
+  --network-interface-ids {} \
+  --query 'NetworkInterfaces[0].Association.PublicIp' \
+  --output text)
+
+echo "Task IP: ${TASK_IP}"
+
+# Test the task
+curl http://${TASK_IP}:3000/health
+curl http://${TASK_IP}:3000/tasks</code></pre>
+
+        <p><strong>Your container is running on Fargate!</strong></p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-05-2.html" class="btn btn-secondary">← Previous: Push to ECR</a>
+          <a href="lesson-05-4.html" class="btn btn-primary">Next: Application Load Balancer →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

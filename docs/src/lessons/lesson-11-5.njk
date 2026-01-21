@@ -1,0 +1,151 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-11-5.html
+lessonNumber: 11
+lessonTitle: "Security Deep Dive"
+duration: "~8 hours"
+cost: "$2-3"
+stepNumber: 5
+totalSteps: 7
+progress: 71.4
+title: "Lesson 11: Security Deep Dive - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-11.html">
+  <span class="step-number">1</span>
+  <span class="step-title">IAM Deep Dive</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Data Encryption with KMS</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">GuardDuty Threat Detection</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">WAF Protection</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-11-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">CloudTrail Auditing</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Security Hub</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Secrets Rotation &amp; Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 11 - Part 5</span>
+        <h1>CloudTrail Auditing</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 5: CloudTrail Auditing (1 hour)</h2>
+
+        <h3>Step 15: Enable CloudTrail</h3>
+        <pre><code class="language-bash"># Create S3 bucket for CloudTrail logs
+export TRAIL_BUCKET="cloudtrail-logs-$(aws sts get-caller-identity --query Account --output text)"
+aws s3 mb s3://$TRAIL_BUCKET
+
+# Apply bucket policy
+cat &gt; trail-bucket-policy.json &lt;&lt; EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::$TRAIL_BUCKET"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::$TRAIL_BUCKET/AWSLogs/$(aws sts get-caller-identity --query Account --output text)/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
+}
+EOF
+
+aws s3api put-bucket-policy \
+  --bucket $TRAIL_BUCKET \
+  --policy file://trail-bucket-policy.json
+
+# Create trail
+aws cloudtrail create-trail \
+  --name security-audit-trail \
+  --s3-bucket-name $TRAIL_BUCKET \
+  --include-global-service-events \
+  --is-multi-region-trail
+
+# Start logging
+aws cloudtrail start-logging --name security-audit-trail
+
+# Enable log file validation (integrity)
+aws cloudtrail update-trail \
+  --name security-audit-trail \
+  --enable-log-file-validation</code></pre>
+
+        <h3>Step 16: Query CloudTrail Events</h3>
+        <pre><code class="language-bash"># Look up recent events
+aws cloudtrail lookup-events \
+  --lookup-attributes AttributeKey=EventName,AttributeValue=CreateBucket \
+  --max-results 10
+
+# Find who accessed secrets
+aws cloudtrail lookup-events \
+  --lookup-attributes AttributeKey=EventName,AttributeValue=GetSecretValue \
+  --max-results 10
+
+# Find unauthorized access attempts
+aws cloudtrail lookup-events \
+  --lookup-attributes AttributeKey=EventName,AttributeValue=UnauthorizedAccess</code></pre>
+
+        <div style="background: var(--info-bg); border-left: 4px solid var(--info-color); padding: 15px; margin: 20px 0;">
+          <strong>What's CloudTrail?</strong> CloudTrail records every API call made in your AWS account. This creates an audit trail showing who did what, when, and from where. It's essential for compliance, security investigations, and troubleshooting. Think of it as your AWS security camera system.
+        </div>
+
+        <div style="background: var(--warning-bg); border-left: 4px solid var(--warning-color); padding: 15px; margin: 20px 0;">
+          <strong>Best Practice:</strong> Never turn off CloudTrail in production. It's your primary tool for detecting unauthorized access and investigating security incidents. The small storage cost is worth it!
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-11-4.html" class="btn btn-secondary">← Previous: WAF Protection</a>
+          <a href="lesson-11-6.html" class="btn btn-primary">Next: Security Hub →</a>
+        </div>
+      </div>

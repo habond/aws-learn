@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 5: Application Load Balancer - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 5</h2>
+        <div class="lesson-title">Containers Are Taking Over</div>
+        <div class="lesson-meta">
+          <span>~8 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 57.14%;"></div>
+      </div>
+      <div class="progress-text">Step 4 of 7</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-05.html">
+<span class="step-number">1</span>
+<span class="step-title">Docker Basics</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Push to ECR</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-3.html">
+<span class="step-number">3</span>
+<span class="step-title">ECS Cluster with Fargate</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-05-4.html">
+<span class="step-number">4</span>
+<span class="step-title">Application Load Balancer</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-5.html">
+<span class="step-number">5</span>
+<span class="step-title">ECS Service</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Scaling and Updates</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Monitoring + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li class="current">
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 5 - Part 4</span>
+        <h1>Application Load Balancer</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 4: Application Load Balancer (1.5 hours)</h2>
+
+        <h3>Step 14: Create ALB Security Group</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">EC2</span></div><code class="language-bash"># Create security group for ALB
+aws ec2 create-security-group \
+  --group-name task-manager-alb-sg \
+  --description "Security group for Task Manager ALB" \
+  --vpc-id ${VPC_ID}
+
+export ALB_SG_ID=$(aws ec2 describe-security-groups \
+  --filters "Name=group-name,Values=task-manager-alb-sg" \
+  --query "SecurityGroups[0].GroupId" \
+  --output text)
+
+# Allow HTTP from anywhere
+aws ec2 authorize-security-group-ingress \
+  --group-id ${ALB_SG_ID} \
+  --protocol tcp \
+  --port 80 \
+  --cidr 0.0.0.0/0
+
+# Update ECS security group to only allow traffic from ALB
+aws ec2 revoke-security-group-ingress \
+  --group-id ${ECS_SG_ID} \
+  --protocol tcp \
+  --port 3000 \
+  --cidr 0.0.0.0/0
+
+aws ec2 authorize-security-group-ingress \
+  --group-id ${ECS_SG_ID} \
+  --protocol tcp \
+  --port 3000 \
+  --source-group ${ALB_SG_ID}</code></pre>
+
+        <h3>Step 15: Create Application Load Balancer</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">ALB</span><span class="code-service-badge">EC2</span></div><code class="language-bash"># Get all subnets (ALB requires 2+ AZs)
+export ALL_SUBNETS=$(aws ec2 describe-subnets \
+  --filters "Name=vpc-id,Values=${VPC_ID}" \
+  --query "Subnets[*].SubnetId" \
+  --output text | tr '\t' ' ')
+
+# Create ALB
+aws elbv2 create-load-balancer \
+  --name task-manager-alb \
+  --subnets ${ALL_SUBNETS} \
+  --security-groups ${ALB_SG_ID} \
+  --scheme internet-facing \
+  --type application
+
+# Get ALB ARN and DNS
+export ALB_ARN=$(aws elbv2 describe-load-balancers \
+  --names task-manager-alb \
+  --query "LoadBalancers[0].LoadBalancerArn" \
+  --output text)
+
+export ALB_DNS=$(aws elbv2 describe-load-balancers \
+  --names task-manager-alb \
+  --query "LoadBalancers[0].DNSName" \
+  --output text)
+
+echo "ALB DNS: ${ALB_DNS}"</code></pre>
+
+        <h3>Step 16: Create Target Group</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">ALB</span></div><code class="language-bash"># Create target group
+aws elbv2 create-target-group \
+  --name task-manager-tg \
+  --protocol HTTP \
+  --port 3000 \
+  --vpc-id ${VPC_ID} \
+  --target-type ip \
+  --health-check-path /health \
+  --health-check-interval-seconds 30 \
+  --health-check-timeout-seconds 5 \
+  --healthy-threshold-count 2 \
+  --unhealthy-threshold-count 3
+
+# Get target group ARN
+export TG_ARN=$(aws elbv2 describe-target-groups \
+  --names task-manager-tg \
+  --query "TargetGroups[0].TargetGroupArn" \
+  --output text)
+
+# Create listener (forward HTTP:80 to target group)
+aws elbv2 create-listener \
+  --load-balancer-arn ${ALB_ARN} \
+  --protocol HTTP \
+  --port 80 \
+  --default-actions Type=forward,TargetGroupArn=${TG_ARN}</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-05-3.html" class="btn btn-secondary">← Previous: ECS Cluster with Fargate</a>
+          <a href="lesson-05-5.html" class="btn btn-primary">Next: ECS Service →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

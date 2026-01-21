@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 4: Test &amp; Iterate - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 4</h2>
+        <div class="lesson-title">Automate All The Things!</div>
+        <div class="lesson-meta">
+          <span>~7 hours</span>
+          <span>~$1</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 71.4%;"></div>
+      </div>
+      <div class="progress-text">Step 5 of 7</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-04.html">
+<span class="step-number">1</span>
+<span class="step-title">Overview + Terraform Setup</span>
+</a>
+</li>
+<li>
+<a href="lesson-04-2.html">
+<span class="step-number">2</span>
+<span class="step-title">DynamoDB with Terraform</span>
+</a>
+</li>
+<li>
+<a href="lesson-04-3.html">
+<span class="step-number">3</span>
+<span class="step-title">Lambda Functions</span>
+</a>
+</li>
+<li>
+<a href="lesson-04-4.html">
+<span class="step-number">4</span>
+<span class="step-title">API Gateway</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-04-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Test &amp; Iterate</span>
+</a>
+</li>
+<li>
+<a href="lesson-04-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Advanced Terraform</span>
+</a>
+</li>
+<li>
+<a href="lesson-04-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Destroy &amp; Rebuild</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li class="current">
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 4 - Part 5</span>
+        <h1>Test &amp; Iterate</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 5: Test &amp; Iterate (1 hour)</h2>
+
+        <h3>Step 17: Test Your Infrastructure</h3>
+        <pre><code class="language-bash"># Create short URL
+curl -X POST $API_ENDPOINT/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://terraform.io"}'
+
+# Test redirect
+curl -I $API_ENDPOINT/abc123
+
+# Check stats
+curl $API_ENDPOINT/stats/abc123</code></pre>
+
+        <p><strong>It works!</strong> And you did it all with Terraform.</p>
+
+        <h3>Step 18: Make Changes and Re-deploy</h3>
+        <p>Try changing something:</p>
+        <pre><code class="language-terraform"># In main.tf, change Lambda memory
+resource "aws_lambda_function" "shorten" {
+  # ... other config
+  memory_size = 512  # Changed from 256
+}</code></pre>
+
+        <pre><code class="language-bash"># See what will change
+terraform plan
+
+# Apply changes
+terraform apply</code></pre>
+
+        <p><strong>Terraform only updates what changed!</strong> This is the power of IaC.</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-04-4.html" class="btn btn-secondary">← Previous: API Gateway</a>
+          <a href="lesson-04-6.html" class="btn btn-primary">Next: Advanced Terraform →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

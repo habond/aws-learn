@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 4: API Gateway with Terraform - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 4</h2>
+        <div class="lesson-title">Automate All The Things!</div>
+        <div class="lesson-meta">
+          <span>~7 hours</span>
+          <span>~$1</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 57.12%;"></div>
+      </div>
+      <div class="progress-text">Step 4 of 7</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-04.html">
+<span class="step-number">1</span>
+<span class="step-title">Overview + Terraform Setup</span>
+</a>
+</li>
+<li>
+<a href="lesson-04-2.html">
+<span class="step-number">2</span>
+<span class="step-title">DynamoDB with Terraform</span>
+</a>
+</li>
+<li>
+<a href="lesson-04-3.html">
+<span class="step-number">3</span>
+<span class="step-title">Lambda Functions</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-04-4.html">
+<span class="step-number">4</span>
+<span class="step-title">API Gateway</span>
+</a>
+</li>
+<li>
+<a href="lesson-04-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Test &amp; Iterate</span>
+</a>
+</li>
+<li>
+<a href="lesson-04-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Advanced Terraform</span>
+</a>
+</li>
+<li>
+<a href="lesson-04-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Destroy &amp; Rebuild</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li class="current">
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 4 - Part 4</span>
+        <h1>API Gateway with Terraform</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 4: API Gateway with Terraform (2 hours)</h2>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Why is API Gateway configuration so complex in Terraform?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> API Gateway in Terraform requires many separate resources: the API itself, resources (URL paths), methods (HTTP verbs), integrations (what the endpoint does), deployments (published versions), and stages (environments). Each is a distinct aws_api_gateway_* resource type.</p>
+
+            <p><strong>Why we need it:</strong> This granular approach mirrors how API Gateway actually works under the hood. Each piece serves a purpose: resources define the URL structure, methods define what HTTP verbs are allowed, integrations connect to Lambda, and deployments make changes live. Breaking them apart gives you fine-grained control.</p>
+
+            <p><strong>Key details:</strong> The order matters: create the API, then resources, then methods, then integrations, and finally deployment and stage. Terraform handles this automatically through dependency references. The deployment's triggers block forces a new deployment whenever route configuration changes.</p>
+
+            <p><strong>Common gotcha:</strong> Changes to API Gateway resources don't automatically deploy. You need to trigger a new deployment to see them. The triggers block with sha1(jsonencode(...)) is a trick to force redeployment when any referenced resource changes. Without this, you'll make changes that don't appear in the live API.</p>
+          </div>
+        </div>
+
+        <h3>Step 12: Define REST API</h3>
+        <p>Add to <code>main.tf</code>:</p>
+        <pre><code class="language-terraform"># API Gateway REST API
+resource "aws_api_gateway_rest_api" "api" {
+  name        = "${var.project_name}-api-${var.environment}"
+  description = "URL Shortener API"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
+
+# API Gateway Deployment
+resource "aws_api_gateway_deployment" "api" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_resource.shorten,
+      aws_api_gateway_resource.code,
+      aws_api_gateway_resource.stats,
+      aws_api_gateway_resource.stats_code,
+      aws_api_gateway_method.shorten_post,
+      aws_api_gateway_method.code_get,
+      aws_api_gateway_method.code_head,
+      aws_api_gateway_method.stats_get,
+      aws_api_gateway_integration.shorten,
+      aws_api_gateway_integration.redirect,
+      aws_api_gateway_integration.redirect_head,
+      aws_api_gateway_integration.stats,
+    ]))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# API Gateway Stage
+resource "aws_api_gateway_stage" "api" {
+  deployment_id = aws_api_gateway_deployment.api.id
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  stage_name    = var.environment
+}</code></pre>
+
+        <h3>Step 13: Define API Resources and Methods</h3>
+        <p>Add to <code>main.tf</code>:</p>
+        <pre><code class="language-terraform"># /shorten resource
+resource "aws_api_gateway_resource" "shorten" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  path_part   = "shorten"
+}
+
+# POST /shorten
+resource "aws_api_gateway_method" "shorten_post" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.shorten.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "shorten" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.shorten.id
+  http_method             = aws_api_gateway_method.shorten_post.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.shorten.invoke_arn
+}
+
+# /{shortCode} resource
+resource "aws_api_gateway_resource" "code" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  path_part   = "{shortCode}"
+}
+
+# GET /{shortCode}
+resource "aws_api_gateway_method" "code_get" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.code.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "redirect" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.code.id
+  http_method             = aws_api_gateway_method.code_get.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.redirect.invoke_arn
+}
+
+# HEAD /{shortCode} (for curl -I testing)
+resource "aws_api_gateway_method" "code_head" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.code.id
+  http_method   = "HEAD"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "redirect_head" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.code.id
+  http_method             = aws_api_gateway_method.code_head.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.redirect.invoke_arn
+}
+
+# /stats resource
+resource "aws_api_gateway_resource" "stats" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  path_part   = "stats"
+}
+
+# /stats/{shortCode} resource
+resource "aws_api_gateway_resource" "stats_code" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_resource.stats.id
+  path_part   = "{shortCode}"
+}
+
+# GET /stats/{shortCode}
+resource "aws_api_gateway_method" "stats_get" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.stats_code.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "stats" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.stats_code.id
+  http_method             = aws_api_gateway_method.stats_get.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.stats.invoke_arn
+}</code></pre>
+
+        <h3>Step 14: Grant API Gateway Permission to Invoke Lambdas</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Why does API Gateway need explicit permission to invoke Lambda?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> aws_lambda_permission is a resource-based policy that explicitly allows API Gateway to invoke a specific Lambda function. It's separate from the IAM role attached to Lambda - this permission controls who can trigger the function, not what the function can do.</p>
+
+            <p><strong>Why we need it:</strong> AWS follows the principle of least privilege. Even if you configure API Gateway to call a Lambda function, Lambda will reject the invocation unless you've explicitly granted permission. This prevents unauthorized services from triggering your functions, even if they know the function name.</p>
+
+            <p><strong>Key details:</strong> The source_arn uses /* wildcards to allow any route in the API to invoke the function. You can make this more restrictive by specifying exact HTTP methods and paths. The principal "apigateway.amazonaws.com" means any API Gateway in your account can invoke if the ARN matches.</p>
+
+            <p><strong>Common gotcha:</strong> If you get "execution failed due to configuration error: Invalid permissions on Lambda function" it means you forgot this permission resource. The integration might look correct in Terraform, but Lambda will refuse calls from API Gateway without the explicit permission.</p>
+          </div>
+        </div>
+
+        <p>Add to <code>main.tf</code>:</p>
+        <pre><code class="language-terraform"># Lambda permissions for API Gateway
+resource "aws_lambda_permission" "shorten" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.shorten.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "redirect" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.redirect.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "stats" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.stats.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
+}</code></pre>
+
+        <h3>Step 15: Define Outputs</h3>
+        <p>Create <code>outputs.tf</code>:</p>
+        <pre><code class="language-terraform">output "api_endpoint" {
+  description = "API Gateway endpoint URL"
+  value       = aws_api_gateway_stage.api.invoke_url
+}
+
+output "dynamodb_table_name" {
+  description = "DynamoDB table name"
+  value       = aws_dynamodb_table.url_shortener.name
+}
+
+output "lambda_functions" {
+  description = "Lambda function names"
+  value = {
+    shorten  = aws_lambda_function.shorten.function_name
+    redirect = aws_lambda_function.redirect.function_name
+    stats    = aws_lambda_function.stats.function_name
+  }
+}</code></pre>
+
+        <h3>Step 16: Deploy Everything</h3>
+        <pre><code class="language-bash"># Apply all changes
+terraform apply
+
+# Get outputs
+terraform output
+
+# Save API endpoint to variable
+export API_ENDPOINT=$(terraform output -raw api_endpoint)
+echo $API_ENDPOINT</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-04-3.html" class="btn btn-secondary">← Previous: Lambda Functions</a>
+          <a href="lesson-04-5.html" class="btn btn-primary">Next: Test &amp; Iterate →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

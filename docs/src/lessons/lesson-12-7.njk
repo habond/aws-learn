@@ -1,0 +1,178 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-12-7.html
+lessonNumber: 12
+lessonTitle: "Victory Lap - Build Something Amazing!"
+duration: "~10-20 hours"
+cost: "$10-20"
+stepNumber: 7
+totalSteps: 8
+progress: 87.5
+title: "Lesson 12: Monitoring & Cost Optimization - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-12.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Capstone Overview</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Infrastructure Setup</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">Processing Pipeline</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">API Layer</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Frontend Integration</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">CI/CD Pipeline</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-12-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Monitoring &amp; Cost Optimization</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-8.html">
+  <span class="step-number">8</span>
+  <span class="step-title">Deliverables &amp; Next Steps</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 12 - Part 7</span>
+        <h1>Monitoring &amp; Cost Optimization</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 6: Monitoring &amp; Observability (2 hours)</h2>
+
+        <h3>Step 7: Create Comprehensive Dashboard</h3>
+
+        <pre><code class="language-bash"># Create CloudWatch dashboard
+cat &gt; dashboard.json &lt;&lt; 'EOF'
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "properties": {
+        "title": "Video Uploads",
+        "metrics": [
+          [ "AWS/S3", "NumberOfObjects", { "stat": "Average" } ]
+        ]
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "title": "Processing Duration",
+        "metrics": [
+          [ "AWS/States", "ExecutionTime", { "stat": "Average" } ]
+        ]
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "title": "API Latency",
+        "metrics": [
+          [ "AWS/ApiGateway", "Latency", { "stat": "p99" } ]
+        ]
+      }
+    },
+    {
+      "type": "log",
+      "properties": {
+        "title": "Recent Errors",
+        "query": "SOURCE '/aws/lambda/thumbnail-generator' | fields @timestamp, @message | filter @message like /ERROR/ | sort @timestamp desc | limit 20"
+      }
+    }
+  ]
+}
+EOF
+
+aws cloudwatch put-dashboard \
+  --dashboard-name video-platform \
+  --dashboard-body file://dashboard.json</code></pre>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Part 7: Cost Optimization (1 hour)</h2>
+
+        <h3>Step 8: Implement Cost-Saving Measures</h3>
+
+        <pre><code class="language-bash"># S3 Lifecycle policies
+aws s3api put-bucket-lifecycle-configuration \
+  --bucket video-uploads-$ACCOUNT_ID \
+  --lifecycle-configuration '{
+    "Rules": [
+      {
+        "Id": "DeleteOldUploads",
+        "Status": "Enabled",
+        "Prefix": "uploads/",
+        "Expiration": {
+          "Days": 7
+        }
+      },
+      {
+        "Id": "TransitionToIA",
+        "Status": "Enabled",
+        "Prefix": "processed/",
+        "Transitions": [
+          {
+            "Days": 30,
+            "StorageClass": "STANDARD_IA"
+          },
+          {
+            "Days": 90,
+            "StorageClass": "GLACIER"
+          }
+        ]
+      }
+    ]
+  }'
+
+# Enable S3 Intelligent-Tiering
+# DynamoDB auto-scaling already handled by PAY_PER_REQUEST
+# Lambda: Use ARM64 architecture for 20% cost savings
+# CloudFront: Enable compression</code></pre>
+
+        <p><strong>Cost Optimization Tips:</strong></p>
+        <ul>
+          <li>Use S3 lifecycle policies to transition old data to cheaper storage classes</li>
+          <li>Enable DynamoDB on-demand billing for unpredictable workloads</li>
+          <li>Use Lambda ARM64 architecture for 20% cost savings</li>
+          <li>Enable CloudFront compression to reduce data transfer costs</li>
+          <li>Set up CloudWatch alarms for cost anomalies</li>
+          <li>Use AWS Cost Explorer to identify optimization opportunities</li>
+        </ul>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-12-6.html" class="btn btn-secondary">← Previous: CI/CD Pipeline</a>
+          <a href="lesson-12-8.html" class="btn btn-primary">Next: Deliverables &amp; Next Steps →</a>
+        </div>
+      </div>

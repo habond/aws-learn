@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 12: Victory Lap - Build Something Amazing! - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 12</h2>
+        <div class="lesson-title">Victory Lap - Build Something Amazing!</div>
+        <div class="lesson-meta">
+          <span>~10-20 hours</span>
+          <span>$10-20</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 12.5%;"></div>
+      </div>
+      <div class="progress-text">Step 1 of 8</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li class="active">
+<a href="lesson-12.html">
+<span class="step-number">1</span>
+<span class="step-title">Capstone Overview</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Infrastructure Setup</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-3.html">
+<span class="step-number">3</span>
+<span class="step-title">Processing Pipeline</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-4.html">
+<span class="step-number">4</span>
+<span class="step-title">API Layer</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Frontend Integration</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-6.html">
+<span class="step-number">6</span>
+<span class="step-title">CI/CD Pipeline</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Monitoring &amp; Cost Optimization</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-8.html">
+<span class="step-number">8</span>
+<span class="step-title">Deliverables &amp; Next Steps</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li class="current">
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 12 - Part 1</span>
+        <h1>Victory Lap - Build Something Amazing!</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Capstone Project</h2>
+        <p>Congratulations! You've made it through 11 lessons. Now it's time to put everything together and build a complete, production-ready application that combines all the skills you've learned.</p>
+
+        <div class="aws-services-summary">
+          <h3>AWS Services You Can Use</h3>
+          <div class="aws-services-grid">
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/lambda/" target="_blank" rel="noopener noreferrer">
+                <strong>Lambda / ECS / EC2</strong>
+                <span>Compute services</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/s3/" target="_blank" rel="noopener noreferrer">
+                <strong>S3 / DynamoDB / RDS</strong>
+                <span>Storage and databases</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/apigateway/" target="_blank" rel="noopener noreferrer">
+                <strong>API Gateway</strong>
+                <span>API management</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/sns/" target="_blank" rel="noopener noreferrer">
+                <strong>SNS / SQS / EventBridge</strong>
+                <span>Event-driven architecture</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/step-functions/" target="_blank" rel="noopener noreferrer">
+                <strong>Step Functions</strong>
+                <span>Workflow orchestration</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/kinesis/" target="_blank" rel="noopener noreferrer">
+                <strong>Kinesis</strong>
+                <span>Real-time data streaming</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/rekognition/" target="_blank" rel="noopener noreferrer">
+                <strong>Rekognition / Bedrock</strong>
+                <span>AI/ML services</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/cloudwatch/" target="_blank" rel="noopener noreferrer">
+                <strong>CloudWatch / X-Ray</strong>
+                <span>Monitoring and observability</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>How should I approach building a capstone project?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A capstone project is a comprehensive application that demonstrates everything you've learned. Unlike earlier lessons with step-by-step instructions, this is your chance to architect, design, and build something independently that showcases your AWS skills.</p>
+
+            <p><strong>Why we need it:</strong> Following tutorials teaches you tools, but building something from scratch teaches you to think like an architect. You'll face real decisions: which database to use, how to handle failures, where to optimize costs. These decisions - and the mistakes you make - are where deep learning happens. Plus, this becomes a portfolio piece for job interviews.</p>
+
+            <p><strong>Key details:</strong> Start with architecture diagrams before writing any code. Define your MVP (minimum viable product) first, then add features iteratively. Use Infrastructure as Code (Terraform) from the beginning. Implement monitoring and logging from day one, not as an afterthought. Document your decisions and tradeoffs - this shows engineering maturity.</p>
+
+            <p><strong>Common gotcha:</strong> Don't try to use every AWS service just to check boxes. Choose services that solve real problems in your application. Over-engineering is as bad as under-engineering. Also, remember to clean up resources when testing - capstone projects can rack up costs if you leave everything running 24/7.</p>
+          </div>
+        </div>
+
+        <h2>Project Options</h2>
+        <p>Choose one (or create your own!):</p>
+
+        <h3>Option 1: Full-Stack Social Media Platform</h3>
+        <p><strong>Services Used</strong>: S3, CloudFront, API Gateway, Lambda, DynamoDB, Rekognition, SQS, SNS, CloudWatch, WAF</p>
+        <p><strong>Features</strong>:</p>
+        <ul>
+          <li>User authentication (Cognito)</li>
+          <li>Image uploads with moderation (Rekognition)</li>
+          <li>Posts, comments, likes</li>
+          <li>Real-time notifications (WebSocket API)</li>
+          <li>Content delivery (CloudFront)</li>
+          <li>Event-driven processing (SQS/SNS)</li>
+        </ul>
+
+        <h3>Option 2: Real-Time Analytics Dashboard</h3>
+        <p><strong>Services Used</strong>: Kinesis, Lambda, DynamoDB, Athena, S3, CloudWatch, QuickSight</p>
+        <p><strong>Features</strong>:</p>
+        <ul>
+          <li>Streaming data ingestion</li>
+          <li>Real-time processing</li>
+          <li>Data warehousing</li>
+          <li>SQL queries (Athena)</li>
+          <li>Visualization (QuickSight)</li>
+          <li>Alerting on anomalies</li>
+        </ul>
+
+        <h3>Option 3: E-Commerce Backend</h3>
+        <p><strong>Services Used</strong>: API Gateway, Lambda, DynamoDB, RDS, ElastiCache, SQS, Step Functions, SES, Cognito</p>
+        <p><strong>Features</strong>:</p>
+        <ul>
+          <li>Product catalog (DynamoDB)</li>
+          <li>Shopping cart (ElastiCache)</li>
+          <li>Order processing (Step Functions)</li>
+          <li>Payment integration</li>
+          <li>Email notifications (SES)</li>
+          <li>Inventory management</li>
+        </ul>
+
+        <h3>Option 4: AI-Powered Content Platform</h3>
+        <p><strong>Services Used</strong>: S3, Lambda, Bedrock, Rekognition, Comprehend, DynamoDB, API Gateway</p>
+        <p><strong>Features</strong>:</p>
+        <ul>
+          <li>Upload documents/images</li>
+          <li>AI analysis and tagging</li>
+          <li>Search and discovery</li>
+          <li>Content recommendations</li>
+          <li>Multi-language support</li>
+          <li>Sentiment analysis</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Architecture Requirements</h2>
+        <p>Your project must include:</p>
+
+        <h3>Core Services (Required)</h3>
+        <ul>
+          <li><strong>Compute</strong>: Lambda, ECS, or EC2</li>
+          <li><strong>Storage</strong>: S3, DynamoDB or RDS</li>
+          <li><strong>API</strong>: API Gateway or ALB</li>
+          <li><strong>Security</strong>: IAM roles, encryption, WAF</li>
+          <li><strong>Monitoring</strong>: CloudWatch metrics, logs, alarms</li>
+        </ul>
+
+        <h3>Advanced Features (Choose 3+)</h3>
+        <ul>
+          <li>Event-driven architecture (SNS/SQS/EventBridge)</li>
+          <li>Caching (ElastiCache or CloudFront)</li>
+          <li>Async processing (Step Functions)</li>
+          <li>Real-time data (Kinesis)</li>
+          <li>AI/ML integration (Rekognition, Bedrock)</li>
+          <li>Containers (ECS/Fargate)</li>
+          <li>Infrastructure as Code (Terraform/CDK)</li>
+        </ul>
+
+        <h3>Production Readiness (Required)</h3>
+        <ul>
+          <li>Multi-AZ deployment</li>
+          <li>Automated backups</li>
+          <li>CI/CD pipeline</li>
+          <li>Comprehensive monitoring</li>
+          <li>Security best practices</li>
+          <li>Cost optimization</li>
+          <li>Documentation</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Example: Building a Video Processing Platform</h2>
+        <p>Let's build a complete video processing platform as an example capstone project.</p>
+
+        <h3>Features</h3>
+        <ul>
+          <li>Upload videos to S3</li>
+          <li>Automatic transcoding (MediaConvert)</li>
+          <li>Thumbnail generation (Lambda + FFmpeg)</li>
+          <li>Metadata extraction</li>
+          <li>Content moderation (Rekognition Video)</li>
+          <li>Searchable catalog</li>
+          <li>CDN delivery</li>
+        </ul>
+
+        <h3>Architecture</h3>
+        <pre><code class="language-bash">User Upload → S3 → EventBridge
+                     ↓
+              Step Functions
+                     ↓
+        ┌────────────┼────────────┐
+        ↓            ↓            ↓
+   MediaConvert  Rekognition  Lambda
+   (Transcode)   (Moderate)   (Thumbnail)
+        ↓            ↓            ↓
+        └────────────┴────────────┘
+                     ↓
+                 DynamoDB
+                     ↓
+              API Gateway → Lambda → Query Results
+                     ↓
+                CloudFront → S3 (Video/Thumbnails)</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="../index.html" class="btn btn-secondary">Back to Home</a>
+          <a href="lesson-12-2.html" class="btn btn-primary">Next: Infrastructure Setup →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

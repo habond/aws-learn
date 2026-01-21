@@ -1,0 +1,59 @@
+{
+  "Comment": "Order processing workflow",
+  "StartAt": "ValidatePayment",
+  "States": {
+    "ValidatePayment": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:ACCOUNT_ID:function:validate-payment",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "PaymentFailed"
+        }
+      ],
+      "Next": "CheckInventory"
+    },
+    "CheckInventory": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:ACCOUNT_ID:function:check-inventory",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "InventoryFailed"
+        }
+      ],
+      "Next": "ProcessOrder"
+    },
+    "ProcessOrder": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:ACCOUNT_ID:function:process-order",
+      "Next": "SendNotification"
+    },
+    "SendNotification": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:ACCOUNT_ID:function:send-notification",
+      "Next": "OrderComplete"
+    },
+    "OrderComplete": {
+      "Type": "Succeed"
+    },
+    "PaymentFailed": {
+      "Type": "Fail",
+      "Error": "PaymentValidationError",
+      "Cause": "Payment could not be validated"
+    },
+    "InventoryFailed": {
+      "Type": "Fail",
+      "Error": "InventoryError",
+      "Cause": "Item out of stock"
+    }
+  }
+}

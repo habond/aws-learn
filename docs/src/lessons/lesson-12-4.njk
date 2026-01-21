@@ -1,0 +1,148 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-12-4.html
+lessonNumber: 12
+lessonTitle: "Victory Lap - Build Something Amazing!"
+duration: "~10-20 hours"
+cost: "$10-20"
+stepNumber: 4
+totalSteps: 8
+progress: 50
+title: "Lesson 12: API Layer - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-12.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Capstone Overview</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Infrastructure Setup</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">Processing Pipeline</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-12-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">API Layer</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Frontend Integration</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">CI/CD Pipeline</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Monitoring &amp; Cost Optimization</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-8.html">
+  <span class="step-number">8</span>
+  <span class="step-title">Deliverables &amp; Next Steps</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 12 - Part 4</span>
+        <h1>API Layer</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 3: API Layer (2 hours)</h2>
+
+        <h3>Step 4: Create REST API</h3>
+
+        <pre><code class="language-javascript">// api/videos.js
+const { DynamoDBClient, QueryCommand, GetItemCommand } = require('@aws-sdk/client-dynamodb');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+
+const ddb = new DynamoDBClient({});
+const s3 = new S3Client({});
+
+// List videos
+exports.listVideos = async (event) =&gt; {
+  const result = await ddb.send(new QueryCommand({
+    TableName: 'video-catalog',
+    IndexName: 'UploadedAtIndex',
+    Limit: 20,
+    ScanIndexForward: false
+  }));
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(result.Items)
+  };
+};
+
+// Get video details
+exports.getVideo = async (event) =&gt; {
+  const { videoId } = event.pathParameters;
+
+  const result = await ddb.send(new GetItemCommand({
+    TableName: 'video-catalog',
+    Key: { videoId: { S: videoId } }
+  }));
+
+  if (!result.Item) {
+    return {
+      statusCode: 404,
+      body: JSON.stringify({ error: 'Video not found' })
+    };
+  }
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(result.Item)
+  };
+};
+
+// Get upload URL
+exports.getUploadUrl = async (event) =&gt; {
+  const { filename } = JSON.parse(event.body);
+  const videoId = `video-${Date.now()}`;
+  const key = `uploads/${videoId}/${filename}`;
+
+  const command = new PutObjectCommand({
+    Bucket: process.env.UPLOAD_BUCKET,
+    Key: key
+  });
+
+  const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      videoId,
+      uploadUrl,
+      key
+    })
+  };
+};</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-12-3.html" class="btn btn-secondary">← Previous: Processing Pipeline</a>
+          <a href="lesson-12-5.html" class="btn btn-primary">Next: Frontend Integration →</a>
+        </div>
+      </div>

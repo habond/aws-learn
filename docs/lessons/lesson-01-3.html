@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 1: S3 Storage - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 1</h2>
+        <div class="lesson-title">Your First Internet Empire</div>
+        <div class="lesson-meta">
+          <span>~6 hours</span>
+          <span>$1-2</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 37.5%;"></div>
+      </div>
+      <div class="progress-text">Step 3 of 8</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-01.html">
+<span class="step-number">1</span>
+<span class="step-title">Overview + AWS Setup</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Build Your Website</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-01-3.html">
+<span class="step-number">3</span>
+<span class="step-title">S3 Storage</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-4.html">
+<span class="step-number">4</span>
+<span class="step-title">CloudFront CDN</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Custom Domain</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-6.html">
+<span class="step-number">6</span>
+<span class="step-title">CloudWatch Monitoring</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Make Updates</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-8.html">
+<span class="step-number">8</span>
+<span class="step-title">CLI Practice + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li class="current">
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 1 - Part 3</span>
+        <h1>S3 - Your Files in the Cloud</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 3: S3 - Your Files in the Cloud (1.5 hours)</h2>
+
+        <h3>Step 5: Create S3 Bucket</h3>
+        <p><strong>Bucket names must be globally unique!</strong></p>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is an S3 Bucket?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A bucket is a container for files in S3 - think of it like the top-level folder for your project. Each bucket has a globally unique name across ALL of AWS (like domain names, no two people can have the same one).</p>
+
+            <p><strong>Why we need it:</strong> Buckets organize your files and set security boundaries. All files in a bucket share the same permissions, region, and settings. You might have separate buckets for: website files, user uploads, backups, logs - each with different access rules.</p>
+
+            <p><strong>Key details:</strong> Bucket names must be 3-63 characters, lowercase, no spaces, globally unique. They're part of the URL (mybucket.s3.amazonaws.com), so choose wisely - you can't rename buckets, only delete and recreate. Buckets exist in one region but can be accessed globally.</p>
+
+            <p><strong>Common gotcha:</strong> "Bucket already exists" error means someone else claimed that name. Try adding your name, company, or year (like "acme-website-2026"). Don't use dots in names if you plan to use SSL - it causes certificate validation issues.</p>
+          </div>
+        </div>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">S3</span></div><code class="language-bash"># Choose a unique bucket name (lowercase, no spaces)
+BUCKET_NAME="your-name-awesome-site-2026"
+
+# Create bucket
+aws s3 mb s3://$BUCKET_NAME --region us-east-1
+
+# Verify it exists
+aws s3 ls</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What does "aws s3 mb" mean?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The "mb" command stands for "make bucket" - it creates a new S3 bucket. The "aws s3" commands are high-level, user-friendly operations for common tasks (similar to Unix commands like cp, mv, rm).</p>
+
+            <p><strong>Why we need it:</strong> Creating buckets via CLI means you can script your infrastructure setup. Need to deploy the same website architecture 10 times? One script does it. It's also faster than clicking through 5 console pages.</p>
+
+            <p><strong>Key details:</strong> The s3:// prefix tells AWS you're referencing an S3 bucket. The --region flag specifies where to physically create it (affects latency and cost). If you omit --region, it uses your CLI's default region from "aws configure".</p>
+
+            <p><strong>Common gotcha:</strong> If you forget --region, the bucket might be created in a different region than you expect. Then later commands fail because you're looking in the wrong region. Always explicitly set --region for important commands, or verify your default with "aws configure get region".</p>
+          </div>
+        </div>
+
+        <h3>Step 6: Configure for Static Website Hosting</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">S3</span></div><code class="language-bash"># Enable static website hosting
+aws s3 website s3://$BUCKET_NAME \
+  --index-document index.html \
+  --error-document error.html</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Index and Error documents?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The index document (usually index.html) is the default file served when someone visits a directory path. The error document (like error.html or 404.html) is shown when a requested file doesn't exist.</p>
+
+            <p><strong>Why we need it:</strong> Without an index document, visiting "yoursite.com/" shows an ugly XML error instead of your homepage. Without an error document, users get AWS's default error page instead of your custom "page not found" message.</p>
+
+            <p><strong>Key details:</strong> When someone visits "yoursite.com/blog/", S3 automatically serves "blog/index.html" if it exists. You can have index.html files in multiple directories. The error document applies to all 404 errors across your entire bucket.</p>
+
+            <p><strong>Common gotcha:</strong> If you forget to create error.html, the config works but shows an ugly error when users hit missing pages. Also, S3 static website hosting doesn't support different status codes - both index and error return HTTP 200, not 404 for errors like a real server would.</p>
+          </div>
+        </div>
+
+        <h3>Step 7: Upload Your Website</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">S3</span></div><code class="language-bash"># From the website directory
+cd website/
+
+# Upload everything
+aws s3 sync . s3://$BUCKET_NAME
+
+# List what you uploaded
+aws s3 ls s3://$BUCKET_NAME --recursive</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What's the difference between "aws s3 sync" and "aws s3 cp"?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> "sync" intelligently copies only changed files by comparing file sizes and timestamps. "cp" copies everything every time, even unchanged files. Both can copy single files or entire directories.</p>
+
+            <p><strong>Why we need it:</strong> When deploying updates, you might change 2 files out of 100. "sync" uploads only those 2 files (saving time and bandwidth). "cp" would upload all 100 files. For a website with images/videos, sync is 10-100x faster after the first upload.</p>
+
+            <p><strong>Key details:</strong> Sync compares by default on size and timestamp. Use --delete flag to remove files from S3 that you deleted locally. Use --dryrun to see what would be transferred without actually doing it. The "." means "current directory".</p>
+
+            <p><strong>Common gotcha:</strong> If you edit a file but the size stays the same, sync might not detect it. Use --exact-timestamps or --size-only flags to control this. Also, sync doesn't set proper content-types by default - you might need --content-type "text/html" for HTML files.</p>
+          </div>
+        </div>
+
+        <h3>Step 8: Make It Public</h3>
+        <p><strong>Create bucket policy</strong> (save as <code>bucket-policy.json</code>):</p>
+
+        <pre><code class="language-json">{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadGetObject",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::YOUR-BUCKET-NAME/*"
+    }
+  ]
+}</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is a Bucket Policy and how does it work?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A bucket policy is a JSON document that defines who can access your S3 bucket and what they can do. It's attached to the bucket itself and applies to all objects inside it.</p>
+
+            <p><strong>Why we need it:</strong> By default, S3 buckets are private - nobody can access them except you. For a public website, you need to explicitly allow anyone on the internet to read (but not write or delete) your files. The bucket policy is how you grant this permission.</p>
+
+            <p><strong>Key details:</strong> The policy has key parts: "Effect" (Allow/Deny), "Principal" (* means everyone), "Action" (what they can do - s3:GetObject means read files), and "Resource" (which files - the /* means all files in the bucket). Version "2012-10-17" is the current policy language version.</p>
+
+            <p><strong>Common gotcha:</strong> Forgetting the /* at the end of the Resource ARN is a classic mistake - the policy applies to the bucket but not the objects inside! Also, you must disable "Block Public Access" settings in the bucket or the policy won't work even if correct.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is an ARN (Amazon Resource Name)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> An ARN is a unique identifier for any AWS resource. Format is: arn:aws:service:region:account-id:resource. For S3, it's simpler: arn:aws:s3:::bucket-name/optional-path (notice 3 colons - S3 doesn't use region/account in ARNs).</p>
+
+            <p><strong>Why we need it:</strong> AWS has millions of resources across thousands of accounts. ARNs uniquely identify exactly which resource you're talking about. "mybucket" is ambiguous - "arn:aws:s3:::mybucket" is globally unique and precise.</p>
+
+            <p><strong>Key details:</strong> Different services have different ARN formats. S3 objects use arn:aws:s3:::bucket/key. EC2 instances use arn:aws:ec2:us-east-1:123456789:instance/i-1234. The /* wildcard matches all objects. You can use other wildcards like /images/* for subdirectories.</p>
+
+            <p><strong>Common gotcha:</strong> Mixing up bucket ARN (arn:aws:s3:::mybucket) with object ARN (arn:aws:s3:::mybucket/*). Policies on objects need the /*, policies on buckets don't. Copy-paste carefully! Also, ARNs are case-sensitive - mybucket vs MyBucket are different.</p>
+          </div>
+        </div>
+
+        <p><strong>Replace <code>YOUR-BUCKET-NAME</code></strong> with your actual bucket name!</p>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">S3</span></div><code class="language-bash"># Apply the policy
+aws s3api put-bucket-policy \
+  --bucket $BUCKET_NAME \
+  --policy file://bucket-policy.json</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What's the difference between "aws s3" and "aws s3api"?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> "aws s3" provides high-level commands for common tasks (cp, sync, ls, mb, rb). "aws s3api" provides low-level access to every S3 API operation with full control. Think of s3 as "easy mode" and s3api as "advanced mode".</p>
+
+            <p><strong>Why we need it:</strong> Simple tasks like uploading files use "aws s3 sync". Complex tasks like setting bucket policies, configuring CORS, or managing versioning require "aws s3api". You can't set a bucket policy with "aws s3" - you must use s3api.</p>
+
+            <p><strong>Key details:</strong> s3 commands work like Unix tools (cp, mv, rm). s3api commands map 1:1 to AWS API calls (put-bucket-policy, get-object-acl). s3api gives you more options but requires more knowledge. Both work with the same buckets/objects.</p>
+
+            <p><strong>Common gotcha:</strong> You can't mix syntax - "aws s3api sync" doesn't exist, nor does "aws s3 put-bucket-policy". If a command fails, check you're using the right prefix. Also, s3api often requires JSON input (--policy file://...) while s3 uses simple flags.</p>
+          </div>
+        </div>
+
+        <h3>Step 9: Test S3 Website</h3>
+        <p>Your site is now live at:</p>
+        <pre><code class="language-bash">http://YOUR-BUCKET-NAME.s3-website-us-east-1.amazonaws.com</code></pre>
+
+        <p><strong>Visit it in your browser!</strong> Does it work? Congrats, you're hosting on AWS!</p>
+
+        <p><strong>Try this</strong>:</p>
+        <ul>
+          <li>Open browser DevTools → Network tab</li>
+          <li>Reload the page</li>
+          <li>Check the response time</li>
+          <li>Note the location (probably Virginia if you used us-east-1)</li>
+        </ul>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-01-2.html" class="btn btn-secondary">← Previous: Build Website</a>
+          <a href="lesson-01-4.html" class="btn btn-primary">Next: CloudFront CDN →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

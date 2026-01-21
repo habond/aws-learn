@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 10: X-Ray Distributed Tracing - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 10</h2>
+        <div class="lesson-title">Observability - Know What&#39;s Happening</div>
+        <div class="lesson-meta">
+          <span>~6 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 66.67%;"></div>
+      </div>
+      <div class="progress-text">Step 4 of 6</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-10.html">
+<span class="step-number">1</span>
+<span class="step-title">Advanced CloudWatch Metrics</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-2.html">
+<span class="step-number">2</span>
+<span class="step-title">CloudWatch Logs Insights</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-3.html">
+<span class="step-number">3</span>
+<span class="step-title">CloudWatch Alarms</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-10-4.html">
+<span class="step-number">4</span>
+<span class="step-title">X-Ray Distributed Tracing</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-5.html">
+<span class="step-number">5</span>
+<span class="step-title">CloudWatch Synthetics</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Container Insights + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li class="current">
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 10 - Part 4</span>
+        <h1>X-Ray Distributed Tracing</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 4: X-Ray Distributed Tracing (1.5 hours)</h2>
+
+        <h3>Step 6: Enable X-Ray in Application</h3>
+
+        <p>Install X-Ray SDK:</p>
+
+        <pre><code class="language-bash">npm install aws-xray-sdk-core</code></pre>
+
+        <p>Update <code>index.js</code>:</p>
+
+        <pre><code class="language-javascript">const AWSXRay = require('aws-xray-sdk-core');
+const AWS = AWSXRay.captureAWS(require('aws-sdk'));
+
+// Enable X-Ray for Express
+const XRayExpress = require('aws-xray-sdk-express');
+app.use(XRayExpress.openSegment('MonitoredApp'));
+
+// Your routes here...
+
+app.use(XRayExpress.closeSegment());
+
+// Wrap async operations
+app.post('/order', express.json(), async (req, res) =&gt; {
+  const segment = AWSXRay.getSegment();
+  const subsegment = segment.addNewSubsegment('ProcessOrder');
+
+  try {
+    // Your order processing logic
+    subsegment.addAnnotation('amount', req.body.amount);
+    subsegment.addMetadata('orderId', `ORD-${Date.now()}`);
+
+    // Simulate external call
+    const externalSegment = subsegment.addNewSubsegment('ExternalAPI');
+    await new Promise(resolve =&gt; setTimeout(resolve, Math.random() * 100));
+    externalSegment.close();
+
+    // ... rest of code
+  } finally {
+    subsegment.close();
+  }
+});</code></pre>
+
+        <h3>Step 7: Run X-Ray Daemon</h3>
+
+        <pre><code class="language-bash"># Download X-Ray daemon (or use Docker)
+# macOS/Linux
+curl https://s3.us-east-2.amazonaws.com/aws-xray-assets.us-east-2/xray-daemon/aws-xray-daemon-linux-3.x.zip -o xray-daemon.zip
+unzip xray-daemon.zip
+./xray &amp;
+
+# Restart app to send traces
+kill $APP_PID
+node index.js &amp;
+export APP_PID=$!
+
+# Generate traffic
+for i in {1..20}; do
+  curl -X POST http://localhost:3000/order \
+    -H "Content-Type: application/json" \
+    -d "{\"amount\": $((RANDOM % 100 + 10))}"
+  sleep 0.5
+done</code></pre>
+
+        <h3>Step 8: View Traces in X-Ray Console</h3>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">X-Ray</span></div><code class="language-bash"># List traces via CLI
+aws xray get-trace-summaries \
+  --start-time $(date -u -v-5M +%Y-%m-%dT%H:%M:%S) \
+  --end-time $(date -u +%Y-%m-%dT%H:%M:%S)
+
+# Or view in console: X-Ray → Traces
+# See service map showing dependencies</code></pre>
+
+        <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 15px; margin: 20px 0;">
+          <strong>What is Distributed Tracing?</strong>
+          <p style="margin: 10px 0 0 0;">Distributed tracing tracks requests as they flow through multiple services, showing you exactly where time is spent and where errors occur. It's essential for microservices architectures.</p>
+        </div>
+
+        <h3>Understanding X-Ray Concepts</h3>
+        <ul>
+          <li><strong>Segment</strong>: A unit of work (e.g., a request to your service)</li>
+          <li><strong>Subsegment</strong>: More granular units within a segment (e.g., database call, external API call)</li>
+          <li><strong>Annotation</strong>: Key-value pairs that are indexed for filtering</li>
+          <li><strong>Metadata</strong>: Additional context that isn't indexed</li>
+        </ul>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-10-3.html" class="btn btn-secondary">← Previous: CloudWatch Alarms</a>
+          <a href="lesson-10-5.html" class="btn btn-primary">Next: CloudWatch Synthetics →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

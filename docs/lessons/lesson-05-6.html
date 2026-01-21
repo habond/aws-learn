@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 5: Scaling and Updates - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 5</h2>
+        <div class="lesson-title">Containers Are Taking Over</div>
+        <div class="lesson-meta">
+          <span>~8 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 85.71%;"></div>
+      </div>
+      <div class="progress-text">Step 6 of 7</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-05.html">
+<span class="step-number">1</span>
+<span class="step-title">Docker Basics</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Push to ECR</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-3.html">
+<span class="step-number">3</span>
+<span class="step-title">ECS Cluster with Fargate</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-4.html">
+<span class="step-number">4</span>
+<span class="step-title">Application Load Balancer</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-5.html">
+<span class="step-number">5</span>
+<span class="step-title">ECS Service</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-05-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Scaling and Updates</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Monitoring + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li class="current">
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 5 - Part 6</span>
+        <h1>Scaling and Updates</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 6: Scaling and Updates (1 hour)</h2>
+
+        <h3>Step 19: Scale Service</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">ECS</span></div><code class="language-bash"># Scale to 4 tasks
+aws ecs update-service \
+  --cluster task-manager-cluster \
+  --service task-manager-service \
+  --desired-count 4
+
+# Watch tasks starting
+aws ecs list-tasks --cluster task-manager-cluster
+
+# Check service
+aws ecs describe-services \
+  --cluster task-manager-cluster \
+  --services task-manager-service \
+  --query 'services[0].{Running:runningCount,Desired:desiredCount}'</code></pre>
+
+        <h3>Step 20: Update Application</h3>
+        <p>Make a change to <code>index.js</code>:</p>
+        <pre><code class="language-javascript">// Add at the top
+const VERSION = '2.0.0';
+
+// Update health check
+app.get('/health', (req, res) =&gt; {
+  res.json({
+    status: 'healthy',
+    version: VERSION,
+    timestamp: new Date().toISOString()
+  });
+});</code></pre>
+
+        <p>Deploy update:</p>
+        <pre><div class="code-block-badges"><span class="code-service-badge">ECS</span></div><code class="language-bash"># Rebuild image with platform flag for AWS compatibility
+docker build --platform linux/amd64 -t task-manager:v2 .
+
+# Tag and push
+docker tag task-manager:v2 ${ECR_REPO}:v2.0.0
+docker tag task-manager:v2 ${ECR_REPO}:latest
+docker push ${ECR_REPO}:v2.0.0
+docker push ${ECR_REPO}:latest
+
+# Force new deployment (pulls latest image)
+aws ecs update-service \
+  --cluster task-manager-cluster \
+  --service task-manager-service \
+  --force-new-deployment
+
+# Watch deployment
+aws ecs wait services-stable \
+  --cluster task-manager-cluster \
+  --services task-manager-service
+
+# Test new version
+curl http://${ALB_DNS}/health</code></pre>
+
+        <p><strong>Rolling deployment complete!</strong> Old containers replaced with new ones.</p>
+
+        <h3>Step 21: Enable Auto Scaling</h3>
+        <pre><code class="language-bash"># Register scalable target
+aws application-autoscaling register-scalable-target \
+  --service-namespace ecs \
+  --resource-id service/task-manager-cluster/task-manager-service \
+  --scalable-dimension ecs:service:DesiredCount \
+  --min-capacity 2 \
+  --max-capacity 10
+
+# Create scaling policy (target tracking based on CPU)
+aws application-autoscaling put-scaling-policy \
+  --service-namespace ecs \
+  --resource-id service/task-manager-cluster/task-manager-service \
+  --scalable-dimension ecs:service:DesiredCount \
+  --policy-name cpu-scaling-policy \
+  --policy-type TargetTrackingScaling \
+  --target-tracking-scaling-policy-configuration file://&lt;(cat &lt;&lt;EOF
+{
+  "TargetValue": 70.0,
+  "PredefinedMetricSpecification": {
+    "PredefinedMetricType": "ECSServiceAverageCPUUtilization"
+  },
+  "ScaleOutCooldown": 60,
+  "ScaleInCooldown": 60
+}
+EOF
+)</code></pre>
+
+        <p><strong>Your service now auto-scales based on CPU!</strong></p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-05-5.html" class="btn btn-secondary">← Previous: ECS Service</a>
+          <a href="lesson-05-7.html" class="btn btn-primary">Next: Monitoring + Cleanup →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

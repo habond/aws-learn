@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 7: Complete Integration - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 7</h2>
+        <div class="lesson-title">Event-Driven Chaos</div>
+        <div class="lesson-meta">
+          <span>~8 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 100%;"></div>
+      </div>
+      <div class="progress-text">Step 5 of 5</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-07.html">
+<span class="step-number">1</span>
+<span class="step-title">SNS Topics</span>
+</a>
+</li>
+<li>
+<a href="lesson-07-2.html">
+<span class="step-number">2</span>
+<span class="step-title">SQS Queues</span>
+</a>
+</li>
+<li>
+<a href="lesson-07-3.html">
+<span class="step-number">3</span>
+<span class="step-title">EventBridge</span>
+</a>
+</li>
+<li>
+<a href="lesson-07-4.html">
+<span class="step-number">4</span>
+<span class="step-title">Step Functions</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-07-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Complete Integration</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li class="current">
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 7 - Part 5</span>
+        <h1>Complete Integration</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 5: Complete Integration (1.5 hours)</h2>
+
+        <h3>Step 16: Create Order Placement API</h3>
+        <p>Create <code>place-order/index.js</code>:</p>
+        <pre><code class="language-javascript">const { EventBridgeClient, PutEventsCommand } = require('@aws-sdk/client-eventbridge');
+const { SFNClient, StartExecutionCommand } = require('@aws-sdk/client-sfn');
+
+const eventBridge = new EventBridgeClient({});
+const stepFunctions = new SFNClient({});
+
+exports.handler = async (event) =&gt; {
+  console.log('Placing order:', event.body);
+
+  const order = JSON.parse(event.body);
+  const orderId = `ORD-${Date.now()}`;
+
+  const orderData = {
+    orderId,
+    ...order,
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    // Send event to EventBridge
+    await eventBridge.send(new PutEventsCommand({
+      Entries: [
+        {
+          Source: 'order.service',
+          DetailType: 'Order Placed',
+          Detail: JSON.stringify(orderData),
+          EventBusName: 'order-event-bus'
+        }
+      ]
+    }));
+
+    // Start Step Functions workflow
+    await stepFunctions.send(new StartExecutionCommand({
+      stateMachineArn: process.env.STATE_MACHINE_ARN,
+      input: JSON.stringify(orderData)
+    }));
+
+    return {
+      statusCode: 202,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: 'Order placed successfully',
+        orderId,
+        status: 'processing'
+      })
+    };
+  } catch (error) {
+    console.error('Error:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Failed to place order' })
+    };
+  }
+};</code></pre>
+
+        <p>Deploy:</p>
+        <pre><div class="code-block-badges"><span class="code-service-badge">IAM</span><span class="code-service-badge">Lambda</span></div><code class="language-bash">cd place-order
+npm init -y
+npm install @aws-sdk/client-eventbridge @aws-sdk/client-sfn
+zip -r function.zip .
+
+# Update Lambda role to allow EventBridge and Step Functions
+cat &gt; lambda-extended-policy.json &lt;&lt; EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "events:PutEvents"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "states:StartExecution"
+      ],
+      "Resource": "$STATE_MACHINE_ARN"
+    }
+  ]
+}
+EOF
+
+aws iam put-role-policy \
+  --role-name lambda-url-shortener-role \
+  --policy-name EventDrivenPermissions \
+  --policy-document file://lambda-extended-policy.json
+
+aws lambda create-function \
+  --function-name place-order \
+  --runtime nodejs20.x \
+  --role $LAMBDA_ROLE_ARN \
+  --handler index.handler \
+  --zip-file fileb://function.zip \
+  --timeout 10 \
+  --environment "Variables={STATE_MACHINE_ARN=$STATE_MACHINE_ARN}"
+cd ..</code></pre>
+
+        <h3>Step 17: Create API Gateway</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">API Gateway</span><span class="code-service-badge">Lambda</span></div><code class="language-bash"># Create REST API
+aws apigateway create-rest-api \
+  --name order-api \
+  --description "Order placement API"
+
+export API_ID=$(aws apigateway get-rest-apis \
+  --query "items[?name=='order-api'].id" \
+  --output text)
+
+export ROOT_ID=$(aws apigateway get-resources \
+  --rest-api-id $API_ID \
+  --query 'items[?path==`/`].id' \
+  --output text)
+
+# Create /orders resource
+aws apigateway create-resource \
+  --rest-api-id $API_ID \
+  --parent-id $ROOT_ID \
+  --path-part orders
+
+export ORDERS_ID=$(aws apigateway get-resources \
+  --rest-api-id $API_ID \
+  --query "items[?path=='/orders'].id" \
+  --output text)
+
+# Create POST method
+aws apigateway put-method \
+  --rest-api-id $API_ID \
+  --resource-id $ORDERS_ID \
+  --http-method POST \
+  --authorization-type NONE
+
+# Integrate with Lambda
+aws apigateway put-integration \
+  --rest-api-id $API_ID \
+  --resource-id $ORDERS_ID \
+  --http-method POST \
+  --type AWS_PROXY \
+  --integration-http-method POST \
+  --uri "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/$(aws lambda get-function --function-name place-order --query 'Configuration.FunctionArn' --output text)/invocations"
+
+# Give permission
+aws lambda add-permission \
+  --function-name place-order \
+  --statement-id apigateway-place-order \
+  --action lambda:InvokeFunction \
+  --principal apigateway.amazonaws.com \
+  --source-arn "arn:aws:execute-api:us-east-1:$ACCOUNT_ID:$API_ID/*/*"
+
+# Deploy API
+aws apigateway create-deployment \
+  --rest-api-id $API_ID \
+  --stage-name prod
+
+export API_ENDPOINT="https://$API_ID.execute-api.us-east-1.amazonaws.com/prod"
+echo "API Endpoint: $API_ENDPOINT"</code></pre>
+
+        <h3>Step 18: Test Complete System</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">SQS</span></div><code class="language-bash"># Place order via API
+curl -X POST $API_ENDPOINT/orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer": "Bob Smith",
+    "amount": 499.99,
+    "items": [
+      {"product": "Gaming Console", "quantity": 1},
+      {"product": "Controller", "quantity": 2}
+    ]
+  }'
+
+# Watch the magic happen:
+# 1. EventBridge receives event
+# 2. Step Functions workflow starts
+# 3. Payment validated
+# 4. Inventory checked
+# 5. Order processed
+# 6. Notification sent (check email!)
+# 7. SQS receives message
+
+# Check Step Functions executions
+aws stepfunctions list-executions \
+  --state-machine-arn $STATE_MACHINE_ARN \
+  --max-results 5
+
+# Check SQS queue
+aws sqs receive-message --queue-url $PROCESSING_QUEUE_URL</code></pre>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Challenges (Optional)</h2>
+
+        <h3>Easy</h3>
+        <ul>
+          <li>Add more notification channels (SMS using SNS)</li>
+          <li>View Step Functions execution graph in console</li>
+          <li>Monitor SQS queue depth</li>
+        </ul>
+
+        <h3>Medium</h3>
+        <ul>
+          <li>Add parallel processing with Step Functions Map state</li>
+          <li>Implement saga pattern for distributed transactions</li>
+          <li>Add CloudWatch alarms for failed executions</li>
+          <li>Create dashboard showing order processing metrics</li>
+        </ul>
+
+        <h3>Hard</h3>
+        <ul>
+          <li>Implement event sourcing pattern</li>
+          <li>Add CQRS (Command Query Responsibility Segregation)</li>
+          <li>Build order cancellation workflow</li>
+          <li>Add distributed tracing with X-Ray</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Troubleshooting</h2>
+
+        <p><strong>Step Functions execution fails?</strong></p>
+        <ul>
+          <li>Check Lambda function logs</li>
+          <li>Verify IAM permissions</li>
+          <li>Check input/output format matches between steps</li>
+        </ul>
+
+        <p><strong>EventBridge not triggering?</strong></p>
+        <ul>
+          <li>Verify event pattern matches</li>
+          <li>Check Lambda has permission</li>
+          <li>View EventBridge metrics</li>
+        </ul>
+
+        <p><strong>SQS messages not processing?</strong></p>
+        <ul>
+          <li>Check DLQ for failed messages</li>
+          <li>Verify queue permissions</li>
+          <li>Check visibility timeout</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Cleanup</h2>
+        <pre><div class="code-block-badges"><span class="code-service-badge">API Gateway</span><span class="code-service-badge">EventBridge</span><span class="code-service-badge">Lambda</span><span class="code-service-badge">SNS</span><span class="code-service-badge">SQS</span></div><code class="language-bash"># Delete API Gateway
+aws apigateway delete-rest-api --rest-api-id $API_ID
+
+# Delete Step Functions state machine
+aws stepfunctions delete-state-machine --state-machine-arn $STATE_MACHINE_ARN
+
+# Delete Lambda functions
+for func in order-event-processor validate-payment check-inventory process-order send-notification place-order; do
+  aws lambda delete-function --function-name $func
+done
+
+# Delete EventBridge rule and bus
+aws events remove-targets --rule new-order-rule --event-bus-name order-event-bus --ids 1
+aws events delete-rule --name new-order-rule --event-bus-name order-event-bus
+aws events delete-event-bus --name order-event-bus
+
+# Delete SQS queues
+aws sqs delete-queue --queue-url $PROCESSING_QUEUE_URL
+aws sqs delete-queue --queue-url $DLQ_URL
+
+# Delete SNS topics
+aws sns delete-topic --topic-arn $ORDER_TOPIC_ARN
+aws sns delete-topic --topic-arn $NOTIFICATION_TOPIC_ARN
+
+# Delete IAM roles (optional - cleanup commands for roles...)</code></pre>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>What You Learned</h2>
+        <ul>
+          <li>Built pub/sub messaging with SNS</li>
+          <li>Created reliable queues with SQS</li>
+          <li>Routed events with EventBridge</li>
+          <li>Orchestrated workflows with Step Functions</li>
+          <li>Implemented error handling and retries</li>
+          <li>Designed event-driven architectures</li>
+          <li>Used fan-out patterns for parallel processing</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Next Steps</h2>
+        <p>Head to <strong>Lesson 8: Big Data Analytics</strong> to learn Kinesis, Glue, and Athena for processing and analyzing massive amounts of data!</p>
+
+        <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 20px; margin: 30px 0;">
+          <h3 style="margin-top: 0;">Congratulations!</h3>
+          <p>You've built a complete event-driven order processing system. You now understand how to build scalable, decoupled architectures using SNS, SQS, EventBridge, and Step Functions. These patterns are used by companies like Netflix, Amazon, and Uber to process millions of events per day.</p>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-07-4.html" class="btn btn-secondary">← Previous: Step Functions</a>
+          <a href="lesson-08.html" class="btn btn-primary">Next Lesson: Big Data Analytics →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

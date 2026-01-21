@@ -1,0 +1,220 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-04-7.html
+lessonNumber: 4
+lessonTitle: "Automate All The Things!"
+duration: "~7 hours"
+cost: "~$1"
+stepNumber: 7
+totalSteps: 7
+progress: 100
+title: "Lesson 4: Destroy & Rebuild - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-04.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Overview + Terraform Setup</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">DynamoDB with Terraform</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">Lambda Functions</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">API Gateway</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Test &amp; Iterate</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Advanced Terraform</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-04-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Destroy &amp; Rebuild</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 4 - Part 7</span>
+        <h1>Destroy &amp; Rebuild</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 7: Destroy and Rebuild (30 minutes)</h2>
+
+        <h3>Step 22: The Magic of IaC</h3>
+        <pre><code class="language-bash"># Destroy EVERYTHING
+terraform destroy
+
+# Type 'yes' to confirm</code></pre>
+
+        <p><strong>Everything is gone!</strong> DynamoDB table, Lambda functions, API Gateway - all deleted.</p>
+
+        <p><strong>Now rebuild it</strong>:</p>
+        <pre><code class="language-bash"># Recreate everything
+terraform apply</code></pre>
+
+        <p><strong>Back in business!</strong> Same exact infrastructure, recreated in minutes.</p>
+
+        <p><strong>This is the power of IaC</strong>: reproducible infrastructure you can destroy and recreate anytime.</p>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Challenges (Optional)</h2>
+
+        <h3>Easy</h3>
+        <ul>
+          <li>Add CloudWatch alarms for Lambda errors</li>
+          <li>Add API Gateway access logging</li>
+          <li>Create a staging environment using workspaces</li>
+        </ul>
+
+        <h3>Medium</h3>
+        <ul>
+          <li>Add custom domain with Route 53 and ACM certificate</li>
+          <li>Create a Terraform module for the entire API</li>
+          <li>Add API Gateway usage plans and API keys</li>
+          <li>Set up CloudWatch dashboard via Terraform</li>
+        </ul>
+
+        <h3>Hard</h3>
+        <ul>
+          <li>Set up CI/CD pipeline (GitHub Actions + Terraform)</li>
+          <li>Implement blue/green deployment for Lambda</li>
+          <li>Create multi-region deployment</li>
+          <li>Add automated testing for Terraform code (terratest)</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Troubleshooting</h2>
+
+        <p><strong>Terraform init fails?</strong></p>
+        <ul>
+          <li>Check internet connection (downloads providers)</li>
+          <li>Verify AWS credentials are configured</li>
+        </ul>
+
+        <p><strong>Apply fails with dependency errors?</strong></p>
+        <ul>
+          <li>Terraform usually handles this automatically</li>
+          <li>Check resource references are correct</li>
+          <li>Try <code>terraform plan</code> to see what's happening</li>
+        </ul>
+
+        <p><strong>State locked?</strong></p>
+        <ul>
+          <li>Someone else is running Terraform</li>
+          <li>Or previous run crashed</li>
+          <li>Fix: <code>terraform force-unlock LOCK_ID</code></li>
+        </ul>
+
+        <p><strong>Changes not applying?</strong></p>
+        <ul>
+          <li>Check you're in the right workspace</li>
+          <li>Verify terraform.tfvars values</li>
+          <li>Use <code>terraform plan</code> to debug</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Cleanup</h2>
+        <pre><code class="language-bash"># Destroy everything
+terraform destroy
+
+# Delete state files (if not using remote state)
+rm -rf .terraform terraform.tfstate*
+
+# Delete zipped Lambda functions
+rm lambda/*.zip</code></pre>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>What You Learned</h2>
+        <ul>
+          <li>Defined infrastructure as code with Terraform</li>
+          <li>Managed state and dependencies automatically</li>
+          <li>Created reusable modules</li>
+          <li>Used workspaces for multiple environments</li>
+          <li>Set up remote state in S3</li>
+          <li>Understood IaC best practices</li>
+          <li>Can destroy and rebuild infrastructure confidently</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Terraform Best Practices</h2>
+
+        <h3>Do:</h3>
+        <ul>
+          <li>Use version control (Git) for Terraform code</li>
+          <li>Use remote state (S3) for team collaboration</li>
+          <li>Use variables for everything that might change</li>
+          <li>Use modules for reusable components</li>
+          <li>Lock provider versions</li>
+          <li>Use <code>terraform fmt</code> to format code</li>
+          <li>Use <code>terraform validate</code> before applying</li>
+          <li>Review <code>terraform plan</code> carefully</li>
+        </ul>
+
+        <h3>Don't:</h3>
+        <ul>
+          <li>Hardcode values (use variables)</li>
+          <li>Commit <code>.terraform</code> directory</li>
+          <li>Commit <code>terraform.tfvars</code> with secrets</li>
+          <li>Manually modify resources Terraform manages</li>
+          <li>Skip <code>terraform plan</code></li>
+          <li>Use default workspace for production</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>IaC Philosophy</h2>
+
+        <p><strong>Pets vs Cattle</strong>:</p>
+        <ul>
+          <li>Pets: servers you name, care for, manually maintain</li>
+          <li>Cattle: numbered servers you can kill and replace</li>
+        </ul>
+
+        <p><strong>With IaC, infrastructure is cattle</strong>: destroy and recreate anytime!</p>
+
+        <p><strong>Manual changes are evil</strong>: if you click around the console, Terraform doesn't know about it. Everything should be in code.</p>
+
+        <p><strong>Version control everything</strong>: infrastructure changes should be reviewed like code changes.</p>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Next Steps</h2>
+        <p>Head to <strong>Lesson 5: Containers Are Taking Over</strong> to learn Docker, ECR, and ECS. You'll containerize applications and deploy them with infrastructure as code!</p>
+
+        <p>You now know how to automate infrastructure. Time to automate application deployment!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-04-6.html" class="btn btn-secondary">← Previous: Advanced Terraform</a>
+          <a href="../index.html" class="btn btn-primary">Back to Home →</a>
+        </div>
+      </div>

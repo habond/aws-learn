@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 1: Make Updates - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 1</h2>
+        <div class="lesson-title">Your First Internet Empire</div>
+        <div class="lesson-meta">
+          <span>~6 hours</span>
+          <span>$1-2</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 87.5%;"></div>
+      </div>
+      <div class="progress-text">Step 7 of 8</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-01.html">
+<span class="step-number">1</span>
+<span class="step-title">Overview + AWS Setup</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Build Your Website</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-3.html">
+<span class="step-number">3</span>
+<span class="step-title">S3 Storage</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-4.html">
+<span class="step-number">4</span>
+<span class="step-title">CloudFront CDN</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Custom Domain</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-6.html">
+<span class="step-number">6</span>
+<span class="step-title">CloudWatch Monitoring</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-01-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Make Updates</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-8.html">
+<span class="step-number">8</span>
+<span class="step-title">CLI Practice + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li class="current">
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 1 - Part 7</span>
+        <h1>Make Updates</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 7: Make Updates (15 minutes)</h2>
+
+        <h3>Step 21: Update Your Site</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">CloudFront</span><span class="code-service-badge">S3</span></div><code class="language-bash"># Edit website/index.html (make any change)
+
+# Upload to S3
+cd website/
+aws s3 sync . s3://$BUCKET_NAME
+
+# Invalidate CloudFront cache (so changes show immediately)
+aws cloudfront create-invalidation \
+  --distribution-id YOUR-DISTRIBUTION-ID \
+  --paths "/*"</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is Cache Invalidation and why is it needed?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Cache invalidation tells CloudFront "delete these cached files from all edge locations right now". It forces CloudFront to fetch fresh copies from S3 the next time someone requests them, instead of serving stale cached versions.</p>
+
+            <p><strong>Why we need it:</strong> You update your website in S3, but CloudFront is still serving the old version from cache for hours. Users see outdated content. Invalidation immediately clears the cache, so everyone sees the new version within minutes.</p>
+
+            <p><strong>Key details:</strong> You specify paths to invalidate: /index.html (one file), /images/* (directory), /* (everything). First 1000 invalidation paths per month are free, then $0.005 per path. An invalidation affecting 1000 files counts as 1 path if you use a wildcard (/*), or 1000 paths if you list them individually.</p>
+
+            <p><strong>Common gotcha:</strong> Invalidations take 5-15 minutes to complete across all edge locations. They're not instant! Also, frequent invalidations suggest your cache TTL is too long - consider setting shorter TTLs for frequently-updated files instead of invalidating constantly.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is a Distribution ID and how do I find it?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The distribution ID is the unique identifier for your CloudFront distribution - a string like "E1XXXXXXXXXXX". It's how AWS knows which distribution you're talking about when you run commands.</p>
+
+            <p><strong>Why we need it:</strong> You might have multiple CloudFront distributions (production, staging, different sites). The ID ensures commands affect the right one. It's required for most CloudFront CLI operations (invalidations, updates, getting config).</p>
+
+            <p><strong>Key details:</strong> Find it in the CloudFront console (list of distributions, first column) or via CLI: aws cloudfront list-distributions --query 'DistributionList.Items[*].[Id,DomainName]'. Save it in a variable or environment file for easy reuse ($DISTRIBUTION_ID).</p>
+
+            <p><strong>Common gotcha:</strong> The distribution ID is NOT the domain name (d1234.cloudfront.net). Don't confuse them! The ID is the short E1XXXXX code. If you use the domain name in a CLI command expecting an ID, you'll get a "distribution not found" error.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What do path patterns like /* mean?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Path patterns use wildcards to match multiple files. /* means "all files at root level and deeper", /images/* means "all files in the images directory", /style.css means "this one specific file".</p>
+
+            <p><strong>Why we need it:</strong> Instead of listing 1000 files individually to invalidate, you use a wildcard. "Invalidate everything" is just /*. "Invalidate all images" is /images/*. It's faster to write and counts as fewer invalidation paths (cheaper).</p>
+
+            <p><strong>Key details:</strong> * matches anything except /. So /images/* matches /images/photo.jpg but not /images/vacation/beach.jpg. To match nested directories, use /images/* and /images/*/*. Or just /* for everything.</p>
+
+            <p><strong>Common gotcha:</strong> Forgetting the leading slash - it's /* not *. Also, being too aggressive with invalidations: invalidating /* for every deploy wastes money and time. Better strategy: use version numbers in file names (style.v2.css) so browsers treat them as different files, or set appropriate cache TTLs.</p>
+          </div>
+        </div>
+
+        <p><strong>Check your site</strong> - changes should appear in ~1-2 minutes!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-01-6.html" class="btn btn-secondary">← Previous: CloudWatch</a>
+          <a href="lesson-01-8.html" class="btn btn-primary">Next: CLI Practice + Cleanup →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

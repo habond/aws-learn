@@ -1,0 +1,262 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-01-8.html
+lessonNumber: 1
+lessonTitle: "Your First Internet Empire"
+duration: "~6 hours"
+cost: "$1-2"
+stepNumber: 8
+totalSteps: 8
+progress: 100
+title: "Lesson 1: CLI Practice + Cleanup - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-01.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Overview + AWS Setup</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Build Your Website</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">S3 Storage</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">CloudFront CDN</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Custom Domain</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">CloudWatch Monitoring</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Make Updates</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-01-8.html">
+  <span class="step-number">8</span>
+  <span class="step-title">CLI Practice + Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 1 - Part 8</span>
+        <h1>AWS CLI Practice + Cleanup</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 8: AWS CLI Practice (30 minutes)</h2>
+
+        <h3>Useful Commands to Know</h3>
+        <pre><code class="language-bash"># List all your S3 buckets
+aws s3 ls
+
+# Check bucket size
+aws s3 ls s3://$BUCKET_NAME --recursive --human-readable --summarize
+
+# Download entire bucket (backup)
+aws s3 sync s3://$BUCKET_NAME ./backup/
+
+# List CloudFront distributions
+aws cloudfront list-distributions --query 'DistributionList.Items[*].[Id,DomainName]'
+
+# Get distribution config
+aws cloudfront get-distribution --id YOUR-DISTRIBUTION-ID
+
+# Check your current AWS identity
+aws sts get-caller-identity
+
+# List all Route 53 hosted zones
+aws route53 list-hosted-zones</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What do the --recursive, --human-readable, and --summarize flags do?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> These flags modify how AWS CLI commands work. --recursive processes all files in subdirectories (not just the current level). --human-readable shows sizes as "1.5 GB" instead of "1610612736 bytes". --summarize adds total size/count at the end.</p>
+
+            <p><strong>Why we need it:</strong> Without --recursive, "aws s3 ls s3://mybucket/images/" only shows files directly in /images/, not in /images/vacation/. That's rarely what you want. --human-readable makes output readable by humans. --summarize answers "how big is my bucket total?"</p>
+
+            <p><strong>Key details:</strong> You can combine flags: --recursive --human-readable --summarize works great for bucket audits. Some commands have different flags - always check "aws s3 ls help" for options. Not all flags work together (some conflict).</p>
+
+            <p><strong>Common gotcha:</strong> Forgetting --recursive means you miss nested files. "My bucket shows empty!" - No, you're just not looking deep enough. Also, --human-readable is purely cosmetic - it doesn't change what happens, just how it's displayed.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is --query and JMESPath?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> --query filters and transforms AWS CLI output using JMESPath, a JSON query language. It's like SQL for JSON - you can select specific fields, filter results, and reshape output without piping through jq or grep.</p>
+
+            <p><strong>Why we need it:</strong> CloudFront list-distributions returns 100 lines of JSON per distribution. You just want IDs and domain names. --query 'DistributionList.Items[*].[Id,DomainName]' extracts only those fields. Much cleaner than scrolling through massive JSON blobs.</p>
+
+            <p><strong>Key details:</strong> JMESPath syntax: Items[*] means "all items in the Items array", .[Id,DomainName] means "get Id and DomainName fields", Items[?Status=='Deployed'] filters to items where Status equals Deployed. It's powerful once you learn the syntax.</p>
+
+            <p><strong>Common gotcha:</strong> JMESPath is picky about quotes - use single quotes around the query, double quotes inside: --query 'Items[?Name=="test"]'. Reversed quotes break. Also, queries are case-sensitive: Items works, items doesn't. Check the JSON structure with --output json first to see available fields.</p>
+          </div>
+        </div>
+
+        <p><strong>Practice these!</strong> CLI mastery = AWS superpowers.</p>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Challenges (Optional)</h2>
+
+        <h3>Easy</h3>
+        <ul>
+          <li>Add a custom 404 error page</li>
+          <li>Add an image and verify it's served from CloudFront</li>
+          <li>Share your site with a friend and check CloudWatch for traffic</li>
+        </ul>
+
+        <h3>Medium</h3>
+        <ul>
+          <li>Set up CloudFront caching for different file types (HTML vs images)</li>
+          <li>Add a second domain (www subdomain)</li>
+          <li>Create a staging environment (second S3 bucket + CloudFront)</li>
+        </ul>
+
+        <h3>Hard</h3>
+        <ul>
+          <li>Set up CloudFront Functions for A/B testing</li>
+          <li>Add CloudFront access logs to S3</li>
+          <li>Create a custom domain for CloudFront distribution</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Cleanup (IMPORTANT!)</h2>
+
+        <p><strong>If you want to minimize costs</strong>:</p>
+
+        <pre><code class="language-bash"># Empty S3 bucket first
+aws s3 rm s3://$BUCKET_NAME --recursive
+
+# Delete bucket
+aws s3 rb s3://$BUCKET_NAME
+
+# Disable CloudFront distribution
+# (Must do via Console - it's a multi-step process)
+# 1. CloudFront → Distribution → Disable
+# 2. Wait 15 minutes
+# 3. Delete distribution
+
+# Delete Route 53 hosted zone (if not using domain)
+# (Keep this if you paid for the domain!)</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Why does CloudFront require disable before delete?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> CloudFront has a two-step deletion process: first disable the distribution (which stops serving traffic and removes it from edge locations), wait for that to complete (15+ minutes), then delete it. You can't delete an enabled distribution.</p>
+
+            <p><strong>Why we need it:</strong> CloudFront distributions are replicated to 400+ edge locations worldwide. Deleting instantly would leave orphaned configs everywhere. Disable first ensures all edge locations stop using it, then delete removes the master config. It's a safety mechanism.</p>
+
+            <p><strong>Key details:</strong> During disable, the distribution status shows "Deploying" then "Disabled". You must wait until it's fully disabled before attempting delete. If you try to delete while enabled, you get an error: "cannot delete enabled distribution".</p>
+
+            <p><strong>Common gotcha:</strong> Forgetting about this during cleanup - you try to delete, it fails, you're confused. Always disable first, go get coffee, come back 20 minutes later and delete. Some students leave distributions running because they couldn't delete them immediately and gave up.</p>
+          </div>
+        </div>
+
+        <p><strong>If you want to keep it running</strong>:</p>
+        <ul>
+          <li>Cost: ~$0.50-1/month for CloudFront + S3 (basically free)</li>
+          <li>You now have a live portfolio site!</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>What You Learned</h2>
+        <ul>
+          <li>Set up AWS account securely (IAM, MFA, billing alerts)</li>
+          <li>Used AWS CLI for everything</li>
+          <li>Deployed static website to S3</li>
+          <li>Configured CloudFront CDN for global performance</li>
+          <li>Set up custom domain with Route 53</li>
+          <li>Added SSL certificate (HTTPS)</li>
+          <li>Monitored with CloudWatch</li>
+          <li>Understand S3, CloudFront, Route 53, IAM basics</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Troubleshooting</h2>
+
+        <h4>S3 bucket policy not working?</h4>
+        <ul>
+          <li>Make sure bucket name in policy matches exactly</li>
+          <li>Check "Block Public Access" settings are OFF</li>
+        </ul>
+
+        <h4>CloudFront not showing updates?</h4>
+        <ul>
+          <li>Did you invalidate the cache?</li>
+          <li>Remember: distributions take 10-15 min to deploy changes</li>
+        </ul>
+
+        <h4>Domain not working?</h4>
+        <ul>
+          <li>DNS takes time (5-60 minutes)</li>
+          <li>Check Route 53 records are correct</li>
+          <li>Make sure CloudFront has the alternate domain name</li>
+        </ul>
+
+        <h4>SSL certificate not validating?</h4>
+        <ul>
+          <li>Must be in us-east-1 region for CloudFront</li>
+          <li>Check Route 53 has validation CNAME records</li>
+          <li>Wait 10-15 minutes</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Next Steps</h2>
+        <p>Head to <strong>Lesson 2: Renting Computers</strong> when you're ready to run actual code on AWS servers!</p>
+
+        <p>But first, take a moment to appreciate what you built:</p>
+        <ul>
+          <li>Your own website</li>
+          <li>On AWS infrastructure</li>
+          <li>With global CDN</li>
+          <li>With HTTPS</li>
+          <li>Monitored and secure</li>
+        </ul>
+
+        <p><strong>Not bad for Lesson 1!</strong></p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-01-7.html" class="btn btn-secondary">← Previous: Make Updates</a>
+          <a href="lesson-02.html" class="btn btn-success">Complete! Next Lesson →</a>
+        </div>
+      </div>

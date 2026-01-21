@@ -1,0 +1,338 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-06-5.html
+lessonNumber: 6
+lessonTitle: "Data Pipelines"
+duration: "~7 hours"
+cost: "$3-4"
+stepNumber: 5
+totalSteps: 6
+progress: 83.33
+title: "Lesson 6: Lambda Data Processor - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-06.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Set Up Networking (VPC)</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">RDS PostgreSQL Database</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">ElastiCache Redis</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">S3 Bucket for Data Upload</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-06-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Lambda Data Processor</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Query API with Caching</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 6 - Part 5</span>
+        <h1>Lambda Data Processor</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 5: Lambda Data Processor (2 hours)</h2>
+
+        <h3>Step 12: Create Lambda Execution Role</h3>
+        <pre><code class="language-bash"># Create trust policy
+cat &gt; lambda-trust-policy.json &lt;&lt; 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+
+# Create role
+aws iam create-role \
+  --role-name data-pipeline-lambda-role \
+  --assume-role-policy-document file://lambda-trust-policy.json
+
+# Attach basic execution policy
+aws iam attach-role-policy \
+  --role-name data-pipeline-lambda-role \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+# Attach VPC execution policy (needed to access RDS/Redis)
+aws iam attach-role-policy \
+  --role-name data-pipeline-lambda-role \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+
+# Create custom policy for S3, Secrets Manager
+cat &gt; lambda-permissions-policy.json &lt;&lt; EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::$BUCKET_NAME",
+        "arn:aws:s3:::$BUCKET_NAME/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue"
+      ],
+      "Resource": "$SECRET_ARN"
+    }
+  ]
+}
+EOF
+
+aws iam put-role-policy \
+  --role-name data-pipeline-lambda-role \
+  --policy-name DataPipelinePermissions \
+  --policy-document file://lambda-permissions-policy.json
+
+# Get role ARN
+export LAMBDA_ROLE_ARN=$(aws iam get-role \
+  --role-name data-pipeline-lambda-role \
+  --query 'Role.Arn' \
+  --output text)
+
+echo "Lambda Role ARN: $LAMBDA_ROLE_ARN"</code></pre>
+
+        <h3>Step 13: Create Processor Lambda Function</h3>
+        <p><strong>Create <code>processor/index.js</code>:</strong></p>
+
+        <pre><code class="language-javascript">const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { Client } = require('pg');
+const Redis = require('ioredis');
+
+const s3 = new S3Client({});
+const secretsManager = new SecretsManagerClient({});
+
+let dbClient;
+let redisClient;
+
+async function getDbCredentials() {
+  const response = await secretsManager.send(
+    new GetSecretValueCommand({ SecretId: process.env.SECRET_ARN })
+  );
+  return JSON.parse(response.SecretString);
+}
+
+async function initializeConnections() {
+  if (!dbClient) {
+    const creds = await getDbCredentials();
+    dbClient = new Client({
+      host: creds.host,
+      port: creds.port,
+      database: creds.database,
+      user: creds.username,
+      password: creds.password
+    });
+    await dbClient.connect();
+  }
+
+  if (!redisClient) {
+    redisClient = new Redis({
+      host: process.env.REDIS_ENDPOINT,
+      port: 6379
+    });
+  }
+
+  return { dbClient, redisClient };
+}
+
+function parseCSV(csvContent) {
+  const lines = csvContent.trim().split('\n');
+  const headers = lines[0].split(',');
+
+  return lines.slice(1).map(line =&gt; {
+    const values = line.split(',');
+    return headers.reduce((obj, header, index) =&gt; {
+      obj[header.trim()] = values[index]?.trim();
+      return obj;
+    }, {});
+  });
+}
+
+exports.handler = async (event) =&gt; {
+  console.log('Event:', JSON.stringify(event));
+
+  try {
+    const { dbClient, redisClient } = await initializeConnections();
+
+    // Get S3 object details from event
+    const bucket = event.Records[0].s3.bucket.name;
+    const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
+
+    console.log(`Processing file: s3://${bucket}/${key}`);
+
+    // Download file from S3
+    const response = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    const csvContent = await response.Body.transformToString();
+
+    // Parse CSV
+    const records = parseCSV(csvContent);
+    console.log(`Parsed ${records.length} records`);
+
+    // Insert into database
+    for (const record of records) {
+      await dbClient.query(
+        'INSERT INTO sales_data (date, product, quantity, revenue, region) VALUES ($1, $2, $3, $4, $5)',
+        [record.date, record.product, parseInt(record.quantity), parseFloat(record.revenue), record.region]
+      );
+    }
+
+    console.log(`Inserted ${records.length} records into database`);
+
+    // Invalidate cache for affected queries
+    await redisClient.del('sales:total');
+    await redisClient.del('sales:by_product');
+    await redisClient.del('sales:by_region');
+
+    console.log('Cache invalidated');
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        message: 'Successfully processed file',
+        recordsProcessed: records.length,
+        file: key
+      })
+    };
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};</code></pre>
+
+        <p><strong>Create <code>processor/package.json</code>:</strong></p>
+
+        <pre><code class="language-json">{
+  "name": "data-processor",
+  "version": "1.0.0",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/client-secrets-manager": "^3.0.0",
+    "pg": "^8.11.0",
+    "ioredis": "^5.3.0"
+  }
+}</code></pre>
+
+        <h3>Step 14: Package and Deploy Processor</h3>
+        <pre><code class="language-bash">cd processor
+npm install
+zip -r ../processor.zip .
+cd ..
+
+# Create Lambda function
+aws lambda create-function \
+  --function-name data-pipeline-processor \
+  --runtime nodejs20.x \
+  --role $LAMBDA_ROLE_ARN \
+  --handler index.handler \
+  --zip-file fileb://processor.zip \
+  --timeout 60 \
+  --memory-size 512 \
+  --environment "Variables={SECRET_ARN=$SECRET_ARN,REDIS_ENDPOINT=$REDIS_ENDPOINT}" \
+  --vpc-config SubnetIds=$SUBNET_1,$SUBNET_2,SecurityGroupIds=$LAMBDA_SG
+
+echo "Processor Lambda created!"</code></pre>
+
+        <h3>Step 15: Configure S3 Event Trigger</h3>
+        <pre><code class="language-bash"># Add permission for S3 to invoke Lambda
+aws lambda add-permission \
+  --function-name data-pipeline-processor \
+  --statement-id s3-trigger \
+  --action lambda:InvokeFunction \
+  --principal s3.amazonaws.com \
+  --source-arn arn:aws:s3:::$BUCKET_NAME
+
+# Create notification configuration
+cat &gt; s3-notification.json &lt;&lt; EOF
+{
+  "LambdaFunctionConfigurations": [
+    {
+      "LambdaFunctionArn": "$(aws lambda get-function --function-name data-pipeline-processor --query 'Configuration.FunctionArn' --output text)",
+      "Events": ["s3:ObjectCreated:*"],
+      "Filter": {
+        "Key": {
+          "FilterRules": [
+            {
+              "Name": "suffix",
+              "Value": ".csv"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
+EOF
+
+# Apply notification configuration
+aws s3api put-bucket-notification-configuration \
+  --bucket $BUCKET_NAME \
+  --notification-configuration file://s3-notification.json</code></pre>
+
+        <h3>Step 16: Test the Pipeline</h3>
+        <pre><code class="language-bash"># Upload sample CSV
+aws s3 cp sample-sales.csv s3://$BUCKET_NAME/sales-2024-01.csv
+
+# Check Lambda logs
+sleep 10
+aws logs tail /aws/lambda/data-pipeline-processor --follow
+
+# Verify data in database
+psql -h $DB_ENDPOINT -U admin -d postgres -c "SELECT * FROM sales_data;"</code></pre>
+
+        <p><strong>Your automated data pipeline is working!</strong></p>
+
+        <p><strong>What just happened?</strong></p>
+        <ul>
+          <li>Created a Lambda function that processes CSV files</li>
+          <li>Connected Lambda to RDS and Redis</li>
+          <li>Configured S3 to trigger Lambda on file uploads</li>
+          <li>Tested the entire pipeline end-to-end</li>
+        </ul>
+
+        <p><strong>The magic</strong>: No servers to manage, scales automatically, pay only for what you use!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-06-4.html" class="btn btn-secondary">← Previous: S3 Bucket</a>
+          <a href="lesson-06-6.html" class="btn btn-primary">Next: Query API with Caching →</a>
+        </div>
+      </div>

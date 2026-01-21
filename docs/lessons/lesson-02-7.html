@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 2: CloudWatch + Cleanup - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 2</h2>
+        <div class="lesson-title">Renting Computers in Someone Else&#39;s Basement</div>
+        <div class="lesson-meta">
+          <span>~8 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 100%;"></div>
+      </div>
+      <div class="progress-text">Step 7 of 7</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-02.html">
+<span class="step-number">1</span>
+<span class="step-title">VPC Basics</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-2.html">
+<span class="step-number">2</span>
+<span class="step-title">SSH Key Pair</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-3.html">
+<span class="step-number">3</span>
+<span class="step-title">Launch EC2 Instance</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-4.html">
+<span class="step-number">4</span>
+<span class="step-title">Deploy Application</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Load Balancer</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Auto Scaling</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-02-7.html">
+<span class="step-number">7</span>
+<span class="step-title">CloudWatch + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li class="current">
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 2 - Part 7</span>
+        <h1>CloudWatch Monitoring + Cleanup</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 7: CloudWatch Monitoring (30 minutes)</h2>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are CloudWatch Alarms?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> CloudWatch Alarms continuously watch metrics and trigger actions when thresholds are breached. An alarm has three states: OK (everything is fine), ALARM (threshold exceeded), and INSUFFICIENT_DATA (not enough data to decide). You set the metric to watch, the threshold, and what action to take when the alarm triggers.</p>
+
+            <p><strong>Why we need it:</strong> You can't watch dashboards 24/7. Alarms notify you automatically when problems occur - high CPU, low disk space, too many errors, etc. They can send emails/SMS via SNS, trigger Auto Scaling, stop/terminate instances, or execute Lambda functions. Alarms turn monitoring from passive (looking at graphs) to active (automatic response).</p>
+
+            <p><strong>Key details:</strong> Alarms evaluate metrics at regular periods (like every 5 minutes). You specify how many consecutive periods must breach the threshold before entering ALARM state (evaluation periods). This prevents false alarms from brief spikes. Alarms cost $0.10/month for standard metrics, $0.30/month for high-resolution metrics.</p>
+
+            <p><strong>Common gotcha:</strong> An alarm entering ALARM state only triggers actions once - when it transitions from OK to ALARM. If it stays in ALARM, actions don't repeat (unless you configure it). Also, insufficient data isn't the same as OK - if an instance stops reporting metrics, the alarm enters INSUFFICIENT_DATA, which might not trigger notifications depending on your settings.</p>
+          </div>
+        </div>
+
+        <h3>Step 17: Set Up Alarms</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Metrics in CloudWatch?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Metrics are time-series data points that represent measurements of your AWS resources and applications. Each metric consists of a name (like CPUUtilization), a namespace (like AWS/EC2), dimensions (like InstanceId=i-1234), and timestamped values. CloudWatch collects these automatically for AWS services.</p>
+
+            <p><strong>Why we need it:</strong> You can't manage what you don't measure. Metrics show you what's happening in your infrastructure - CPU usage, network traffic, request counts, error rates, etc. Without metrics, you're flying blind. With them, you can spot trends, debug issues, set up alarms, and make data-driven decisions about scaling and optimization.</p>
+
+            <p><strong>Key details:</strong> AWS services publish metrics automatically (EC2, RDS, Lambda, etc.). Standard metrics are free and published every 5 minutes. Detailed monitoring costs extra but publishes every 1 minute. You can also publish custom metrics from your applications using the CloudWatch API. Metrics are retained for different periods: 1 minute data for 15 days, 5 minute data for 63 days, 1 hour data for 455 days.</p>
+
+            <p><strong>Common gotcha:</strong> Metrics only contain data points when things happen. If an instance is stopped, it stops publishing metrics - you'll see gaps in graphs. This is different from zero - a stopped instance doesn't have 0% CPU, it has no data. Also, there's a slight delay (1-3 minutes) between when something happens and when the metric appears in CloudWatch.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Namespaces in CloudWatch?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Namespaces are containers that organize metrics from different AWS services. Each service has its own namespace - AWS/EC2 for EC2 metrics, AWS/RDS for database metrics, AWS/Lambda for Lambda functions, etc. Custom metrics use namespaces you define, like "MyApp/Production".</p>
+
+            <p><strong>Why we need it:</strong> Without namespaces, all metrics would be mixed together in one giant pool. Namespaces separate them logically by service, making it easy to find the metrics you need. When you create an alarm or build a dashboard, you first select the namespace, which filters down to relevant metrics.</p>
+
+            <p><strong>Key details:</strong> AWS service namespaces always start with "AWS/" (like AWS/ELB, AWS/DynamoDB). Custom metric namespaces can't start with "AWS/" - that's reserved. Namespace names are case-sensitive. All metrics within a namespace share the same retention and access policies.</p>
+
+            <p><strong>Common gotcha:</strong> You can't move metrics between namespaces or rename a namespace - once published, the namespace is permanent. If you accidentally publish custom metrics to the wrong namespace, you have to wait for them to expire (up to 15 months) or continue publishing to the wrong namespace. Choose namespace names carefully upfront.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Statistics (Average, Sum, etc.)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Statistics are aggregations of metric data over a period. When you query a metric, you specify which statistic to retrieve: Average (mean of all values), Sum (total of all values), Minimum, Maximum, or SampleCount (number of data points). CloudWatch calculates these from the raw data points.</p>
+
+            <p><strong>Why we need it:</strong> Raw metric data points arrive frequently (every minute or less). Alarms and graphs need to aggregate this into meaningful values. For CPU usage, Average makes sense - you care about average CPU over 5 minutes. For request counts, Sum makes sense - you want total requests in that period, not the average of samples.</p>
+
+            <p><strong>Key details:</strong> Average is the most common statistic for resource utilization metrics (CPU, memory). Sum is typical for count-based metrics (requests, errors). Maximum is useful for detecting spikes (peak response time). Percentiles (p50, p90, p99) are available for some metrics and show distribution rather than simple averages.</p>
+
+            <p><strong>Common gotcha:</strong> Using the wrong statistic can cause misleading alarms. If you alarm on Average CPU &gt; 70%, but your app has spiky workloads, average might be 50% even while Maximum hits 100% causing slowdowns. Consider using Maximum or p95 for spike-sensitive metrics. Also, Sum on CPU doesn't make sense - always use Average for utilization percentages.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is Period in CloudWatch?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Period is the length of time (in seconds) over which CloudWatch aggregates metric data. When you query a metric with period=300, CloudWatch groups data points from each 5-minute window and calculates the statistic for that window. Common periods: 60 (1 minute), 300 (5 minutes), 3600 (1 hour).</p>
+
+            <p><strong>Why we need it:</strong> Different use cases need different time granularity. For real-time monitoring, 1-minute periods catch issues quickly. For long-term trends, 1-hour periods reduce noise and show patterns. Period also affects alarm sensitivity - shorter periods react faster but are more prone to false alarms from brief spikes.</p>
+
+            <p><strong>Key details:</strong> Period must be a multiple of 60 (60, 120, 180, 300, etc.). The shortest available period depends on the metric - standard metrics support 5 minutes minimum, detailed monitoring supports 1 minute. Longer periods reduce the number of data points returned, which affects API costs and graph rendering performance.</p>
+
+            <p><strong>Common gotcha:</strong> You can't query a 1-minute period for metrics that only publish every 5 minutes - you'll get sparse data. Also, very short periods with very long time ranges cause API throttling. If you want to view 30 days of data, use 1-hour periods, not 1-minute. CloudWatch automatically adjusts period granularity for old data anyway.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Evaluation Periods?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Evaluation periods specify how many consecutive periods must breach the threshold before an alarm triggers. If you set evaluation periods = 2 with a 5-minute period, the metric must exceed the threshold for 2 consecutive 5-minute windows (10 minutes total) before the alarm enters ALARM state.</p>
+
+            <p><strong>Why we need it:</strong> Brief spikes shouldn't trigger alarms - they're normal in most systems. Evaluation periods prevent false alarms by requiring sustained threshold breaches. If CPU spikes to 90% for 1 minute then drops to 30%, you don't want to scale up. But if it stays above 70% for 10 minutes straight, that's a real issue requiring action.</p>
+
+            <p><strong>Key details:</strong> Evaluation periods work with datapoints-to-alarm to create flexible alarm conditions. For example: "3 out of 5" means 3 periods must breach within a 5-period window - they don't have to be consecutive. This is more forgiving than requiring 3 consecutive periods. The default is all periods must breach (3 out of 3).</p>
+
+            <p><strong>Common gotcha:</strong> Too few evaluation periods (like 1) cause alarm thrashing - constant switching between OK and ALARM from normal fluctuations. Too many (like 10) make alarms slow to respond - by the time the alarm triggers, your app might already be down. A good starting point is 2-3 evaluation periods for most alarms.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is SNS and how does it work for notifications?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> SNS (Simple Notification Service) is a pub/sub messaging service. You create a "topic" (like "critical-alerts"), subscribe endpoints to it (email addresses, phone numbers, Lambda functions, etc.), and publish messages to the topic. All subscribers receive the message. CloudWatch alarms can publish to SNS topics when they trigger.</p>
+
+            <p><strong>Why we need it:</strong> CloudWatch alarms need a way to notify humans or trigger automated responses. SNS decouples alarms from notification destinations - one alarm can notify multiple people via different channels. Change your email? Update the SNS subscription, not every alarm. Add Slack notifications? Subscribe a Lambda function to the SNS topic that posts to Slack.</p>
+
+            <p><strong>Key details:</strong> SNS supports multiple protocols: email, SMS, HTTP/HTTPS webhooks, Lambda functions, SQS queues, mobile push notifications. Email subscriptions require confirmation (click a link in the confirmation email). SNS is cheap - $0.50 per million requests, plus delivery costs ($0.75 per 100 SMS in the US, email is free).</p>
+
+            <p><strong>Common gotcha:</strong> If you subscribe an email to SNS but don't confirm the subscription, you won't receive notifications - check spam folders for the confirmation email. Also, SNS doesn't guarantee ordered delivery or exactly-once delivery - messages might arrive out of order or duplicate. For critical alerts, use multiple notification channels for redundancy.</p>
+          </div>
+        </div>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">CloudWatch</span></div><code class="language-bash"># Create alarm for high CPU
+aws cloudwatch put-metric-alarm \
+  --alarm-name high-cpu-alarm \
+  --alarm-description "Alert when CPU is high" \
+  --metric-name CPUUtilization \
+  --namespace AWS/EC2 \
+  --statistic Average \
+  --period 300 \
+  --threshold 70 \
+  --comparison-operator GreaterThanThreshold \
+  --evaluation-periods 2
+
+# Check alarms
+aws cloudwatch describe-alarms</code></pre>
+
+        <h3>Step 18: View Metrics</h3>
+        <ol>
+          <li>Go to CloudWatch console</li>
+          <li>Click "Metrics" → "All metrics"</li>
+          <li>Choose EC2 → Per-Instance Metrics</li>
+          <li>Select your instances and view:
+            <ul>
+              <li>CPUUtilization</li>
+              <li>NetworkIn/Out</li>
+              <li>DiskRead/WriteBytes</li>
+            </ul>
+          </li>
+        </ol>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Challenges (Optional)</h2>
+
+        <h3>Easy</h3>
+        <ul>
+          <li>Add HTTPS support with a certificate</li>
+          <li>Create a custom CloudWatch dashboard</li>
+          <li>Add more endpoints to your app</li>
+        </ul>
+
+        <h3>Medium</h3>
+        <ul>
+          <li>Set up CloudWatch Logs for application logs</li>
+          <li>Create SNS topic for alarm notifications</li>
+          <li>Add health check endpoint that checks database connectivity</li>
+        </ul>
+
+        <h3>Hard</h3>
+        <ul>
+          <li>Deploy to multiple availability zones</li>
+          <li>Set up Blue/Green deployment</li>
+          <li>Create custom metrics from your application</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Cleanup (IMPORTANT!)</h2>
+        <p><strong>These resources cost money!</strong> Clean up when done:</p>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Why does cleanup order matter?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> AWS resources have dependencies - some resources can't be deleted while others are using them. For example, you can't delete a security group that's attached to running instances, or delete a load balancer that's referenced by an Auto Scaling Group. Cleanup order is the sequence you must follow to successfully delete everything.</p>
+
+            <p><strong>Why we need it:</strong> Deleting in the wrong order causes errors and leaves orphaned resources that continue charging you. If you try to delete a VPC before deleting instances inside it, the deletion fails but you don't know what's blocking it. Following the correct order - delete dependents first, then dependencies - ensures clean removal and prevents surprise bills.</p>
+
+            <p><strong>Key details:</strong> The general rule: delete from top to bottom of the stack. For EC2 infrastructure: (1) Delete Auto Scaling Groups (stops launching new instances), (2) Wait for instances to terminate, (3) Delete load balancers, (4) Delete target groups, (5) Delete remaining instances, (6) Delete launch templates/AMIs, (7) Delete security groups, (8) Delete subnets/VPC if custom. Always wait for async deletions to complete before proceeding.</p>
+
+            <p><strong>Common gotcha:</strong> Some deletions are async - the API returns success immediately but deletion happens in the background. If you immediately try to delete a dependency, it fails because the dependent resource still exists. Always add sleep/wait commands between steps. Also, forgetting to delete one resource (like a NAT gateway or Elastic IP) can prevent VPC deletion and keep charging you indefinitely.</p>
+          </div>
+        </div>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">ALB</span><span class="code-service-badge">EC2</span></div><code class="language-bash"># Delete Auto Scaling Group
+aws autoscaling delete-auto-scaling-group \
+  --auto-scaling-group-name web-app-asg \
+  --force-delete
+
+# Wait for instances to terminate
+sleep 60
+
+# Delete load balancer
+aws elbv2 delete-load-balancer --load-balancer-arn $ALB_ARN
+
+# Wait for ALB to delete
+sleep 120
+
+# Delete target group
+aws elbv2 delete-target-group --target-group-arn $TG_ARN
+
+# Terminate original instance
+aws ec2 terminate-instances --instance-ids $INSTANCE_ID
+
+# Delete launch template
+aws ec2 delete-launch-template --launch-template-name web-app-template
+
+# Deregister AMI
+aws ec2 deregister-image --image-id $MY_AMI
+
+# Delete security group (wait until all instances terminated)
+sleep 60
+aws ec2 delete-security-group --group-id $SG_ID
+
+# Delete key pair
+aws ec2 delete-key-pair --key-name my-aws-key
+rm ~/.ssh/my-aws-key.pem</code></pre>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>What You Learned</h2>
+        <ul>
+          <li>Launched and configured EC2 instances</li>
+          <li>Understood VPC, subnets, security groups</li>
+          <li>Deployed application to EC2</li>
+          <li>Created Application Load Balancer</li>
+          <li>Set up Auto Scaling for high availability</li>
+          <li>Monitored with CloudWatch</li>
+          <li>Created AMIs for reproducible deployments</li>
+          <li>Managed infrastructure via CLI</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Next Steps</h2>
+        <p>Ready for <strong>Lesson 3: Servers Are So 2010</strong> where you'll build the same thing... but serverless! No servers to manage, automatic scaling, and way cheaper.</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-02-6.html" class="btn btn-secondary">← Previous: Auto Scaling</a>
+          <a href="lesson-03.html" class="btn btn-success">Complete! Next Lesson →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-06-3.html
+lessonNumber: 6
+lessonTitle: "Data Pipelines"
+duration: "~7 hours"
+cost: "$3-4"
+stepNumber: 3
+totalSteps: 6
+progress: 50
+title: "Lesson 6: ElastiCache Redis - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-06.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Set Up Networking (VPC)</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">RDS PostgreSQL Database</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-06-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">ElastiCache Redis</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">S3 Bucket for Data Upload</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Lambda Data Processor</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Query API with Caching</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 6 - Part 3</span>
+        <h1>ElastiCache Redis</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 3: ElastiCache Redis (1 hour)</h2>
+
+        <h3>Step 8: Create Redis Subnet Group</h3>
+        <pre><code class="language-bash"># Create subnet group for Redis
+aws elasticache create-cache-subnet-group \
+  --cache-subnet-group-name data-pipeline-redis-subnet \
+  --cache-subnet-group-description "Subnet group for data pipeline Redis" \
+  --subnet-ids $SUBNET_1 $SUBNET_2</code></pre>
+
+        <h3>Step 9: Create Redis Cluster</h3>
+        <pre><code class="language-bash"># Create Redis cluster
+aws elasticache create-cache-cluster \
+  --cache-cluster-id data-pipeline-redis \
+  --cache-node-type cache.t3.micro \
+  --engine redis \
+  --engine-version 7.0 \
+  --num-cache-nodes 1 \
+  --cache-subnet-group-name data-pipeline-redis-subnet \
+  --security-group-ids $REDIS_SG
+
+# Wait for cluster to be available (takes 3-5 minutes)
+echo "Waiting for Redis cluster to be available..."
+aws elasticache wait cache-cluster-available --cache-cluster-id data-pipeline-redis
+
+# Get endpoint
+export REDIS_ENDPOINT=$(aws elasticache describe-cache-clusters \
+  --cache-cluster-id data-pipeline-redis \
+  --show-cache-node-info \
+  --query "CacheClusters[0].CacheNodes[0].Endpoint.Address" \
+  --output text)
+
+echo "Redis Endpoint: $REDIS_ENDPOINT"</code></pre>
+
+        <p><strong>What just happened?</strong></p>
+        <ul>
+          <li>Created a managed Redis cache cluster in ElastiCache</li>
+          <li>Configured it to be accessible from our Lambda functions</li>
+          <li>Obtained the Redis endpoint for connection</li>
+        </ul>
+
+        <p><strong>Why Redis?</strong></p>
+        <ul>
+          <li><strong>Speed</strong>: In-memory data store, microsecond latency</li>
+          <li><strong>Cache invalidation</strong>: Easy to clear when data updates</li>
+          <li><strong>TTL support</strong>: Automatic expiration of old data</li>
+          <li><strong>Simple data structures</strong>: Perfect for caching query results</li>
+        </ul>
+
+        <p><strong>Pro tip</strong>: Redis is great for caching expensive database queries. Cache hits can reduce RDS load by 90%+ and speed up responses by 10-100x!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-06-2.html" class="btn btn-secondary">← Previous: RDS PostgreSQL</a>
+          <a href="lesson-06-4.html" class="btn btn-primary">Next: S3 Bucket for Data Upload →</a>
+        </div>
+      </div>

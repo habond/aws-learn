@@ -1,0 +1,17 @@
+{
+  "Source": "order.service",
+  "DetailType": "Order Placed",
+  "Detail": {
+    "orderId": "ORD-001",
+    "customer": "Jane Doe",
+    "amount": 149.99,
+    "items": [
+      {
+        "product": "Widget",
+        "quantity": 2
+      }
+    ],
+    "timestamp": "2024-01-15T10:30:00Z"
+  },
+  "EventBusName": "order-event-bus"
+}

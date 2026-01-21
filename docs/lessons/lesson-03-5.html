@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 3: Monitoring &amp; Cleanup - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 3</h2>
+        <div class="lesson-title">Servers Are So 2010 (Go Serverless!)</div>
+        <div class="lesson-meta">
+          <span>~6 hours</span>
+          <span>~$0.50</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 100%;"></div>
+      </div>
+      <div class="progress-text">Step 5 of 5</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-03.html">
+<span class="step-number">1</span>
+<span class="step-title">DynamoDB Database</span>
+</a>
+</li>
+<li>
+<a href="lesson-03-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Lambda Functions</span>
+</a>
+</li>
+<li>
+<a href="lesson-03-3.html">
+<span class="step-number">3</span>
+<span class="step-title">API Gateway</span>
+</a>
+</li>
+<li>
+<a href="lesson-03-4.html">
+<span class="step-number">4</span>
+<span class="step-title">Test Your API</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-03-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Monitoring &amp; Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li class="current">
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 3 - Part 5</span>
+        <h1>Monitoring &amp; Debugging</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 5: Monitoring &amp; Debugging (1 hour)</h2>
+
+        <h3>Step 15: View CloudWatch Logs</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Log Groups - How Are They Organized?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A log group is a container for log streams with the same retention, permissions, and monitoring settings. Lambda automatically creates log groups named /aws/lambda/[function-name]. Each function invocation writes to a separate log stream within that group.</p>
+
+            <p><strong>Why we need it:</strong> Log groups organize related logs together and apply consistent settings. You set retention (how long to keep logs) once per group. IAM permissions, metric filters, and subscriptions work at the log group level, simplifying management.</p>
+
+            <p><strong>Key details:</strong> Log streams within a group represent individual execution contexts (like Lambda container instances). Streams are created automatically and named with timestamps or container IDs. You can search across all streams in a group simultaneously.</p>
+
+            <p><strong>Common gotcha:</strong> Log groups persist even after deleting Lambda functions - they don't auto-delete. This can accumulate storage costs over time. Always delete log groups when removing functions. Also, default retention is "Never expire" - set it to 7-30 days to control costs.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>logs tail --follow - Real-Time Logs?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The "tail --follow" command streams new log entries in real-time, similar to "tail -f" on Unix systems. As your Lambda executes, log lines appear immediately in your terminal. It's perfect for debugging and watching functions process requests live.</p>
+
+            <p><strong>Why we need it:</strong> Without real-time logs, you'd need to invoke the function, wait, refresh the console, and search for your logs. "tail --follow" eliminates this loop - you see output instantly as it happens, making debugging much faster.</p>
+
+            <p><strong>Key details:</strong> The command polls CloudWatch every second for new entries. It shows logs from all streams in the log group, merging them chronologically. Press Ctrl+C to stop. You can filter by time range or search pattern.</p>
+
+            <p><strong>Common gotcha:</strong> Logs appear with 1-2 second delay due to CloudWatch ingestion. If you don't see logs, check that your Lambda has AWSLambdaBasicExecutionRole attached. Also, tail shows only NEW logs - existing logs require "aws logs filter-log-events" command.</p>
+          </div>
+        </div>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">CloudWatch Logs</span></div><code class="language-bash"># List log groups
+aws logs describe-log-groups \
+  --log-group-name-prefix /aws/lambda/url-
+
+# Get logs for shorten function
+aws logs tail /aws/lambda/url-shorten --follow
+
+# Or view in console
+# CloudWatch → Log groups → /aws/lambda/url-shorten</code></pre>
+
+        <h3>Step 16: Check Lambda Metrics</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">CloudWatch</span></div><code class="language-bash"># Get invocation count
+aws cloudwatch get-metric-statistics \
+  --namespace AWS/Lambda \
+  --metric-name Invocations \
+  --dimensions Name=FunctionName,Value=url-shorten \
+  --start-time $(date -u -v-1H +%Y-%m-%dT%H:%M:%S) \
+  --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+  --period 3600 \
+  --statistics Sum
+
+# View in console: Lambda → Functions → url-shorten → Monitoring</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>CloudWatch Logs vs Metrics - What's the Difference?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Logs are detailed text records of events (like console.log() output, errors, requests). Metrics are numerical data points over time (like invocation count, duration, errors). Logs answer "what happened exactly?"; metrics answer "how much/how often?"</p>
+
+            <p><strong>Why we need it:</strong> Logs are for debugging specific issues - you search for error messages or trace execution flow. Metrics are for monitoring overall health - you graph request rates, set alarms on error thresholds, track trends. Different tools for different purposes.</p>
+
+            <p><strong>Key details:</strong> Logs cost more to store and query. Metrics are cheaper and faster for dashboards and alarms. Lambda automatically publishes metrics (invocations, duration, errors). You extract custom metrics from logs using metric filters, or publish them with PutMetricData.</p>
+
+            <p><strong>Common gotcha:</strong> Beginners try to use logs for monitoring (querying logs for error counts). This is expensive and slow. Use metrics for monitoring/alerting; use logs only when investigating specific failures. Also, metrics have 1-minute granularity minimum; logs are real-time.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>get-metric-statistics - What's It For?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> This command retrieves metric data from CloudWatch for a specific time range. You specify the metric (Invocations, Errors, Duration), time range, period (granularity like 60 seconds), and statistic (Sum, Average, Max). It returns numerical time-series data.</p>
+
+            <p><strong>Why we need it:</strong> The AWS console has graphs, but CLI access lets you script monitoring, generate reports, or feed data into custom dashboards. You can programmatically check if error rates spiked or if performance degraded over time.</p>
+
+            <p><strong>Key details:</strong> --namespace groups metrics (AWS/Lambda for Lambda metrics). --dimensions filters to specific resources (FunctionName=url-shorten). Statistics include Sum (total count), Average (mean value), Max/Min (extremes). Period must be multiple of 60 seconds.</p>
+
+            <p><strong>Common gotcha:</strong> Metrics have eventual consistency - recent data (last 2-3 minutes) might be incomplete. For real-time monitoring, use CloudWatch Live Tail. Also, free tier metrics have 5-minute granularity; 1-minute costs extra (but Lambda provides 1-minute free).</p>
+          </div>
+        </div>
+
+        <h3>Step 17: Enable X-Ray Tracing (Optional)</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">Lambda</span></div><code class="language-bash"># Enable tracing on all functions
+for func in url-shorten url-redirect url-stats; do
+  aws lambda update-function-configuration \
+    --function-name $func \
+    --tracing-config Mode=Active
+done
+
+# View traces in X-Ray console after making requests</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>X-Ray - What is Distributed Tracing?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> X-Ray traces requests as they flow through your distributed system - from API Gateway to Lambda to DynamoDB and back. It creates a visual service map showing how components interact and where time is spent. Each request gets a trace ID that follows it through all services.</p>
+
+            <p><strong>Why we need it:</strong> CloudWatch Logs show individual service logs, but don't connect them. X-Ray shows the complete request journey - which Lambda called which DynamoDB table, how long each step took, where errors occurred. Essential for debugging complex serverless architectures.</p>
+
+            <p><strong>Key details:</strong> X-Ray adds trace headers to requests automatically. Lambda and other AWS services send trace data to X-Ray. You get service maps, latency distributions, and error tracking. Drill down into individual traces to see exact timing and errors for one request.</p>
+
+            <p><strong>Common gotcha:</strong> X-Ray costs money - free tier covers 100K traces/month, then $5 per million. For high-traffic apps, costs add up. Use sampling (trace 1% of requests) to reduce costs. Also, X-Ray requires IAM permissions - add AWSXRayDaemonWriteAccess to Lambda role.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Tracing Mode: Active vs PassThrough?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Active mode means Lambda starts a new trace for every request, even if the caller didn't provide a trace ID. PassThrough only traces requests that already have X-Ray headers - if API Gateway doesn't send trace headers, PassThrough won't trace anything.</p>
+
+            <p><strong>Why we need it:</strong> Active ensures all requests are traced, giving complete visibility. PassThrough respects caller's tracing decisions - useful when the caller controls tracing policy (like API Gateway with X-Ray enabled). Active is simpler and recommended for most use cases.</p>
+
+            <p><strong>Key details:</strong> Active mode has slightly higher overhead (microseconds) because it generates trace IDs. In PassThrough, if no parent trace exists, the request isn't traced - you lose visibility. Most people use Active to ensure nothing is missed.</p>
+
+            <p><strong>Common gotcha:</strong> Using PassThrough with API Gateway that doesn't have X-Ray enabled means zero traces - you wonder why X-Ray shows nothing. Always use Active mode unless you have a specific reason for PassThrough. Also, tracing adds minimal latency but does consume memory.</p>
+          </div>
+        </div>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Cleanup (IMPORTANT!)</h2>
+        <pre><div class="code-block-badges"><span class="code-service-badge">API Gateway</span><span class="code-service-badge">DynamoDB</span><span class="code-service-badge">IAM</span><span class="code-service-badge">Lambda</span></div><code class="language-bash"># Delete API Gateway
+aws apigateway delete-rest-api --rest-api-id $API_ID
+
+# Delete Lambda functions
+for func in url-shorten url-redirect url-stats; do
+  aws lambda delete-function --function-name $func
+done
+
+# Delete DynamoDB table
+aws dynamodb delete-table --table-name url-shortener
+
+# Delete IAM role policies
+aws iam delete-role-policy \
+  --role-name lambda-url-shortener-role \
+  --policy-name DynamoDBAccess
+
+aws iam detach-role-policy \
+  --role-name lambda-url-shortener-role \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+# Delete IAM role
+aws iam delete-role --role-name lambda-url-shortener-role</code></pre>
+
+        <p><strong>Cost if you keep it running</strong>: ~$0 (free tier covers it!)</p>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>What You Learned</h2>
+        <ul>
+          <li>Built serverless REST API with Lambda</li>
+          <li>Created API Gateway endpoints</li>
+          <li>Stored data in DynamoDB NoSQL database</li>
+          <li>Managed Lambda permissions with IAM roles</li>
+          <li>Debugged with CloudWatch Logs</li>
+          <li>Understood serverless architecture patterns</li>
+          <li>No servers to manage!</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Serverless vs Servers: When to Use What</h2>
+
+        <h3>Use Serverless (Lambda) when:</h3>
+        <ul>
+          <li>Unpredictable or spiky traffic</li>
+          <li>Want to minimize operational overhead</li>
+          <li>Event-driven workloads</li>
+          <li>Short-running tasks (&lt; 15 minutes)</li>
+          <li>Cost optimization for low traffic</li>
+        </ul>
+
+        <h3>Use Servers (EC2) when:</h3>
+        <ul>
+          <li>Predictable, steady traffic</li>
+          <li>Long-running processes</li>
+          <li>Need specific OS/kernel features</li>
+          <li>Legacy applications</li>
+          <li>Very high, sustained traffic (cheaper at scale)</li>
+        </ul>
+
+        <p><strong>Best practice</strong>: Start serverless, move to servers only if needed!</p>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Next Steps</h2>
+        <p>Head to <strong>Lesson 4: Automate All The Things</strong> to recreate this ENTIRE lesson with Infrastructure as Code using Terraform. No more manual clicking or CLI commands - define everything in code!</p>
+
+        <p>You'll learn why "clicking around the console" is not how pros do it.</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-03-4.html" class="btn btn-secondary">← Previous: Test Your API</a>
+          <a href="lesson-04.html" class="btn btn-success">Complete! Next Lesson →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-09-3.html
+lessonNumber: 9
+lessonTitle: "AI/ML Buzzwords (Get Your MBA!)"
+duration: "~6 hours"
+cost: "$5-10"
+stepNumber: 3
+totalSteps: 3
+progress: 100
+title: "Lesson 9: Additional AI Services - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-09.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Image Analysis with Rekognition</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-09-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Text Analysis with Bedrock</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-09-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">Additional AI Services</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 9 - Part 3</span>
+        <h1>Additional AI Services</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 3: Additional AI Services (1 hour)</h2>
+
+        <h3>Step 12: Test Comprehend (NLP)</h3>
+        <pre><code class="language-bash"># Detect sentiment
+aws comprehend detect-sentiment \
+  --text "I love this service! It's amazing!" \
+  --language-code en
+
+# Detect entities
+aws comprehend detect-entities \
+  --text "Amazon Web Services is based in Seattle, Washington" \
+  --language-code en
+
+# Detect key phrases
+aws comprehend detect-key-phrases \
+  --text "AWS provides many AI and ML services for developers" \
+  --language-code en</code></pre>
+
+        <h3>Step 13: Test Translate</h3>
+        <pre><code class="language-bash"># Translate to Spanish
+aws translate translate-text \
+  --text "Hello, how are you?" \
+  --source-language-code en \
+  --target-language-code es
+
+# Translate to French
+aws translate translate-text \
+  --text "AWS is awesome for machine learning" \
+  --source-language-code en \
+  --target-language-code fr</code></pre>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Challenges (Optional)</h2>
+
+        <h3>Easy</h3>
+        <ul>
+          <li>Add more Rekognition features (celebrity detection)</li>
+          <li>Create dashboard showing analysis results</li>
+          <li>Add email notifications for flagged content</li>
+        </ul>
+
+        <h3>Medium</h3>
+        <ul>
+          <li>Build custom image classification model with SageMaker</li>
+          <li>Add multi-language support with Translate</li>
+          <li>Create moderation workflow with human review</li>
+          <li>Implement custom vocabulary for Comprehend</li>
+        </ul>
+
+        <h3>Hard</h3>
+        <ul>
+          <li>Train custom Rekognition model</li>
+          <li>Build recommendation engine</li>
+          <li>Implement fine-tuned Bedrock model</li>
+          <li>Create A/B testing for different AI models</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Troubleshooting</h2>
+
+        <h3>Bedrock access denied?</h3>
+        <ul>
+          <li>Request model access in console</li>
+          <li>Wait for approval (can take minutes to hours)</li>
+          <li>Check region (not all regions support all models)</li>
+        </ul>
+
+        <h3>Rekognition errors?</h3>
+        <ul>
+          <li>Verify image is in S3</li>
+          <li>Check IAM permissions</li>
+          <li>Ensure image format is supported (JPEG, PNG)</li>
+        </ul>
+
+        <h3>High costs?</h3>
+        <ul>
+          <li>Bedrock charges per token</li>
+          <li>Rekognition charges per image</li>
+          <li>Monitor usage in Cost Explorer</li>
+          <li>Set billing alerts!</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Cleanup</h2>
+        <pre><code class="language-bash"># Delete API
+aws apigatewayv2 delete-api --api-id $API_ID
+
+# Delete Lambda functions
+aws lambda delete-function --function-name image-content-analyzer
+aws lambda delete-function --function-name text-content-analyzer
+
+# Delete DynamoDB tables
+aws dynamodb delete-table --table-name content-analysis
+aws dynamodb delete-table --table-name text-analysis
+
+# Empty and delete S3 bucket
+aws s3 rm s3://$IMAGE_BUCKET --recursive
+aws s3 rb s3://$IMAGE_BUCKET</code></pre>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>What You Learned</h2>
+        <ul>
+          <li>Analyzed images with Rekognition</li>
+          <li>Used foundation models with Bedrock</li>
+          <li>Processed natural language with Comprehend</li>
+          <li>Translated text with Translate</li>
+          <li>Built AI-powered applications</li>
+          <li>Understood prompt engineering</li>
+          <li>Integrated multiple AI services</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>AI/ML Services Comparison</h2>
+
+        <h3>Use Rekognition when:</h3>
+        <ul>
+          <li>Computer vision tasks</li>
+          <li>Pre-trained models sufficient</li>
+          <li>Quick implementation needed</li>
+        </ul>
+
+        <h3>Use Bedrock when:</h3>
+        <ul>
+          <li>Need latest LLMs</li>
+          <li>Complex text understanding</li>
+          <li>Conversational AI</li>
+        </ul>
+
+        <h3>Use SageMaker when:</h3>
+        <ul>
+          <li>Custom model training</li>
+          <li>Full ML workflow control</li>
+          <li>Advanced ML engineering</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Next Steps</h2>
+        <p>Head to <a href="lesson-10.html">Lesson 10: Observability</a> to learn advanced monitoring, tracing, and debugging with CloudWatch, X-Ray, and Grafana!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-09-2.html" class="btn btn-secondary">← Previous: Text Analysis with Bedrock</a>
+          <a href="lesson-10.html" class="btn btn-primary">Next Lesson: Observability →</a>
+        </div>
+      </div>

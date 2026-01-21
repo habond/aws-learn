@@ -1,0 +1,147 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-10-3.html
+lessonNumber: 10
+lessonTitle: "Observability - Know What's Happening"
+duration: "~6 hours"
+cost: "$2-3"
+stepNumber: 3
+totalSteps: 6
+progress: 50
+title: "Lesson 10: CloudWatch Alarms - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-10.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Advanced CloudWatch Metrics</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-10-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">CloudWatch Logs Insights</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-10-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">CloudWatch Alarms</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-10-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">X-Ray Distributed Tracing</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-10-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">CloudWatch Synthetics</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-10-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Container Insights + Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 10 - Part 3</span>
+        <h1>CloudWatch Alarms</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 3: CloudWatch Alarms (45 minutes)</h2>
+
+        <h3>Step 4: Create Alarms for Key Metrics</h3>
+
+        <pre><code class="language-bash"># Create SNS topic for alerts
+aws sns create-topic --name monitoring-alerts
+
+export ALERT_TOPIC_ARN=$(aws sns list-topics \
+  --query "Topics[?contains(TopicArn, 'monitoring-alerts')].TopicArn" \
+  --output text)
+
+# Subscribe email
+aws sns subscribe \
+  --topic-arn $ALERT_TOPIC_ARN \
+  --protocol email \
+  --notification-endpoint your-email@example.com
+
+# Confirm subscription in email!
+
+# Create alarm for high error rate
+aws cloudwatch put-metric-alarm \
+  --alarm-name high-error-rate \
+  --alarm-description "Alert when error rate is high" \
+  --metric-name Errors \
+  --namespace CustomApp \
+  --statistic Sum \
+  --period 60 \
+  --evaluation-periods 2 \
+  --threshold 5 \
+  --comparison-operator GreaterThanThreshold \
+  --alarm-actions $ALERT_TOPIC_ARN
+
+# Create alarm for slow requests
+aws cloudwatch put-metric-alarm \
+  --alarm-name slow-requests \
+  --alarm-description "Alert when requests are slow" \
+  --metric-name RequestDuration \
+  --namespace CustomApp \
+  --statistic Average \
+  --period 300 \
+  --evaluation-periods 2 \
+  --threshold 1000 \
+  --comparison-operator GreaterThanThreshold \
+  --alarm-actions $ALERT_TOPIC_ARN
+
+# Create alarm for low order count (possible issue)
+aws cloudwatch put-metric-alarm \
+  --alarm-name low-order-count \
+  --alarm-description "Alert when no orders in 15 minutes" \
+  --metric-name OrderCount \
+  --namespace CustomApp \
+  --statistic Sum \
+  --period 900 \
+  --evaluation-periods 1 \
+  --threshold 1 \
+  --comparison-operator LessThanThreshold \
+  --alarm-actions $ALERT_TOPIC_ARN \
+  --treat-missing-data notBreaching</code></pre>
+
+        <h3>Step 5: Test Alarms</h3>
+
+        <pre><code class="language-bash"># Generate errors to trigger alarm
+for i in {1..10}; do
+  curl http://localhost:3000/flaky || true
+  sleep 1
+done
+
+# Check alarm state
+aws cloudwatch describe-alarms --alarm-names high-error-rate
+
+# Check your email for alert!</code></pre>
+
+        <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
+          <strong>Important:</strong> Remember to confirm your SNS email subscription before testing alarms, or you won't receive notifications!
+        </div>
+
+        <h3>Understanding Alarm States</h3>
+        <ul>
+          <li><strong>OK</strong>: Metric is within the defined threshold</li>
+          <li><strong>ALARM</strong>: Metric has breached the threshold</li>
+          <li><strong>INSUFFICIENT_DATA</strong>: Not enough data to evaluate</li>
+        </ul>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-10-2.html" class="btn btn-secondary">← Previous: CloudWatch Logs Insights</a>
+          <a href="lesson-10-4.html" class="btn btn-primary">Next: X-Ray Distributed Tracing →</a>
+        </div>
+      </div>

@@ -1,0 +1,224 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-03-4.html
+lessonNumber: 3
+lessonTitle: "Servers Are So 2010 (Go Serverless!)"
+duration: "~6 hours"
+cost: "~$0.50"
+stepNumber: 4
+totalSteps: 5
+progress: 80
+title: "Lesson 3: Test Your API - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-03.html">
+  <span class="step-number">1</span>
+  <span class="step-title">DynamoDB Database</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-03-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Lambda Functions</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-03-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">API Gateway</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-03-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">Test Your API</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-03-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Monitoring &amp; Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 3 - Part 4</span>
+        <h1>Test Your API</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 4: Test Your API (30 minutes)</h2>
+
+        <h3>Step 14: Test All Endpoints</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>curl -X POST - What Do These Flags Mean?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> curl is a command-line tool for making HTTP requests. -X POST specifies the HTTP method (POST instead of default GET). -H sets headers like "Content-Type: application/json". -d sends the request body data.</p>
+
+            <p><strong>Why we need it:</strong> APIs need specific HTTP methods, headers, and data formats to work correctly. curl lets you craft precise requests from the terminal without writing code. It's the universal tool for testing APIs - works everywhere and supports all HTTP features.</p>
+
+            <p><strong>Key details:</strong> -X sets method (GET/POST/PUT/DELETE). -H adds headers (can use multiple times). -d sends data and automatically sets Content-Type to application/x-www-form-urlencoded unless you override. Single quotes preserve JSON special characters.</p>
+
+            <p><strong>Common gotcha:</strong> Forgetting Content-Type header makes APIs reject JSON data. Use -H "Content-Type: application/json" with -d. Also, shell quoting matters - use single quotes for JSON to avoid escaping issues. Windows cmd requires different quoting than bash.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>curl -I - Headers Only?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The -I flag (or --head) makes curl fetch only HTTP headers, not the response body. It sends a HEAD request (or converts GET to HEAD). Useful for checking status codes, redirects, or headers without downloading full content.</p>
+
+            <p><strong>Why we need it:</strong> Testing redirects (301/302) doesn't require the body - you just want to see the Location header and status code. For large responses, headers-only is faster. It's perfect for checking if resources exist (200 vs 404) without transferring data.</p>
+
+            <p><strong>Key details:</strong> HEAD requests are like GET but return only headers. The response body is discarded. Some servers treat HEAD differently than GET - usually they're identical except for body. HTTP status codes and all headers are returned.</p>
+
+            <p><strong>Common gotcha:</strong> Some APIs don't implement HEAD properly and return 405 Method Not Allowed. In that case, use regular GET and pipe to head command to see just headers. Also, -I changes GET to HEAD, which might give different results than actual GET.</p>
+          </div>
+        </div>
+
+        <pre><code class="language-bash"># Create a short URL
+curl -X POST $API_ENDPOINT/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://aws.amazon.com"}'
+
+# Response: {"shortCode":"abc123","shortUrl":"...","originalUrl":"..."}
+
+# Test redirect (use the shortCode from above)
+curl -I $API_ENDPOINT/abc123
+
+# Check stats
+curl $API_ENDPOINT/stats/abc123
+
+# Create custom short code
+curl -X POST $API_ENDPOINT/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://github.com", "customCode": "github"}'
+
+# Test custom code
+curl -I $API_ENDPOINT/github</code></pre>
+
+        <p><strong>Everything working?</strong> You just built a serverless API!</p>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Troubleshooting</h2>
+
+        <h4>Lambda function not executing?</h4>
+        <ul>
+          <li>Check IAM role has correct permissions</li>
+          <li>View CloudWatch Logs for errors</li>
+          <li>Test function directly with <code>aws lambda invoke</code></li>
+        </ul>
+
+        <h4>API Gateway returning 502?</h4>
+        <ul>
+          <li>Lambda function must return proper response format</li>
+          <li>Check Lambda logs for errors</li>
+          <li>Verify integration is set to <code>AWS_PROXY</code></li>
+        </ul>
+
+        <h4>DynamoDB access denied?</h4>
+        <ul>
+          <li>Check Lambda role has DynamoDB permissions</li>
+          <li>Verify table name matches in code</li>
+          <li>Check region matches</li>
+        </ul>
+
+        <h4>Cold start latency?</h4>
+        <ul>
+          <li>First request to Lambda is slower (cold start)</li>
+          <li>Consider provisioned concurrency for production</li>
+          <li>Optimize function package size</li>
+        </ul>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Cold Start - What Causes It?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A cold start happens when AWS needs to provision a new Lambda container to handle your request. This includes downloading your code, starting the runtime, and initializing your function. It adds 100ms-5+ seconds of latency to the first request.</p>
+
+            <p><strong>Why we need it:</strong> Lambda scales to zero when idle to save money - no requests means no containers running. When a request arrives after idle time, AWS must create a new container (cold start). Subsequent requests to the same container are "warm" and much faster.</p>
+
+            <p><strong>Key details:</strong> Cold starts occur when: (1) first invocation ever, (2) scaling up (traffic exceeds warm containers), (3) after ~15 minutes of inactivity, (4) after code updates. Node.js and Python have faster cold starts (~100-500ms) than Java (~1-5 seconds).</p>
+
+            <p><strong>Common gotcha:</strong> Minimizing cold starts is often premature optimization. Most APIs handle 500ms latency fine. Only optimize if you measure a problem. Reduce package size, remove unused dependencies, and keep functions small. For critical APIs, use provisioned concurrency (but it costs money even when idle).</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Provisioned Concurrency - Eliminating Cold Starts?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Provisioned Concurrency keeps Lambda containers "warm" and ready to serve requests instantly. You specify how many concurrent instances to keep initialized. These containers never cold start - they're always running, even with zero traffic.</p>
+
+            <p><strong>Why we need it:</strong> For latency-critical applications (like real-time APIs or gaming backends), cold starts are unacceptable. Provisioned Concurrency guarantees sub-100ms response times by eliminating initialization delay. It's insurance against cold start latency.</p>
+
+            <p><strong>Key details:</strong> You pay for provisioned capacity continuously, even with zero requests - it's expensive. Set provisioned concurrency to expected baseline traffic; Lambda auto-scales beyond that with regular (cold-startable) containers. Use with Application Auto Scaling to adjust based on traffic patterns.</p>
+
+            <p><strong>Common gotcha:</strong> Provisioned Concurrency costs are HIGH - roughly 2-3x more than on-demand pricing. Only use for proven latency requirements. Most APIs don't need it. Try optimizing package size and warm-up strategies first. Also, it doesn't help if traffic spikes beyond provisioned amount - those still cold start.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>502 Error - Malformed Lambda Response?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A 502 Bad Gateway from API Gateway means your Lambda returned an invalid response format. With AWS_PROXY integration, Lambda must return exactly {statusCode: number, headers: object, body: string}. Anything else causes 502.</p>
+
+            <p><strong>Why we need it:</strong> API Gateway expects a specific response structure to construct the HTTP response. If your Lambda returns a plain object, forgets statusCode, or doesn't stringify the body, API Gateway can't process it and returns 502 to the client.</p>
+
+            <p><strong>Key details:</strong> Common causes: (1) forgetting to return response object, (2) statusCode as string not number, (3) body not JSON.stringify'd, (4) throwing unhandled exceptions. Always check CloudWatch Logs for the actual Lambda error.</p>
+
+            <p><strong>Common gotcha:</strong> 502 errors hide the real problem - check Lambda logs to see what actually happened. Often it's a JavaScript error that crashed the function before it could return a proper response. Always wrap your handler in try-catch to return 500 errors properly instead of 502.</p>
+          </div>
+        </div>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Challenges (Optional)</h2>
+
+        <h3>Easy</h3>
+        <ul>
+          <li>Add a DELETE endpoint to remove short URLs</li>
+          <li>Add expiration time to URLs (TTL in DynamoDB)</li>
+          <li>Add validation for custom short codes (no special chars)</li>
+        </ul>
+
+        <h3>Medium</h3>
+        <ul>
+          <li>Add API key authentication</li>
+          <li>Create a simple frontend (host on S3 from Lesson 1!)</li>
+          <li>Add rate limiting using API Gateway</li>
+          <li>Store click timestamps in DynamoDB for analytics</li>
+        </ul>
+
+        <h3>Hard</h3>
+        <ul>
+          <li>Add custom domains with Route 53</li>
+          <li>Implement QR code generation for short URLs</li>
+          <li>Add global secondary index for querying by original URL</li>
+          <li>Create Lambda function to clean up expired URLs</li>
+        </ul>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-03-3.html" class="btn btn-secondary">← Previous: API Gateway</a>
+          <a href="lesson-03-5.html" class="btn btn-primary">Next: Monitoring &amp; Cleanup →</a>
+        </div>
+      </div>

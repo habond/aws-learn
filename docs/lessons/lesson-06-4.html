@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 6: S3 Bucket for Data Upload - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 6</h2>
+        <div class="lesson-title">Data Pipelines</div>
+        <div class="lesson-meta">
+          <span>~7 hours</span>
+          <span>$3-4</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 66.67%;"></div>
+      </div>
+      <div class="progress-text">Step 4 of 6</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-06.html">
+<span class="step-number">1</span>
+<span class="step-title">Set Up Networking (VPC)</span>
+</a>
+</li>
+<li>
+<a href="lesson-06-2.html">
+<span class="step-number">2</span>
+<span class="step-title">RDS PostgreSQL Database</span>
+</a>
+</li>
+<li>
+<a href="lesson-06-3.html">
+<span class="step-number">3</span>
+<span class="step-title">ElastiCache Redis</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-06-4.html">
+<span class="step-number">4</span>
+<span class="step-title">S3 Bucket for Data Upload</span>
+</a>
+</li>
+<li>
+<a href="lesson-06-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Lambda Data Processor</span>
+</a>
+</li>
+<li>
+<a href="lesson-06-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Query API with Caching</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li class="current">
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 6 - Part 4</span>
+        <h1>S3 Bucket for Data Upload</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 4: S3 Bucket for Data Upload (30 minutes)</h2>
+
+        <h3>Step 10: Create S3 Bucket</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">S3</span><span class="code-service-badge">STS</span></div><code class="language-bash"># Create bucket
+export BUCKET_NAME="data-pipeline-uploads-$(aws sts get-caller-identity --query Account --output text)"
+
+aws s3 mb s3://$BUCKET_NAME
+
+echo "S3 Bucket: $BUCKET_NAME"</code></pre>
+
+        <h3>Step 11: Create Sample CSV Data</h3>
+        <p><strong>Create <code>sample-sales.csv</code>:</strong></p>
+
+        <pre><code>date,product,quantity,revenue,region
+2024-01-01,Widget A,100,1500.00,North
+2024-01-01,Widget B,75,1125.50,South
+2024-01-01,Gadget X,50,2500.00,East
+2024-01-02,Widget A,120,1800.00,North
+2024-01-02,Gadget Y,30,900.00,West
+2024-01-03,Widget B,200,3000.00,South</code></pre>
+
+        <p><strong>What's happening here?</strong></p>
+        <ul>
+          <li>Created an S3 bucket to receive data uploads</li>
+          <li>Prepared sample CSV data to test the pipeline</li>
+          <li>This bucket will be the trigger for our data processing</li>
+        </ul>
+
+        <p><strong>The event-driven pattern</strong>:</p>
+        <ol>
+          <li>User/System uploads CSV to S3</li>
+          <li>S3 sends event notification</li>
+          <li>Lambda automatically processes the file</li>
+          <li>Data lands in RDS, cache gets invalidated</li>
+          <li>No servers to manage, scales automatically!</li>
+        </ol>
+
+        <p><strong>Pro tip</strong>: S3 event notifications are the foundation of serverless data pipelines. They're instant, reliable, and free!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-06-3.html" class="btn btn-secondary">← Previous: ElastiCache Redis</a>
+          <a href="lesson-06-5.html" class="btn btn-primary">Next: Lambda Data Processor →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

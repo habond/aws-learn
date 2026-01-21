@@ -1,0 +1,103 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-06-4.html
+lessonNumber: 6
+lessonTitle: "Data Pipelines"
+duration: "~7 hours"
+cost: "$3-4"
+stepNumber: 4
+totalSteps: 6
+progress: 66.67
+title: "Lesson 6: S3 Bucket for Data Upload - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-06.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Set Up Networking (VPC)</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">RDS PostgreSQL Database</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">ElastiCache Redis</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-06-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">S3 Bucket for Data Upload</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Lambda Data Processor</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Query API with Caching</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 6 - Part 4</span>
+        <h1>S3 Bucket for Data Upload</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 4: S3 Bucket for Data Upload (30 minutes)</h2>
+
+        <h3>Step 10: Create S3 Bucket</h3>
+        <pre><code class="language-bash"># Create bucket
+export BUCKET_NAME="data-pipeline-uploads-$(aws sts get-caller-identity --query Account --output text)"
+
+aws s3 mb s3://$BUCKET_NAME
+
+echo "S3 Bucket: $BUCKET_NAME"</code></pre>
+
+        <h3>Step 11: Create Sample CSV Data</h3>
+        <p><strong>Create <code>sample-sales.csv</code>:</strong></p>
+
+        <pre><code>date,product,quantity,revenue,region
+2024-01-01,Widget A,100,1500.00,North
+2024-01-01,Widget B,75,1125.50,South
+2024-01-01,Gadget X,50,2500.00,East
+2024-01-02,Widget A,120,1800.00,North
+2024-01-02,Gadget Y,30,900.00,West
+2024-01-03,Widget B,200,3000.00,South</code></pre>
+
+        <p><strong>What's happening here?</strong></p>
+        <ul>
+          <li>Created an S3 bucket to receive data uploads</li>
+          <li>Prepared sample CSV data to test the pipeline</li>
+          <li>This bucket will be the trigger for our data processing</li>
+        </ul>
+
+        <p><strong>The event-driven pattern</strong>:</p>
+        <ol>
+          <li>User/System uploads CSV to S3</li>
+          <li>S3 sends event notification</li>
+          <li>Lambda automatically processes the file</li>
+          <li>Data lands in RDS, cache gets invalidated</li>
+          <li>No servers to manage, scales automatically!</li>
+        </ol>
+
+        <p><strong>Pro tip</strong>: S3 event notifications are the foundation of serverless data pipelines. They're instant, reliable, and free!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-06-3.html" class="btn btn-secondary">← Previous: ElastiCache Redis</a>
+          <a href="lesson-06-5.html" class="btn btn-primary">Next: Lambda Data Processor →</a>
+        </div>
+      </div>

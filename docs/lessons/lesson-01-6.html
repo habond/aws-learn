@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 1: CloudWatch Monitoring - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 1</h2>
+        <div class="lesson-title">Your First Internet Empire</div>
+        <div class="lesson-meta">
+          <span>~6 hours</span>
+          <span>$1-2</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 75%;"></div>
+      </div>
+      <div class="progress-text">Step 6 of 8</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-01.html">
+<span class="step-number">1</span>
+<span class="step-title">Overview + AWS Setup</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Build Your Website</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-3.html">
+<span class="step-number">3</span>
+<span class="step-title">S3 Storage</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-4.html">
+<span class="step-number">4</span>
+<span class="step-title">CloudFront CDN</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Custom Domain</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-01-6.html">
+<span class="step-number">6</span>
+<span class="step-title">CloudWatch Monitoring</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Make Updates</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-8.html">
+<span class="step-number">8</span>
+<span class="step-title">CLI Practice + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li class="current">
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 1 - Part 6</span>
+        <h1>CloudWatch - Know What's Happening</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 6: CloudWatch - Know What's Happening (30 minutes)</h2>
+
+        <h3>Step 18: Check CloudFront Metrics</h3>
+        <ol>
+          <li>Go to CloudFront → Your distribution → Monitoring</li>
+          <li>Check out:
+            <ul>
+              <li><strong>Requests</strong>: How many people visited</li>
+              <li><strong>Bytes downloaded</strong>: How much data served</li>
+              <li><strong>Error rate</strong>: Hopefully 0%!</li>
+            </ul>
+          </li>
+        </ol>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Metrics in CloudWatch?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Metrics are time-series data points that measure something over time - like number of requests per minute, bytes transferred per hour, error percentage. CloudWatch collects metrics from AWS services automatically and lets you graph, monitor, and alert on them.</p>
+
+            <p><strong>Why we need it:</strong> "How many people visited my site yesterday?" "Is my site slow right now?" "Did traffic spike after that tweet?" Metrics answer these questions. Without them, you're flying blind - you have no idea if your site is working well or falling apart.</p>
+
+            <p><strong>Key details:</strong> Most AWS services publish basic metrics for free (like CloudFront requests). Metrics have dimensions (filters) - like "all requests" vs "requests for /api/* only". Data is kept for 15 months. You can publish custom metrics from your apps too (costs extra).</p>
+
+            <p><strong>Common gotcha:</strong> Metrics aren't real-time - there's usually 1-5 minute delay. If you refresh your site and check CloudWatch immediately, the data might not be there yet. Also, some metrics require enabling (like detailed S3 metrics) - they're not automatic.</p>
+          </div>
+        </div>
+
+        <h3>Step 19: Enable S3 Metrics</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">S3</span></div><code class="language-bash"># Enable request metrics for your bucket
+aws s3api put-bucket-metrics-configuration \
+  --bucket $BUCKET_NAME \
+  --id EntireBucket \
+  --metrics-configuration Id=EntireBucket</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Request Metrics and why enable them?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Request metrics are detailed S3 statistics about operations on your bucket - how many GET requests, PUT requests, DELETE requests, how much data transferred, latency per request type. They're optional (cost extra) unlike basic storage metrics (free).</p>
+
+            <p><strong>Why we need it:</strong> Basic S3 metrics only show storage size and number of objects. Request metrics show actual usage - are people downloading files? Are there errors? This helps debug problems ("why is my site slow?") and optimize costs ("we're getting charged for 1M requests, where are they coming from?").</p>
+
+            <p><strong>Key details:</strong> Request metrics cost about $0.01 per 1000 metrics requests (cheap for learning, adds up at scale). You can filter to specific prefixes (like /images/*) instead of the entire bucket. Metrics appear in CloudWatch with 1-minute granularity.</p>
+
+            <p><strong>Common gotcha:</strong> Enabling request metrics doesn't retroactively create data - you only get metrics from the time you enable it forward. Also, "EntireBucket" is just an ID we chose - you could name it anything. The ID lets you have multiple metric configurations for different prefixes.</p>
+          </div>
+        </div>
+
+        <h3>Step 20: Create a Dashboard</h3>
+        <ol>
+          <li>Go to CloudWatch → Dashboards → Create dashboard</li>
+          <li>Name it: <code>my-website-dashboard</code></li>
+          <li>Add widgets:
+            <ul>
+              <li>CloudFront requests</li>
+              <li>CloudFront bytes downloaded</li>
+              <li>S3 bucket size</li>
+            </ul>
+          </li>
+          <li>Save dashboard</li>
+        </ol>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Dashboards and Widgets?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A CloudWatch dashboard is a customizable page that displays multiple metrics in one view. Widgets are the individual visualizations (graphs, numbers, logs) that you add to a dashboard. Think of it like a customizable monitoring homepage for your infrastructure.</p>
+
+            <p><strong>Why we need it:</strong> Instead of clicking through 10 different service pages to check your site's health, you create one dashboard with all key metrics. Open it each morning - if everything looks good, you're done. If something's wrong, the graphs show you immediately.</p>
+
+            <p><strong>Key details:</strong> Widgets can show: line graphs (trends over time), number displays (current value), logs (recent errors), alarms (red/green status). You can have multiple dashboards for different purposes (production, staging, cost monitoring). Dashboards can be shared with your team via links.</p>
+
+            <p><strong>Common gotcha:</strong> Dashboards don't auto-refresh by default - you need to manually refresh or set an auto-refresh interval (1min, 5min, etc). Also, dashboards are region-specific - metrics from us-east-1 won't appear on a dashboard in eu-west-1. Create dashboards in the same region as your resources.</p>
+          </div>
+        </div>
+
+        <p><strong>Now you can see your website's stats at a glance!</strong></p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-01-5.html" class="btn btn-secondary">← Previous: Custom Domain</a>
+          <a href="lesson-01-7.html" class="btn btn-primary">Next: Make Updates →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

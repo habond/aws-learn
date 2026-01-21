@@ -1,0 +1,150 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-08-3.html
+lessonNumber: 8
+lessonTitle: "Big Data Analytics"
+duration: "~7 hours"
+cost: "$3-5"
+stepNumber: 3
+totalSteps: 5
+progress: 60
+title: "Lesson 8: AWS Glue (Data Catalog) - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-08.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Overview + Kinesis Data Streams</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-08-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Kinesis Firehose to S3</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-08-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">AWS Glue (Data Catalog)</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-08-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">Athena Queries</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-08-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Real-time Processing with Lambda</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 8 - Part 3</span>
+        <h1>AWS Glue (Data Catalog)</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 3: AWS Glue (Data Catalog) (1.5 hours)</h2>
+
+        <h3>Step 7: Create Glue Database</h3>
+        <pre><code class="language-bash">aws glue create-database \
+  --database-input '{
+    "Name": "sensor_analytics",
+    "Description": "Database for sensor data analytics"
+  }'</code></pre>
+
+        <h3>Step 8: Create Glue Crawler</h3>
+        <pre><code class="language-bash"># Create Glue crawler role
+cat &gt; glue-trust-policy.json &lt;&lt; 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "glue.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+
+aws iam create-role \
+  --role-name glue-crawler-role \
+  --assume-role-policy-document file://glue-trust-policy.json
+
+# Attach AWS managed policy
+aws iam attach-role-policy \
+  --role-name glue-crawler-role \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
+
+# Add S3 access
+cat &gt; glue-s3-policy.json &lt;&lt; EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::$BUCKET_NAME",
+        "arn:aws:s3:::$BUCKET_NAME/*"
+      ]
+    }
+  ]
+}
+EOF
+
+aws iam put-role-policy \
+  --role-name glue-crawler-role \
+  --policy-name GlueS3Access \
+  --policy-document file://glue-s3-policy.json
+
+export GLUE_ROLE_ARN=$(aws iam get-role \
+  --role-name glue-crawler-role \
+  --query 'Role.Arn' \
+  --output text)
+
+# Wait for role
+sleep 10
+
+# Create crawler
+aws glue create-crawler \
+  --name sensor-data-crawler \
+  --role $GLUE_ROLE_ARN \
+  --database-name sensor_analytics \
+  --targets "{\"S3Targets\":[{\"Path\":\"s3://$BUCKET_NAME/sensor-data/\"}]}" \
+  --schema-change-policy '{
+    "UpdateBehavior": "UPDATE_IN_DATABASE",
+    "DeleteBehavior": "LOG"
+  }'
+
+# Run crawler
+aws glue start-crawler --name sensor-data-crawler
+
+# Wait for crawler to complete (takes 1-2 minutes)
+sleep 120
+
+# Check crawler status
+aws glue get-crawler --name sensor-data-crawler
+
+# View tables
+aws glue get-tables --database-name sensor_analytics</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-08-2.html" class="btn btn-secondary">← Previous: Kinesis Firehose to S3</a>
+          <a href="lesson-08-4.html" class="btn btn-primary">Next: Athena Queries →</a>
+        </div>
+      </div>

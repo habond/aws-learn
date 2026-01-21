@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 2: Deploy Application - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 2</h2>
+        <div class="lesson-title">Renting Computers in Someone Else&#39;s Basement</div>
+        <div class="lesson-meta">
+          <span>~8 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 57.2%;"></div>
+      </div>
+      <div class="progress-text">Step 4 of 7</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-02.html">
+<span class="step-number">1</span>
+<span class="step-title">VPC Basics</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-2.html">
+<span class="step-number">2</span>
+<span class="step-title">SSH Key Pair</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-3.html">
+<span class="step-number">3</span>
+<span class="step-title">Launch EC2 Instance</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-02-4.html">
+<span class="step-number">4</span>
+<span class="step-title">Deploy Application</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Load Balancer</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Auto Scaling</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-7.html">
+<span class="step-number">7</span>
+<span class="step-title">CloudWatch + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li class="current">
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 2 - Part 4</span>
+        <h1>Deploy Your Application</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 4: Deploy Your Application (2 hours)</h2>
+
+        <h3>Step 6: Set Up Server</h3>
+        <p><strong>On your EC2 instance</strong> (via SSH):</p>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What's yum and why use -y?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> <code>yum</code> (Yellowdog Updater Modified) is the package manager for Red Hat-based Linux distributions like Amazon Linux and CentOS. It's like an app store for your server - it downloads, installs, and updates software packages.</p>
+
+            <p><strong>Why we need it:</strong> Instead of manually downloading and compiling software, <code>yum</code> handles dependencies, versions, and installation automatically. The <code>-y</code> flag auto-answers "yes" to all prompts, making it non-interactive (essential for scripts).</p>
+
+            <p><strong>Key details:</strong> <code>sudo yum update -y</code> updates all installed packages to their latest versions. <code>sudo yum install -y package-name</code> installs new software. Always use <code>sudo</code> because package management requires root privileges.</p>
+
+            <p><strong>Common gotcha:</strong> Other Linux distributions use different package managers: <code>apt</code> on Ubuntu/Debian, <code>brew</code> on macOS. The commands are similar but not identical.</p>
+          </div>
+        </div>
+
+        <pre><code class="language-bash"># Update system
+sudo yum update -y
+
+# Install Node.js (or Python, your choice)
+sudo yum install -y nodejs npm
+
+# Verify installation
+node --version
+npm --version
+
+# Install git
+sudo yum install -y git
+
+# Create app directory
+mkdir ~/app
+cd ~/app</code></pre>
+
+        <h3>Step 7: Deploy Sample App</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Why create a /health endpoint?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A health check endpoint is a simple URL (like <code>/health</code>) that returns a success response (200 OK) when your application is functioning properly. It's like a heartbeat monitor for your app.</p>
+
+            <p><strong>Why we need it:</strong> Load balancers, monitoring systems, and orchestration platforms regularly check this endpoint to verify your application is alive and healthy. If it fails to respond or returns an error, the system knows something is wrong.</p>
+
+            <p><strong>Key details:</strong> Keep health checks simple and fast - they run every few seconds. Return <code>200 OK</code> if healthy, <code>503 Service Unavailable</code> if unhealthy (like database is down). Don't do expensive operations in health checks.</p>
+
+            <p><strong>Common gotcha:</strong> A health check that only returns "OK" without actually checking dependencies can give false positives. Better health checks verify database connections, required files exist, etc. But balance thoroughness with speed!</p>
+          </div>
+        </div>
+
+        <h4>Option A: Node.js Express App</h4>
+
+        <pre><code class="language-javascript"># Initialize Node app
+npm init -y
+
+# Install Express
+npm install express
+
+# Create app
+cat &gt; index.js &lt;&lt; 'EOF'
+const express = require('express');
+const os = require('os');
+const app = express();
+const PORT = 3000;
+
+app.get('/', (req, res) =&gt; {
+  res.json({
+    message: 'Hello from EC2!',
+    hostname: os.hostname(),
+    platform: os.platform(),
+    uptime: os.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/health', (req, res) =&gt; {
+  res.json({ status: 'healthy' });
+});
+
+app.listen(PORT, '0.0.0.0', () =&gt; {
+  console.log(`Server running on port ${PORT}`);
+});
+EOF
+
+# Run the app
+node index.js</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Why listen on '0.0.0.0' instead of 'localhost'?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> <code>0.0.0.0</code> is a special IP address that means "listen on all network interfaces." In contrast, <code>localhost</code> or <code>127.0.0.1</code> only accepts connections from the same machine.</p>
+
+            <p><strong>Why we need it:</strong> Your EC2 instance has multiple network interfaces - one for internal AWS communication and one for external internet traffic. By binding to <code>0.0.0.0</code>, your app accepts connections from anywhere. If you bind to <code>localhost</code>, only SSH sessions on the same server could reach it.</p>
+
+            <p><strong>Key details:</strong> This doesn't make your app publicly accessible by itself - security groups still control what traffic reaches the instance. <code>0.0.0.0</code> just means "when traffic arrives at this server, accept it on any interface."</p>
+
+            <p><strong>Common gotcha:</strong> Developers often test locally with <code>localhost</code> and forget to change it for deployment. Then they're confused why their app works via SSH but not from the internet!</p>
+          </div>
+        </div>
+
+        <h4>Option B: Python Flask App</h4>
+
+        <pre><code class="language-python"># Install Python and pip
+sudo yum install -y python3 python3-pip
+
+# Install Flask
+pip3 install flask
+
+# Create app
+cat &gt; app.py &lt;&lt; 'EOF'
+from flask import Flask, jsonify
+import socket
+import platform
+from datetime import datetime
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return jsonify({
+        'message': 'Hello from EC2!',
+        'hostname': socket.gethostname(),
+        'platform': platform.system(),
+        'timestamp': datetime.now().isoformat()
+    })
+
+@app.route('/health')
+def health():
+    return jsonify({'status': 'healthy'})
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=3000)
+EOF
+
+# Run the app
+python3 app.py</code></pre>
+
+        <h3>Step 8: Test Your App</h3>
+        <p><strong>From your local machine</strong>:</p>
+
+        <pre><code class="language-bash"># Test the app
+curl http://$PUBLIC_IP:3000
+
+# Should see JSON response with server info!</code></pre>
+
+        <h3>Step 9: Run App as Service (so it doesn't stop when you disconnect)</h3>
+        <p><strong>Back on the EC2 instance</strong>:</p>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What's systemd and why run as a service?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> <code>systemd</code> is Linux's service manager - it controls background programs (called services or daemons). It starts them on boot, restarts them if they crash, manages dependencies, and collects logs. Think of it as a babysitter for your applications.</p>
+
+            <p><strong>Why we need it:</strong> When you run <code>node index.js</code> directly, the app stops when you close your SSH session. A systemd service runs in the background independently, survives reboots, and automatically restarts on crashes. This is how professionals deploy applications.</p>
+
+            <p><strong>Key details:</strong> Service files live in <code>/etc/systemd/system/</code>. After creating or editing a service file, run <code>systemctl daemon-reload</code> to tell systemd to re-read configurations. Then <code>systemctl start</code> to run it now, and <code>systemctl enable</code> to make it start on boot.</p>
+
+            <p><strong>Common gotcha:</strong> Service files need absolute paths (like <code>/usr/bin/node</code>) not relative ones. Find the full path with <code>which node</code>. Also, services run as the specified user - make sure that user has permission to access all required files.</p>
+          </div>
+        </div>
+
+        <pre><code class="language-bash"># Create systemd service file
+sudo tee /etc/systemd/system/webapp.service &gt; /dev/null &lt;&lt; EOF
+[Unit]
+Description=My Web App
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/home/ec2-user/app
+ExecStart=/usr/bin/node /home/ec2-user/app/index.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Understanding the service file sections</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>[Unit] section:</strong> Metadata and dependencies. <code>Description</code> is human-readable text. <code>After=network.target</code> means "wait for network to be ready before starting" - ensures your app doesn't start before it can reach the database or internet.</p>
+
+            <p><strong>[Service] section:</strong> How to run the service. <code>Type=simple</code> = straightforward process that stays running. <code>User=ec2-user</code> = run as this user (NOT root - security!). <code>WorkingDirectory</code> = where to run from. <code>ExecStart</code> = the command to execute. <code>Restart=on-failure</code> = automatically restart if it crashes.</p>
+
+            <p><strong>[Install] section:</strong> When to enable. <code>WantedBy=multi-user.target</code> = start this service when system reaches multi-user mode (normal boot). This is what <code>systemctl enable</code> uses.</p>
+
+            <p><strong>Common gotcha:</strong> If your app needs environment variables, add <code>Environment="KEY=value"</code> lines in [Service]. Or use <code>EnvironmentFile=/path/to/.env</code> to load from a file.</p>
+          </div>
+        </div>
+
+# Reload systemd
+sudo systemctl daemon-reload
+
+# Start service
+sudo systemctl start webapp
+
+# Enable to start on boot
+sudo systemctl enable webapp
+
+# Check status
+sudo systemctl status webapp</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What's the difference between start, enable, and status?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>systemctl start:</strong> Starts the service immediately (right now). The service begins running but won't automatically start after a reboot unless you also enable it.</p>
+
+            <p><strong>systemctl enable:</strong> Configures the service to start automatically on boot. This doesn't start it immediately - just sets it up to start next time the server boots. Usually you want to do both <code>start</code> and <code>enable</code>.</p>
+
+            <p><strong>systemctl status:</strong> Shows the current state: is it running? When did it start? Recent log entries? Exit codes if it crashed? This is your first stop when debugging why a service isn't working.</p>
+
+            <p><strong>Other useful commands:</strong> <code>systemctl stop</code> (stop running service), <code>systemctl restart</code> (stop then start - useful after code updates), <code>systemctl disable</code> (prevent auto-start on boot), <code>journalctl -u webapp -f</code> (follow logs in real-time).</p>
+          </div>
+        </div>
+
+        <p>Now your app runs even when you disconnect! Exit SSH and test again.</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-02-3.html" class="btn btn-secondary">← Previous: Launch EC2 Instance</a>
+          <a href="lesson-02-5.html" class="btn btn-primary">Next: Load Balancer →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

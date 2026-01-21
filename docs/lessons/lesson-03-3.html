@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 3: API Gateway - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 3</h2>
+        <div class="lesson-title">Servers Are So 2010 (Go Serverless!)</div>
+        <div class="lesson-meta">
+          <span>~6 hours</span>
+          <span>~$0.50</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 60%;"></div>
+      </div>
+      <div class="progress-text">Step 3 of 5</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-03.html">
+<span class="step-number">1</span>
+<span class="step-title">DynamoDB Database</span>
+</a>
+</li>
+<li>
+<a href="lesson-03-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Lambda Functions</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-03-3.html">
+<span class="step-number">3</span>
+<span class="step-title">API Gateway</span>
+</a>
+</li>
+<li>
+<a href="lesson-03-4.html">
+<span class="step-number">4</span>
+<span class="step-title">Test Your API</span>
+</a>
+</li>
+<li>
+<a href="lesson-03-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Monitoring &amp; Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li class="current">
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 3 - Part 3</span>
+        <h1>API Gateway</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 3: API Gateway (2 hours)</h2>
+
+        
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>REST API vs HTTP API in AWS?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> AWS offers two types of APIs: REST API (feature-rich, traditional) and HTTP API (simpler, cheaper). REST APIs support API keys, request validation, SDK generation, and caching. HTTP APIs are 71% cheaper but have fewer features.</p>
+
+            <p><strong>Why we need it:</strong> REST APIs are for complex use cases requiring advanced features like custom authorizers, request/response transformation, or API keys. HTTP APIs are perfect for simple Lambda proxies where you just need routing - they're faster and cheaper.</p>
+
+            <p><strong>Key details:</strong> We use REST API here to demonstrate full capabilities. For production, evaluate if you need REST features or if HTTP API suffices. HTTP APIs have lower latency (~30% faster) and simpler configuration but lack some advanced IAM integration.</p>
+
+            <p><strong>Common gotcha:</strong> Beginners create REST APIs by default because they're older and more documented. But HTTP APIs are the modern choice for most serverless apps. Only use REST if you specifically need its unique features - otherwise you're paying more for nothing.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Endpoint Configuration: REGIONAL/EDGE/PRIVATE?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> REGIONAL deploys the API to a specific region (like us-east-1). EDGE uses CloudFront to distribute your API globally for lower latency worldwide. PRIVATE makes the API only accessible from within your VPC.</p>
+
+            <p><strong>Why we need it:</strong> REGIONAL is simplest and cheapest for apps serving one geographic area. EDGE costs more but reduces latency for global users by caching responses at CloudFront edge locations. PRIVATE is for internal APIs that shouldn't be internet-accessible.</p>
+
+            <p><strong>Key details:</strong> Most APIs start REGIONAL and only go EDGE if global latency becomes an issue. EDGE endpoints use CloudFront pricing (data transfer costs). PRIVATE requires VPC endpoints and can't be accessed from the internet at all.</p>
+
+            <p><strong>Common gotcha:</strong> EDGE sounds appealing but adds complexity and cost. CloudFront caching can cause stale data issues if not configured properly. Start with REGIONAL - you can always migrate to EDGE later if you prove you need global distribution.</p>
+          </div>
+        </div>
+
+        <h3>Step 9: Create REST API</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">API Gateway</span></div><code class="language-bash"># Create API
+aws apigateway create-rest-api \
+  --name url-shortener-api \
+  --description "Serverless URL Shortener" \
+  --endpoint-configuration types=REGIONAL
+
+# Get API ID
+export API_ID=$(aws apigateway get-rest-apis \
+  --query "items[?name=='url-shortener-api'].id" \
+  --output text)
+
+echo "API ID: $API_ID"
+
+# Get root resource ID
+export ROOT_ID=$(aws apigateway get-resources \
+  --rest-api-id $API_ID \
+  --query 'items[?path==`/`].id' \
+  --output text)
+
+echo "Root Resource ID: $ROOT_ID"</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is a Resource in API Gateway?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A resource is a URL path segment in your API. Each resource has a path (like /shorten or /users/{id}) and can have HTTP methods (GET, POST, etc.) attached. Resources are hierarchical - they can have parent-child relationships.</p>
+
+            <p><strong>Why we need it:</strong> Resources define your API's URL structure. They map to Lambda functions or other backend services. The root resource (/) is created automatically; you add children to build your URL paths. Resources let you organize your API logically.</p>
+
+            <p><strong>Key details:</strong> Each API has one root resource with path "/". You create child resources by specifying a parent ID and path part. Resources support path parameters with {curly braces}. You can nest resources: /users/{userId}/posts/{postId}.</p>
+
+            <p><strong>Common gotcha:</strong> The resource path doesn't include the stage or domain - it's just the path segment. The full URL becomes https://api-id.execute-api.region.amazonaws.com/stage/resource-path. Also, you can't have duplicate path parts under the same parent.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is Path Part?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The path part is the URL segment for a specific resource. "shorten" is the path part that creates /shorten. "{shortCode}" is a path part with a variable - it matches any value and makes it available to your Lambda as event.pathParameters.shortCode.</p>
+
+            <p><strong>Why we need it:</strong> Path parts build your API's URL structure. Static parts (like "shorten") are literal matches. Dynamic parts (like "{id}") capture values from the URL, letting one Lambda handle many different IDs instead of creating separate routes for each.</p>
+
+            <p><strong>Key details:</strong> Path parts must be unique among siblings but can repeat under different parents. Variables use {brackets} and become path parameters. You can mix static and dynamic: /users/{userId}/posts. Variables can't contain slashes.</p>
+
+            <p><strong>Common gotcha:</strong> Forgetting to configure request-parameters validation means path variables might be null in your Lambda. Also, greedy path variables {proxy+} match multiple segments but are advanced - only use when you need a catch-all route.</p>
+          </div>
+        </div>
+
+        <h3>Step 10: Create /shorten Endpoint</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">API Gateway</span><span class="code-service-badge">Lambda</span><span class="code-service-badge">STS</span></div><code class="language-bash"># Create /shorten resource
+aws apigateway create-resource \
+  --rest-api-id $API_ID \
+  --parent-id $ROOT_ID \
+  --path-part shorten
+
+# Get shorten resource ID
+export SHORTEN_ID=$(aws apigateway get-resources \
+  --rest-api-id $API_ID \
+  --query "items[?path=='/shorten'].id" \
+  --output text)
+
+# Create POST method
+aws apigateway put-method \
+  --rest-api-id $API_ID \
+  --resource-id $SHORTEN_ID \
+  --http-method POST \
+  --authorization-type NONE
+
+# Get Lambda function ARN
+export SHORTEN_ARN=$(aws lambda get-function \
+  --function-name url-shorten \
+  --query 'Configuration.FunctionArn' \
+  --output text)
+
+# Get AWS account ID
+export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+# Integrate with Lambda
+aws apigateway put-integration \
+  --rest-api-id $API_ID \
+  --resource-id $SHORTEN_ID \
+  --http-method POST \
+  --type AWS_PROXY \
+  --integration-http-method POST \
+  --uri "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/$SHORTEN_ARN/invocations"
+
+# Give API Gateway permission to invoke Lambda
+aws lambda add-permission \
+  --function-name url-shorten \
+  --statement-id apigateway-shorten \
+  --action lambda:InvokeFunction \
+  --principal apigateway.amazonaws.com \
+  --source-arn "arn:aws:execute-api:us-east-1:$ACCOUNT_ID:$API_ID/*/*"</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Authorization Type NONE vs Others?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> NONE means the endpoint is public - anyone can call it without authentication. Other types include AWS_IAM (requires AWS credentials), CUSTOM (your own Lambda authorizer), COGNITO_USER_POOLS (user authentication), and API keys.</p>
+
+            <p><strong>Why we need it:</strong> Public APIs (NONE) are simplest for learning but insecure for production. AWS_IAM works for service-to-service calls. CUSTOM authorizers let you validate JWT tokens or custom auth schemes. COGNITO integrates with user pools for login/signup.</p>
+
+            <p><strong>Key details:</strong> Most production APIs use CUSTOM authorizers with JWT tokens from OAuth providers. AWS_IAM is perfect for backend services communicating securely. API keys are for basic rate limiting but don't provide real security - they're easily leaked.</p>
+
+            <p><strong>Common gotcha:</strong> Beginners deploy NONE to production thinking they'll "add auth later" - then forget and expose sensitive data. Always plan authentication from the start. Also, API keys alone aren't authorization - they identify the caller but don't verify permissions.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Integration Type: Why AWS_PROXY?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> AWS_PROXY passes the entire request to Lambda unchanged and returns Lambda's response directly to the client. Other types like AWS require you to configure request/response mappings with templates. PROXY is simpler - Lambda gets full control.</p>
+
+            <p><strong>Why we need it:</strong> Without PROXY, you'd write VTL (Velocity Template Language) templates to transform requests and responses. PROXY eliminates this complexity - your Lambda receives the raw HTTP request and returns a standard response format. It's the modern best practice.</p>
+
+            <p><strong>Key details:</strong> With PROXY, Lambda must return the exact format {statusCode, headers, body}. API Gateway doesn't transform anything. Other integration types let you map Lambda responses to different status codes or modify headers, but add complexity.</p>
+
+            <p><strong>Common gotcha:</strong> If your Lambda returns the wrong format with PROXY, API Gateway returns 502 Bad Gateway - there's no safety net. Always validate your response structure. Also, PROXY means you can't use API Gateway's built-in response mapping to handle errors.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Why Integration HTTP Method is Always POST?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The integration HTTP method is how API Gateway invokes Lambda - it's always POST, regardless of whether your client uses GET, POST, PUT, or DELETE. The client's HTTP method is passed in the event object to Lambda.</p>
+
+            <p><strong>Why we need it:</strong> Lambda functions are invoked via HTTP POST to the Lambda API. API Gateway POSTs the request event to Lambda's invoke endpoint. Your client's actual method (GET/POST/DELETE) is available in event.httpMethod so your Lambda can handle it appropriately.</p>
+
+            <p><strong>Key details:</strong> Don't confuse the client method (--http-method) with the integration method (--integration-http-method). Client method is what users call; integration method is internal between API Gateway and Lambda. Integration method is always POST for Lambda.</p>
+
+            <p><strong>Common gotcha:</strong> Setting integration-http-method to match the client method (like GET) breaks Lambda integration - you'll get errors. Always use POST for Lambda integrations. This is one of the most common configuration mistakes beginners make.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Lambda URI Format Explained</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The URI "arn:aws:apigateway:region:lambda:path/2015-03-31/functions/FUNCTION_ARN/invocations" tells API Gateway how to call Lambda. It's an API Gateway-specific format combining the Lambda API version (2015-03-31) and your function's ARN.</p>
+
+            <p><strong>Why we need it:</strong> API Gateway needs to know which Lambda API endpoint to call and which function to invoke. The URI format is standardized - always the same structure with your function ARN inserted. The date is the Lambda API version, not a creation date.</p>
+
+            <p><strong>Key details:</strong> The region must match your API Gateway region. The function ARN includes the function name and account. "/invocations" is the Lambda API endpoint for triggering functions. You can optionally include a function alias or version in the ARN.</p>
+
+            <p><strong>Common gotcha:</strong> Wrong region in the URI causes cross-region calls that fail or cost extra. Typos in the function ARN fail silently until you deploy and test. Always verify the URI format matches the template exactly - one wrong character breaks everything.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Lambda Permission - Resource-Based Policy?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Lambda permissions (add-permission) create resource-based policies that allow other AWS services to invoke your function. This is separate from the Lambda's execution role - it controls who can trigger the function, not what the function can do.</p>
+
+            <p><strong>Why we need it:</strong> Without this permission, API Gateway can't invoke your Lambda even though the integration exists. The permission says "API Gateway service (apigateway.amazonaws.com) is allowed to call lambda:InvokeFunction on this specific Lambda function."</p>
+
+            <p><strong>Key details:</strong> statement-id is a unique name for the permission - use descriptive names. principal specifies the AWS service. source-arn restricts which specific API can invoke (scoped to your API ID). Without source-arn, any API Gateway could trigger your function.</p>
+
+            <p><strong>Common gotcha:</strong> Forgetting this permission causes 500 errors when calling your API - API Gateway has the integration but lacks invoke permission. The error message is cryptic. Always add permissions immediately after creating integrations.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Source ARN Wildcards - What Do They Mean?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The source-arn "arn:aws:execute-api:region:account:api-id/*/*" uses wildcards to allow any stage (*) and any path (*) within your API to invoke the Lambda. The two asterisks represent stage and path.</p>
+
+            <p><strong>Why we need it:</strong> Without wildcards, you'd need separate permissions for each stage (dev, prod) and each endpoint (/shorten, /stats). Wildcards simplify setup. The format is api-id/stage/path, where * matches anything.</p>
+
+            <p><strong>Key details:</strong> First * = stage (prod, dev, etc.). Second * = HTTP method and path. You can be specific: "api-id/prod/GET/users" or broad: "api-id/*/*". Broader is convenient but less secure - any endpoint in the API can invoke the Lambda.</p>
+
+            <p><strong>Common gotcha:</strong> Using */* for all APIs in your account (no api-id) is too permissive - any API can invoke the function. Always include your specific api-id. For production, consider limiting to specific stages and paths for tighter security.</p>
+          </div>
+        </div>
+
+        <h3>Step 11: Create /{shortCode} Endpoint</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">API Gateway</span><span class="code-service-badge">Lambda</span></div><code class="language-bash"># Create {shortCode} resource with path parameter
+aws apigateway create-resource \
+  --rest-api-id $API_ID \
+  --parent-id $ROOT_ID \
+  --path-part '{shortCode}'
+
+export CODE_ID=$(aws apigateway get-resources \
+  --rest-api-id $API_ID \
+  --query "items[?path=='/{shortCode}'].id" \
+  --output text)
+
+# Create GET method for redirect
+aws apigateway put-method \
+  --rest-api-id $API_ID \
+  --resource-id $CODE_ID \
+  --http-method GET \
+  --authorization-type NONE \
+  --request-parameters method.request.path.shortCode=true
+
+export REDIRECT_ARN=$(aws lambda get-function \
+  --function-name url-redirect \
+  --query 'Configuration.FunctionArn' \
+  --output text)
+
+# Integrate with Lambda
+aws apigateway put-integration \
+  --rest-api-id $API_ID \
+  --resource-id $CODE_ID \
+  --http-method GET \
+  --type AWS_PROXY \
+  --integration-http-method POST \
+  --uri "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/$REDIRECT_ARN/invocations"
+
+# Permission
+aws lambda add-permission \
+  --function-name url-redirect \
+  --statement-id apigateway-redirect \
+  --action lambda:InvokeFunction \
+  --principal apigateway.amazonaws.com \
+  --source-arn "arn:aws:execute-api:us-east-1:$ACCOUNT_ID:$API_ID/*/*"
+
+# Create HEAD method for redirect (curl -I sends HEAD requests)
+aws apigateway put-method \
+  --rest-api-id $API_ID \
+  --resource-id $CODE_ID \
+  --http-method HEAD \
+  --authorization-type NONE \
+  --request-parameters method.request.path.shortCode=true
+
+# Integrate HEAD method with same Lambda
+aws apigateway put-integration \
+  --rest-api-id $API_ID \
+  --resource-id $CODE_ID \
+  --http-method HEAD \
+  --type AWS_PROXY \
+  --integration-http-method POST \
+  --uri "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/$REDIRECT_ARN/invocations"</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Why Support HEAD Method for Redirects?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The HEAD method is like GET but returns only HTTP headers, not the response body. When you use curl -I to test a redirect, it sends a HEAD request to check the status code and Location header without downloading the full response.</p>
+
+            <p><strong>Why we need it:</strong> Testing redirects with HEAD is standard practice - you just want to verify the 301/302 status and Location header, not follow the redirect. If HEAD isn't configured, curl -I will fail with a 403 error even though GET works fine.</p>
+
+            <p><strong>Key details:</strong> HEAD and GET methods on the same resource typically use the same Lambda function. The Lambda receives event.httpMethod to distinguish between them. Most redirect implementations handle both identically since they return the same headers.</p>
+
+            <p><strong>Common gotcha:</strong> Forgetting to add HEAD support is a classic mistake. The API works fine in browsers (which use GET), but curl -I testing fails mysteriously. Always add HEAD for any endpoint you'll test with curl -I.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Path Parameters {id} - How Do They Work?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Path parameters use {curly braces} to capture dynamic values from the URL. When a request hits /abc123, the {shortCode} parameter captures "abc123" and makes it available in your Lambda as event.pathParameters.shortCode.</p>
+
+            <p><strong>Why we need it:</strong> Without path parameters, you'd need a separate endpoint for every possible ID - impossible to scale. Path parameters let one Lambda handle infinite IDs. They're standard in REST APIs for accessing specific resources like /users/{userId} or /posts/{postId}.</p>
+
+            <p><strong>Key details:</strong> Parameter names must match between the resource path part and request-parameters configuration. They're passed to Lambda as strings in event.pathParameters. You can have multiple parameters: /users/{userId}/posts/{postId}.</p>
+
+            <p><strong>Common gotcha:</strong> Parameters are always strings - even if the URL contains "123", you get the string "123" not the number. Always validate and parse path parameters in your Lambda. Also, path parameters match everything - /abc/def matches {id}, capturing "abc/def" as one value if greedy.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>request-parameters Validation?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> request-parameters configuration tells API Gateway which URL parameters, headers, or query strings are required. "method.request.path.shortCode=true" means the shortCode path parameter is required - requests without it are rejected before reaching Lambda.</p>
+
+            <p><strong>Why we need it:</strong> Without validation, malformed requests reach your Lambda and cause errors. API Gateway can validate requests early and return 400 Bad Request immediately. This saves Lambda invocations (cost) and provides faster error feedback to clients.</p>
+
+            <p><strong>Key details:</strong> Set to true for required parameters, false for optional. Format is method.request.{type}.{name} where type is path/querystring/header. API Gateway only checks presence, not format - you still need Lambda validation for content.</p>
+
+            <p><strong>Common gotcha:</strong> Forgetting to mark path parameters as required means they could be null in Lambda, causing crashes. Always set required=true for path parameters. Also, this only validates presence - an empty string or invalid format still passes through.</p>
+          </div>
+        </div>
+
+        <h3>Step 12: Create /stats/{shortCode} Endpoint</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">API Gateway</span><span class="code-service-badge">Lambda</span></div><code class="language-bash"># Create stats resource
+aws apigateway create-resource \
+  --rest-api-id $API_ID \
+  --parent-id $ROOT_ID \
+  --path-part stats
+
+export STATS_ROOT_ID=$(aws apigateway get-resources \
+  --rest-api-id $API_ID \
+  --query "items[?path=='/stats'].id" \
+  --output text)
+
+# Create {shortCode} under stats
+aws apigateway create-resource \
+  --rest-api-id $API_ID \
+  --parent-id $STATS_ROOT_ID \
+  --path-part '{shortCode}'
+
+export STATS_ID=$(aws apigateway get-resources \
+  --rest-api-id $API_ID \
+  --query "items[?path=='/stats/{shortCode}'].id" \
+  --output text)
+
+# Create GET method
+aws apigateway put-method \
+  --rest-api-id $API_ID \
+  --resource-id $STATS_ID \
+  --http-method GET \
+  --authorization-type NONE
+
+export STATS_ARN=$(aws lambda get-function \
+  --function-name url-stats \
+  --query 'Configuration.FunctionArn' \
+  --output text)
+
+# Integrate
+aws apigateway put-integration \
+  --rest-api-id $API_ID \
+  --resource-id $STATS_ID \
+  --http-method GET \
+  --type AWS_PROXY \
+  --integration-http-method POST \
+  --uri "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/$STATS_ARN/invocations"
+
+# Permission
+aws lambda add-permission \
+  --function-name url-stats \
+  --statement-id apigateway-stats \
+  --action lambda:InvokeFunction \
+  --principal apigateway.amazonaws.com \
+  --source-arn "arn:aws:execute-api:us-east-1:$ACCOUNT_ID:$API_ID/*/*"</code></pre>
+
+        <h3>Step 13: Deploy API</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">API Gateway</span></div><code class="language-bash"># Create deployment
+aws apigateway create-deployment \
+  --rest-api-id $API_ID \
+  --stage-name prod
+
+# Get API endpoint
+export API_ENDPOINT="https://$API_ID.execute-api.us-east-1.amazonaws.com/prod"
+
+echo "API Endpoint: $API_ENDPOINT"</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Deployment - Why Separate from Changes?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Creating resources and methods in API Gateway doesn't make them live. A deployment is a snapshot of your API configuration published to a stage. Until you deploy, changes exist in draft mode only - users can't access them.</p>
+
+            <p><strong>Why we need it:</strong> This separation lets you make multiple changes (add routes, update integrations) and deploy them all at once. It prevents partial updates from breaking your API. You control exactly when changes go live, making rollbacks easier.</p>
+
+            <p><strong>Key details:</strong> Each deployment creates an immutable snapshot. You can have multiple deployments and switch stages between them for instant rollback. Deployments are cheap - create one whenever you're ready to publish changes.</p>
+
+            <p><strong>Common gotcha:</strong> The classic beginner mistake is creating endpoints, testing, and wondering why they return 404. You forgot to deploy! Always deploy after making changes. Also, deploying to the wrong stage can accidentally update production.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Stage - dev/staging/prod?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A stage is an environment for your API (like dev, staging, prod). Each stage has its own URL and can point to different deployments. Stages let you test changes in dev before promoting to prod without recreating the entire API.</p>
+
+            <p><strong>Why we need it:</strong> You can't test in production safely. Stages give you separate environments with the same API structure. Each stage can have different settings (throttling, caching, logging) and can even integrate with different backend versions.</p>
+
+            <p><strong>Key details:</strong> Stage names appear in the URL: api-id.execute-api.region.amazonaws.com/STAGE_NAME/path. Common pattern: dev for development, staging for pre-production testing, prod for live traffic. Each stage has independent metrics and logs.</p>
+
+            <p><strong>Common gotcha:</strong> Stages share the same API resources - changing a resource affects all stages. Use stage variables to point stages at different Lambda aliases or versions. Also, deploying doesn't automatically create stages - specify the stage name in create-deployment.</p>
+          </div>
+        </div>
+
+        <p><strong>Your API is now live!</strong> Let's test it.</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-03-2.html" class="btn btn-secondary">← Previous: Lambda Functions</a>
+          <a href="lesson-03-4.html" class="btn btn-primary">Next: Test Your API →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

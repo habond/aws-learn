@@ -1,0 +1,182 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-08.html
+lessonNumber: 8
+lessonTitle: "Big Data Analytics"
+duration: "~7 hours"
+cost: "$3-5"
+stepNumber: 1
+totalSteps: 5
+progress: 20
+title: "Lesson 8: Big Data Analytics - AWS Learning Tutorial"
+tocContent: |
+  <li class="active">
+  <a href="lesson-08.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Overview + Kinesis Data Streams</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-08-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Kinesis Firehose to S3</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-08-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">AWS Glue (Data Catalog)</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-08-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">Athena Queries</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-08-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Real-time Processing with Lambda</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 8 - Part 1</span>
+        <h1>Big Data Analytics (Process ALL The Data!)</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>What You're Building</h2>
+        <p>Build a real-time analytics pipeline that ingests streaming data, processes it, and makes it queryable via SQL. You'll simulate IoT sensor data (temperature, humidity), stream it through Kinesis, transform it with Glue, and query it with Athena. Real-world use case: IoT analytics, clickstream analysis, log aggregation.</p>
+
+        <h2>What You'll Learn</h2>
+        <ul>
+          <li><strong>Kinesis Data Streams</strong>: Real-time data ingestion</li>
+          <li><strong>Kinesis Firehose</strong>: Delivery to S3/Redshift</li>
+          <li><strong>AWS Glue</strong>: ETL and data catalog</li>
+          <li><strong>Athena</strong>: Serverless SQL queries</li>
+          <li><strong>S3</strong>: Data lake storage</li>
+          <li><strong>Partitioning</strong>: Optimize query performance</li>
+        </ul>
+
+        <h2>Prerequisites</h2>
+        <ul>
+          <li>Completed Lessons 1-7</li>
+          <li>AWS CLI configured</li>
+          <li>Python installed (for data generation)</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Part 1: Kinesis Data Streams (1.5 hours)</h2>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is Kinesis and how is it different from SQS?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Kinesis Data Streams is a real-time data streaming service for collecting and processing large amounts of data continuously. Unlike SQS which handles discrete messages, Kinesis handles streams of records that multiple consumers can read simultaneously. Think of it as a high-speed fire hose for data.</p>
+
+            <p><strong>Why we need it:</strong> When you have high-throughput data like IoT sensors sending readings every second, clickstream data from websites, or log aggregation from thousands of servers, you need something faster than traditional queues. Kinesis can ingest millions of events per second and allow multiple applications to process the same data stream independently.</p>
+
+            <p><strong>Key details:</strong> Kinesis stores data for 24 hours by default (up to 365 days if configured). Shards are the unit of capacity - each shard handles 1MB/sec input and 2MB/sec output. Multiple consumers can read from the same stream without deleting data. Records are ordered within a shard based on partition key.</p>
+
+            <p><strong>Common gotcha:</strong> You pay per shard per hour, not per record. Under-provisioning shards causes throttling; over-provisioning wastes money. Monitor shard metrics carefully. Also, Kinesis requires explicit checkpointing - if your consumer crashes, you need to track where you left off or you'll reprocess data.</p>
+          </div>
+        </div>
+
+        <h3>Step 1: Create Kinesis Stream</h3>
+        <pre><code class="language-bash"># Create stream for sensor data
+aws kinesis create-stream \
+  --stream-name sensor-data-stream \
+  --shard-count 1
+
+# Wait for stream to be active
+aws kinesis wait stream-exists --stream-name sensor-data-stream
+
+# Get stream ARN
+export STREAM_ARN=$(aws kinesis describe-stream \
+  --stream-name sensor-data-stream \
+  --query 'StreamDescription.StreamARN' \
+  --output text)
+
+echo "Stream ARN: $STREAM_ARN"</code></pre>
+
+        <h3>Step 2: Create Data Producer</h3>
+        <p>Create <code>producer.py</code>:</p>
+
+        <pre><code class="language-python">import boto3
+import json
+import time
+import random
+from datetime import datetime
+
+kinesis = boto3.client('kinesis')
+STREAM_NAME = 'sensor-data-stream'
+
+def generate_sensor_data(sensor_id):
+    return {
+        'sensor_id': sensor_id,
+        'timestamp': datetime.utcnow().isoformat(),
+        'temperature': round(random.uniform(15.0, 30.0), 2),
+        'humidity': round(random.uniform(30.0, 80.0), 2),
+        'location': random.choice(['warehouse-1', 'warehouse-2', 'warehouse-3'])
+    }
+
+def send_data():
+    sensor_ids = [f'sensor-{i:03d}' for i in range(1, 11)]
+
+    print("Starting data producer...")
+    try:
+        while True:
+            for sensor_id in sensor_ids:
+                data = generate_sensor_data(sensor_id)
+
+                kinesis.put_record(
+                    StreamName=STREAM_NAME,
+                    Data=json.dumps(data),
+                    PartitionKey=sensor_id
+                )
+
+                print(f"Sent: {data}")
+
+            time.sleep(2)
+    except KeyboardInterrupt:
+        print("\nStopped producer")
+
+if __name__ == '__main__':
+    send_data()</code></pre>
+
+        <p>Install boto3 and run:</p>
+
+        <pre><code class="language-bash">pip3 install boto3
+
+# Run producer (keep it running in background)
+python3 producer.py &amp;
+export PRODUCER_PID=$!</code></pre>
+
+        <h3>Step 3: Test Stream with Consumer</h3>
+        <pre><code class="language-bash"># Get shard iterator
+export SHARD_ITERATOR=$(aws kinesis get-shard-iterator \
+  --stream-name sensor-data-stream \
+  --shard-id shardId-000000000000 \
+  --shard-iterator-type LATEST \
+  --query 'ShardIterator' \
+  --output text)
+
+# Read records
+aws kinesis get-records --shard-iterator $SHARD_ITERATOR
+
+# You should see sensor data!</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-07.html" class="btn btn-secondary">← Previous Lesson</a>
+          <a href="lesson-08-2.html" class="btn btn-primary">Next: Kinesis Firehose to S3 →</a>
+        </div>
+      </div>

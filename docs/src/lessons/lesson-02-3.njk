@@ -1,0 +1,318 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-02-3.html
+lessonNumber: 2
+lessonTitle: "Renting Computers in Someone Else's Basement"
+duration: "~8 hours"
+cost: "$2-3"
+stepNumber: 3
+totalSteps: 7
+progress: 42.9
+title: "Lesson 2: Launch EC2 Instance - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-02.html">
+  <span class="step-number">1</span>
+  <span class="step-title">VPC Basics</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-02-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">SSH Key Pair</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-02-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">Launch EC2 Instance</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-02-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">Deploy Application</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-02-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Load Balancer</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-02-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Auto Scaling</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-02-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">CloudWatch + Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 2 - Part 3</span>
+        <h1>Launch Your First EC2 Instance</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 3: Launch Your First EC2 Instance (1.5 hours)</h2>
+
+        <h3>Step 3: Create Security Group</h3>
+        <p>Security groups are like firewall rules.</p>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is port 22 (SSH) and port 3000?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Ports are virtual doorways on a computer that different services use to communicate. Port 22 is the standard port for SSH (remote terminal access). Port 3000 is commonly used by Node.js development servers. Think of ports like apartment numbers in a building - the IP address is the building, the port is the specific apartment.</p>
+
+            <p><strong>Why we need it:</strong> Multiple services run on a single server, each listening on different ports. SSH on 22, HTTP on 80, HTTPS on 443, custom apps on others. Security groups block all ports by default, so you explicitly open only the ones you need. Opening port 22 lets you SSH in to configure the server. Opening port 3000 lets web traffic reach your Node.js app.</p>
+
+            <p><strong>Key details:</strong> Ports range from 0-65535. Ports 0-1023 are "well-known" (HTTP=80, HTTPS=443, SSH=22). Ports 1024-49151 are "registered" (often used by specific applications). Ports 49152-65535 are "dynamic" (used for temporary connections). Your app can listen on any port, but using standard ports makes configuration easier.</p>
+
+            <p><strong>Common gotcha:</strong> Opening port 22 to 0.0.0.0/0 (the entire internet) is risky - bots constantly scan for open SSH ports to brute-force. Always restrict SSH to your IP (/32) when possible. Also, if your app listens on port 3000 but you only open port 80 in the security group, users can't connect - the ports must match.</p>
+          </div>
+        </div>
+
+        <pre><code class="language-bash"># Create security group
+aws ec2 create-security-group \
+  --group-name web-server-sg \
+  --description "Security group for web servers" \
+  --vpc-id $VPC_ID
+
+# Get the security group ID
+export SG_ID=$(aws ec2 describe-security-groups \
+  --filters "Name=group-name,Values=web-server-sg" \
+  --query "SecurityGroups[0].GroupId" \
+  --output text)
+
+echo "Security Group: $SG_ID"
+
+# Allow SSH (port 22) from your IP
+# Get your public IP first
+MY_IP=$(curl -s https://checkip.amazonaws.com)
+
+aws ec2 authorize-security-group-ingress \
+  --group-id $SG_ID \
+  --protocol tcp \
+  --port 22 \
+  --cidr ${MY_IP}/32
+
+# Allow HTTP (port 80) from anywhere
+aws ec2 authorize-security-group-ingress \
+  --group-id $SG_ID \
+  --protocol tcp \
+  --port 80 \
+  --cidr 0.0.0.0/0
+
+# Allow your app port (e.g., 3000 for Node.js)
+aws ec2 authorize-security-group-ingress \
+  --group-id $SG_ID \
+  --protocol tcp \
+  --port 3000 \
+  --cidr 0.0.0.0/0</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is CIDR notation (0.0.0.0/0 and /32)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> CIDR (Classless Inter-Domain Routing) is a compact way to specify IP address ranges. The format is IP/number, where the number indicates how many bits are fixed. For example, 192.168.1.0/24 means the first 24 bits are fixed (192.168.1) and the last 8 bits can vary (0-255), giving you 256 addresses.</p>
+
+            <p><strong>Why we need it:</strong> Security rules need to apply to ranges of IPs, not just individual addresses. Instead of listing 256 individual IPs, you write one CIDR block. 0.0.0.0/0 means "all possible IPs" (the entire internet). 1.2.3.4/32 means exactly one IP (1.2.3.4). This notation makes it easy to grant access to specific networks or individuals.</p>
+
+            <p><strong>Key details:</strong> The number after the slash indicates how many of the 32 bits (in IPv4) are fixed. /32 = 1 address (all bits fixed). /24 = 256 addresses (last 8 bits vary). /16 = 65,536 addresses. /0 = all 4.3 billion IPv4 addresses. Common ones: /32 for single IP, /24 for small networks, /16 for larger networks, /0 for everything.</p>
+
+            <p><strong>Common gotcha:</strong> Forgetting the /32 when specifying a single IP is a frequent mistake - writing just "1.2.3.4" won't work, you must write "1.2.3.4/32". Also, 0.0.0.0/0 (allow from anywhere) is convenient for testing but dangerous for production SSH access - bots will find and attack it within minutes.</p>
+          </div>
+        </div>
+
+        <h3>Step 4: Launch EC2 Instance</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is an AMI (Amazon Machine Image)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> An AMI is a pre-configured template for creating EC2 instances. It includes the operating system, pre-installed software, and initial configuration. Think of it like a snapshot or disk image - instead of installing an OS from scratch, you clone a ready-to-go system.</p>
+
+            <p><strong>Why we need it:</strong> Installing and configuring an operating system manually takes time and is error-prone. AMIs let you launch identical servers in seconds. AWS provides official AMIs for Amazon Linux, Ubuntu, Windows, etc. You can also create custom AMIs with your app pre-installed, making deployment trivial - just launch from your AMI.</p>
+
+            <p><strong>Key details:</strong> AMIs are region-specific - an AMI in us-east-1 must be copied to use in us-west-2. There are public AMIs (AWS or community), private AMIs (yours only), and marketplace AMIs (commercial software). AMI IDs look like "ami-0123456789abcdef0". The same OS version might have different AMI IDs in different regions.</p>
+
+            <p><strong>Common gotcha:</strong> AMI IDs change when new versions are released. If you hardcode an AMI ID in a script, it might break when that AMI is deprecated. Instead, use describe-images with filters to find the latest version dynamically (like the example in the code). Also, custom AMIs include your data - never create an AMI from a server with secrets or customer data.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is Amazon Linux 2023?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Amazon Linux 2023 (AL2023) is a Linux distribution created and maintained by AWS, optimized for running on EC2. It's based on Fedora and includes AWS-specific tools and optimizations. It's the successor to Amazon Linux 2 and Amazon Linux 1.</p>
+
+            <p><strong>Why we need it:</strong> While you could use Ubuntu, CentOS, or any other Linux distro on EC2, Amazon Linux is purpose-built for AWS. It includes the AWS CLI pre-installed, AWS-specific kernel optimizations, and long-term support from AWS. It's also tightly integrated with AWS services and generally launches faster than other distros.</p>
+
+            <p><strong>Key details:</strong> AL2023 follows a predictable release cycle with support for each major version lasting 5 years. It uses dnf (like Fedora/RHEL) for package management. The AWS CLI and SSM agent come pre-installed. It's free tier eligible and has no licensing costs. AWS keeps it updated with security patches automatically if you enable unattended upgrades.</p>
+
+            <p><strong>Common gotcha:</strong> Amazon Linux isn't fully compatible with Red Hat/CentOS - some packages available on RHEL might not exist in AL2023 repos. Also, moving from Amazon Linux 2 to 2023 isn't a simple upgrade - they're different enough that migration requires testing. If you need compatibility with RHEL-based systems, consider using actual RHEL or Rocky Linux instead.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What do instance types like t2.micro mean?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Instance types define the hardware specs of your virtual server - CPU, memory, network, and storage performance. The naming scheme is: family (t, m, c, r, etc.) + generation (2, 3, 5, etc.) + size (nano, micro, small, medium, large, xlarge, etc.). For example, t2.micro is "T family, generation 2, micro size".</p>
+
+            <p><strong>Why we need it:</strong> Different workloads need different resources. A t2.micro (1 vCPU, 1GB RAM) is perfect for learning or low-traffic websites. An m5.large (2 vCPUs, 8GB RAM) suits general-purpose apps. A c5.xlarge (4 vCPUs, optimized for compute) is great for CPU-intensive tasks. Instance types let you match resources to your needs and budget.</p>
+
+            <p><strong>Key details:</strong> Instance families: T (burstable, cheap), M (general purpose), C (compute optimized), R (memory optimized), I (storage optimized). Generation numbers indicate newer hardware - higher is newer and often cheaper for same performance. Sizes go: nano, micro, small, medium, large, xlarge, 2xlarge, 4xlarge, etc. t2.micro is free tier eligible (750 hours/month for first year).</p>
+
+            <p><strong>Common gotcha:</strong> T-family instances use burst credits - they can temporarily use more CPU than their baseline, but if you sustain high CPU, you'll run out of credits and throttle to baseline (10-20% of a core). This makes them terrible for sustained workloads. Also, not all instance types are available in all regions/AZs - sometimes you'll get "insufficient capacity" errors.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Why should we tag resources?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Tags are key-value pairs you attach to AWS resources for identification and organization. Common tags include Name (what is this?), Environment (dev/staging/prod), Project (which project?), Owner (who manages it?), and CostCenter (who pays for it?). Tags are metadata - they don't affect how resources work.</p>
+
+            <p><strong>Why we need it:</strong> Once you have dozens or hundreds of resources, finding things becomes impossible without tags. Tags let you filter, search, and organize. The "Name" tag is special - it shows up in the console's main column. Tags also enable cost tracking (see costs by project), automation (scripts can filter by tag), and access control (IAM policies can restrict based on tags).</p>
+
+            <p><strong>Key details:</strong> Each resource can have up to 50 tags. Tag keys and values are case-sensitive. The "Name" tag is just a regular tag that AWS console displays prominently - there's nothing special about it in the API. Tags apply to that specific resource only - creating an instance with tags doesn't automatically tag its volumes or network interfaces.</p>
+
+            <p><strong>Common gotcha:</strong> Forgetting to tag resources is easy but creates chaos later. Establish a tagging strategy early and stick to it. Also, tag keys are case-sensitive - "Environment" and "environment" are different tags, which can cause confusion. Use tag policies or automation to enforce consistent tagging across your organization.</p>
+          </div>
+        </div>
+
+        <pre><code class="language-bash"># Find the latest Amazon Linux 2023 AMI
+export AMI_ID=$(aws ec2 describe-images \
+  --owners amazon \
+  --filters "Name=name,Values=al2023-ami-2023*-x86_64" \
+  --query "Images | sort_by(@, &amp;CreationDate) | [-1].ImageId" \
+  --output text)
+
+echo "Using AMI: $AMI_ID"
+
+# Launch instance
+aws ec2 run-instances \
+  --image-id $AMI_ID \
+  --instance-type t2.micro \
+  --key-name my-aws-key \
+  --security-group-ids $SG_ID \
+  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=web-server-1}]'
+
+# Get instance ID
+export INSTANCE_ID=$(aws ec2 describe-instances \
+  --filters "Name=tag:Name,Values=web-server-1" "Name=instance-state-name,Values=running,pending" \
+  --query "Reservations[0].Instances[0].InstanceId" \
+  --output text)
+
+echo "Instance ID: $INSTANCE_ID"
+
+# Wait for instance to be running
+aws ec2 wait instance-running --instance-ids $INSTANCE_ID</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What does the "wait" command do?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The AWS CLI wait command pauses script execution until a resource reaches a specific state. For instance, "aws ec2 wait instance-running" blocks until the instance's state changes to "running". Think of it as a smart sleep that knows when to continue instead of blindly waiting a fixed time.</p>
+
+            <p><strong>Why we need it:</strong> AWS operations are asynchronous - when you launch an instance, the API returns immediately, but the instance takes 30-120 seconds to actually boot. If your script tries to SSH or get the IP before the instance is ready, it fails. The wait command ensures resources are ready before proceeding, making scripts reliable without hardcoding arbitrary sleep delays.</p>
+
+            <p><strong>Key details:</strong> Wait commands poll every 5-15 seconds (depending on the waiter) with a timeout after 5-10 minutes. If the resource reaches the desired state, the command exits successfully. If it times out or reaches a failure state, it exits with an error. Common waiters: instance-running, instance-stopped, instance-terminated, image-available.</p>
+
+            <p><strong>Common gotcha:</strong> "Running" doesn't mean the instance is fully booted - it means AWS started it. The OS still needs to boot, which takes another 30-60 seconds. If you SSH immediately after wait instance-running, you might get "Connection refused". Also, if an instance fails to start (wrong AMI, insufficient capacity), wait will sit there until timeout - always check CloudWatch or system logs if waits hang.</p>
+          </div>
+        </div>
+
+        <pre><code class="language-bash"># Get public IP
+export PUBLIC_IP=$(aws ec2 describe-instances \
+  --instance-ids $INSTANCE_ID \
+  --query "Reservations[0].Instances[0].PublicIpAddress" \
+  --output text)
+
+echo "Public IP: $PUBLIC_IP"</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What's the difference between Public and Private IP?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A public IP address is reachable from the internet (like 54.234.12.45), while a private IP is only accessible within your VPC (like 10.0.1.23). Every EC2 instance gets a private IP automatically. Public IPs are optional and can be dynamic (changes on stop/start) or elastic (permanent and transferable).</p>
+
+            <p><strong>Why we need it:</strong> Private IPs let instances communicate with each other inside your VPC without exposing them to the internet - crucial for databases and internal services. Public IPs let instances receive traffic from the internet and access external services. You typically give web servers public IPs but keep databases private, accessible only from web servers.</p>
+
+            <p><strong>Key details:</strong> Private IPs are permanent for the instance's lifetime. Public IPs are free while the instance is running but get released when you stop it (not terminate, stop). Elastic IPs are static public IPs you can reassign between instances - they're free while attached to a running instance but cost $0.005/hour when reserved but unused (to discourage hoarding).</p>
+
+            <p><strong>Common gotcha:</strong> If you stop an instance with a public IP and start it again, it gets a different public IP. This breaks hardcoded DNS records or firewall rules. Use Elastic IPs for anything that needs a stable address. Also, instances in private subnets can't get public IPs even if you request them - the subnet's route table must allow internet access via an Internet Gateway.</p>
+          </div>
+        </div>
+
+        <h3>Step 5: SSH Into Your Server</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is ec2-user and why this username?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> ec2-user is the default username for Amazon Linux instances. Every Linux AMI has a default user that AWS creates - Ubuntu uses "ubuntu", Debian uses "admin", CentOS uses "centos", Red Hat uses "ec2-user". This user has sudo privileges, allowing administrative tasks without logging in as root.</p>
+
+            <p><strong>Why we need it:</strong> Logging in as root directly via SSH is a security risk - one mistake could destroy the system. Instead, AWS creates a regular user with sudo privileges. You SSH as this user, then use sudo for administrative commands. The username varies by OS because each Linux distribution has its own conventions and package maintainers set the default.</p>
+
+            <p><strong>Key details:</strong> The default user's SSH public key is automatically added during instance launch based on your chosen key pair. The user can sudo without a password, which is convenient but means protecting your SSH key is critical. You can create additional users after logging in, but ec2-user remains the initial access point.</p>
+
+            <p><strong>Common gotcha:</strong> Using the wrong username is the number one SSH failure. If you try "ssh root@..." or "ssh admin@..." on Amazon Linux, you'll get "Permission denied" because those users don't exist or can't SSH. Always check the AMI's documentation for the correct default username. Custom AMIs might use different usernames entirely.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>How do filters work in AWS CLI?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Filters in AWS CLI let you narrow down results from describe commands. Instead of fetching all instances and filtering locally, filters are applied server-side. The format is "--filters Name=attribute,Values=value1,value2". For example, "--filters Name=tag:Name,Values=web-server-1" finds instances with that specific tag.</p>
+
+            <p><strong>Why we need it:</strong> AWS accounts accumulate hundreds or thousands of resources. Fetching everything and filtering locally is slow and wasteful. Server-side filters return only what you need, making scripts faster and reducing data transfer. Filters also enable precise queries like "all running instances in subnet X with tag Y".</p>
+
+            <p><strong>Key details:</strong> Filter names and values are case-sensitive. Multiple values for one filter use OR logic (matches any value). Multiple filters use AND logic (must match all). Common filters: instance-state-name (running, stopped, etc.), tag:KeyName (tag-based filtering), vpc-id, subnet-id. The --query parameter is different - it filters the JSON response after it arrives.</p>
+
+            <p><strong>Common gotcha:</strong> Confusing --filters with --query is common. Filters happen server-side before AWS sends data; query happens client-side after receiving data. Use filters to reduce what AWS sends, then query to extract specific fields. Also, some resource types support different filters - check "aws ec2 describe-instances help" to see available filters for each command.</p>
+          </div>
+        </div>
+
+        <pre><code class="language-bash"># Connect to your instance
+ssh -i ~/.ssh/my-aws-key.pem ec2-user@$PUBLIC_IP</code></pre>
+
+        <p><strong>You're now inside your AWS server!</strong></p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-02-2.html" class="btn btn-secondary">← Previous: SSH Key Pair</a>
+          <a href="lesson-02-4.html" class="btn btn-primary">Next: Deploy Application →</a>
+        </div>
+      </div>

@@ -1,0 +1,148 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-11-6.html
+lessonNumber: 11
+lessonTitle: "Security Deep Dive"
+duration: "~8 hours"
+cost: "$2-3"
+stepNumber: 6
+totalSteps: 7
+progress: 85.7
+title: "Lesson 11: Security Deep Dive - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-11.html">
+  <span class="step-number">1</span>
+  <span class="step-title">IAM Deep Dive</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Data Encryption with KMS</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">GuardDuty Threat Detection</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">WAF Protection</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">CloudTrail Auditing</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-11-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Security Hub</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Secrets Rotation &amp; Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 11 - Part 6</span>
+        <h1>Security Hub</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 6: Security Hub (1 hour)</h2>
+
+        <h3>Step 17: Enable Security Hub</h3>
+        <pre><code class="language-bash"># Enable Security Hub
+aws securityhub enable-security-hub
+
+# Enable security standards
+aws securityhub batch-enable-standards \
+  --standards-subscription-requests \
+    StandardsArn=arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0 \
+    StandardsArn=arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0
+
+# Get findings
+aws securityhub get-findings --max-results 10
+
+# Get compliance summary
+aws securityhub get-compliance-summary-by-compliance-status</code></pre>
+
+        <h3>Step 18: Review and Fix Findings</h3>
+        <pre><code class="language-bash"># Get high-severity findings
+aws securityhub get-findings \
+  --filters '{"SeverityLabel":[{"Value":"HIGH","Comparison":"EQUALS"}]}' \
+  --query 'Findings[*].[Title,Id]' \
+  --output table
+
+# Common findings and fixes:
+# 1. S3 buckets without encryption → Enable default encryption
+# 2. RDS without backups → Enable automated backups
+# 3. Unused access keys → Remove/rotate
+# 4. Security groups too open → Restrict rules
+# 5. No MFA on root account → Enable MFA!</code></pre>
+
+        <div style="background: var(--info-bg); border-left: 4px solid var(--info-color); padding: 15px; margin: 20px 0;">
+          <strong>What's Security Hub?</strong> Security Hub aggregates security findings from multiple AWS services (GuardDuty, IAM Access Analyzer, Inspector, etc.) and third-party tools into a single dashboard. It's your security command center - one place to see all security issues across your AWS account.
+        </div>
+
+        <h3>Common Findings and How to Fix Them</h3>
+        <div style="background: var(--code-bg); padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h4 style="margin-top: 0;">1. S3 Buckets Without Encryption</h4>
+          <pre><code class="language-bash">aws s3api put-bucket-encryption \
+  --bucket YOUR_BUCKET_NAME \
+  --server-side-encryption-configuration '{
+    "Rules": [{
+      "ApplyServerSideEncryptionByDefault": {
+        "SSEAlgorithm": "AES256"
+      }
+    }]
+  }'</code></pre>
+
+          <h4>2. Security Groups Too Open</h4>
+          <pre><code class="language-bash"># Review open security groups
+aws ec2 describe-security-groups \
+  --filters Name=ip-permission.cidr,Values='0.0.0.0/0' \
+  --query 'SecurityGroups[*].[GroupId,GroupName]'
+
+# Restrict to specific IP
+aws ec2 revoke-security-group-ingress \
+  --group-id sg-xxxxx \
+  --protocol tcp \
+  --port 22 \
+  --cidr 0.0.0.0/0
+
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-xxxxx \
+  --protocol tcp \
+  --port 22 \
+  --cidr YOUR_IP/32</code></pre>
+
+          <h4>3. Unused IAM Access Keys</h4>
+          <pre><code class="language-bash"># Check last used date
+aws iam list-access-keys --user-name USERNAME
+
+# Delete unused keys
+aws iam delete-access-key \
+  --user-name USERNAME \
+  --access-key-id ACCESS_KEY_ID</code></pre>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-11-5.html" class="btn btn-secondary">← Previous: CloudTrail Auditing</a>
+          <a href="lesson-11-7.html" class="btn btn-primary">Next: Secrets Rotation &amp; Cleanup →</a>
+        </div>
+      </div>

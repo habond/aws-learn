@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 2: Auto Scaling - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 2</h2>
+        <div class="lesson-title">Renting Computers in Someone Else&#39;s Basement</div>
+        <div class="lesson-meta">
+          <span>~8 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 85.8%;"></div>
+      </div>
+      <div class="progress-text">Step 6 of 7</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-02.html">
+<span class="step-number">1</span>
+<span class="step-title">VPC Basics</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-2.html">
+<span class="step-number">2</span>
+<span class="step-title">SSH Key Pair</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-3.html">
+<span class="step-number">3</span>
+<span class="step-title">Launch EC2 Instance</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-4.html">
+<span class="step-number">4</span>
+<span class="step-title">Deploy Application</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Load Balancer</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-02-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Auto Scaling</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-7.html">
+<span class="step-number">7</span>
+<span class="step-title">CloudWatch + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li class="current">
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 2 - Part 6</span>
+        <h1>Auto Scaling</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 6: Auto Scaling (1.5 hours)</h2>
+
+        
+
+        <h3>Step 14: Create Launch Template</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Launch Templates and how do they differ from AMIs?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A Launch Template is a recipe that defines how to launch EC2 instances - AMI, instance type, security groups, key pairs, etc. Think of an AMI as the disk image (the software) and a Launch Template as the configuration (the settings). When Auto Scaling needs to create instances, it uses the Launch Template to know what to create.</p>
+
+            <p><strong>Why we need it:</strong> Auto Scaling Groups need to know how to launch instances consistently. Without a Launch Template, you'd have to manually specify all settings every time. The template ensures every auto-scaled instance is identical - same software (via AMI), same network settings, same security configuration. You can also version templates to track changes over time.</p>
+
+            <p><strong>Key details:</strong> Launch Templates replaced the older "Launch Configurations" (which are deprecated but still work). Templates support versioning - you can have v1, v2, v3 and switch between them or roll back. They can specify everything about an instance: AMI, type, key pair, security groups, user data scripts, IAM roles, monitoring settings, and more.</p>
+
+            <p><strong>Common gotcha:</strong> Changing a Launch Template doesn't update existing instances - only new instances launched after the change get the new settings. To update running instances, you must terminate them and let Auto Scaling launch replacements. Also, forgetting to specify the AMI in the template causes launch failures, but the error only appears in Auto Scaling activity logs, not immediately.</p>
+          </div>
+        </div>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">EC2</span></div><code class="language-bash"># Create launch template
+aws ec2 create-launch-template \
+  --launch-template-name web-app-template \
+  --version-description "v1" \
+  --launch-template-data "{
+    \"ImageId\": \"$MY_AMI\",
+    \"InstanceType\": \"t2.micro\",
+    \"KeyName\": \"my-aws-key\",
+    \"SecurityGroupIds\": [\"$SG_ID\"]
+  }"</code></pre>
+
+        <h3>Step 15: Create Auto Scaling Group</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Auto Scaling Groups?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> An Auto Scaling Group (ASG) automatically maintains a fleet of EC2 instances. You define how many instances you want (desired capacity), the minimum and maximum allowed, and rules for when to scale up or down. The ASG continuously monitors your instances and adjusts the count to match your configuration.</p>
+
+            <p><strong>Why we need it:</strong> Manually managing multiple servers is tedious and error-prone. If traffic spikes, you need more servers fast. If an instance fails, you need a replacement immediately. ASGs handle this automatically - they launch instances when needed, terminate them when not, and replace failed instances within minutes. This gives you reliability and cost savings without manual intervention.</p>
+
+            <p><strong>Key details:</strong> ASGs work with Launch Templates to know what to launch. They integrate with Load Balancers to automatically register new instances and remove terminated ones. Health checks can be EC2-level (is the VM running?) or ELB-level (is the app responding?). ASGs can span multiple Availability Zones for fault tolerance.</p>
+
+            <p><strong>Common gotcha:</strong> ASGs replace unhealthy instances automatically, which is great until you're trying to debug why instances keep dying - the ASG terminates the broken instance before you can investigate. Use "suspend scaling" temporarily for debugging. Also, if desired capacity is set too low for your actual traffic, your app will be overloaded even though the ASG is working correctly.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What do Min, Max, and Desired Capacity mean?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> These three numbers define the bounds of your Auto Scaling Group. Minimum is the fewest instances allowed (even during low traffic). Maximum is the most instances allowed (even during traffic spikes). Desired is how many instances you want right now - the ASG tries to maintain this exact count.</p>
+
+            <p><strong>Why we need it:</strong> Min prevents scaling down to zero instances (ensuring availability). Max prevents runaway costs if scaling goes wrong. Desired is your target - based on current conditions, this is the optimal number. For example: min=2 (always at least 2 for redundancy), max=10 (never exceed 10 to control costs), desired=4 (currently need 4 based on traffic).</p>
+
+            <p><strong>Key details:</strong> Desired capacity can be changed manually or by scaling policies. If you manually set desired=6 but max=5, AWS rejects it. If scaling policies try to exceed max, they're capped at max. The ASG continuously works to match the actual instance count to desired capacity, launching or terminating instances as needed.</p>
+
+            <p><strong>Common gotcha:</strong> Setting min=max (like min=2, max=2) disables auto scaling entirely - the count is fixed. This is sometimes desired for predictable workloads, but defeats the purpose of Auto Scaling. Also, if you set min too high, you'll pay for idle instances during low traffic. Balance availability needs against costs.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is Health Check Type - ELB vs EC2?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Health check type determines how Auto Scaling decides if an instance is healthy. EC2 health checks ask "Is the virtual machine running?" ELB health checks ask "Is the application responding correctly?" The ASG terminates and replaces instances that fail health checks.</p>
+
+            <p><strong>Why we need it:</strong> A running VM doesn't mean your app is working. The instance might be running but your app crashed, the database connection failed, or the process hung. EC2 checks only catch infrastructure failures (VM crash, hardware issue). ELB checks catch application failures too, making them more reliable for web applications.</p>
+
+            <p><strong>Key details:</strong> With EC2 health checks, an instance is healthy if the VM is running. With ELB health checks, an instance must pass the load balancer's health check endpoint (like GET /health returns 200 OK). ELB checks happen every 15-30 seconds. If an instance fails health checks consecutively for the configured threshold, it's marked unhealthy.</p>
+
+            <p><strong>Common gotcha:</strong> ELB health checks are stricter, which can cause unexpected terminations if your health check endpoint isn't robust. If your app takes 5 minutes to warm up after launch, it'll fail ELB checks and get terminated immediately. That's why health check grace period exists - it gives new instances time to start before checking health.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is Health Check Grace Period?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Health check grace period is the time (in seconds) that Auto Scaling waits after launching an instance before checking if it's healthy. During this period, the instance is assumed healthy even if health checks fail. Once the grace period expires, normal health checks begin.</p>
+
+            <p><strong>Why we need it:</strong> Instances need time to boot, start applications, warm up caches, and connect to dependencies. A Node.js app might take 2-3 minutes to fully start. If health checks begin immediately, they'll fail (app isn't ready yet), causing the ASG to terminate the instance before it has a chance to become healthy. The grace period prevents this premature termination.</p>
+
+            <p><strong>Key details:</strong> The default is 300 seconds (5 minutes), but you can adjust based on your app's startup time. If your app starts in 30 seconds, use 60-90 seconds. If it takes 10 minutes to warm up, use 600-720 seconds. The grace period starts when the instance enters InService state, not when it launches.</p>
+
+            <p><strong>Common gotcha:</strong> Setting grace period too low causes a death spiral - instances launch, fail health checks before they're ready, get terminated, ASG launches replacements, repeat. Setting it too high means broken instances stay in rotation longer, causing user-facing errors. Monitor your app's actual startup time and set grace period to 1.5-2x that duration.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is VPC Zone Identifier?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> VPC Zone Identifier is a comma-separated list of subnet IDs that tells Auto Scaling which subnets to launch instances into. The ASG distributes instances across these subnets evenly. If you provide subnets from multiple Availability Zones, the ASG automatically spreads instances across AZs for fault tolerance.</p>
+
+            <p><strong>Why we need it:</strong> Availability Zones are physically separate data centers. If AZ us-east-1a loses power, instances in us-east-1b and us-east-1c keep running. By launching into multiple AZ subnets, Auto Scaling makes your application resilient to data center failures. If all instances were in one AZ and it failed, your entire app would go down.</p>
+
+            <p><strong>Key details:</strong> The ASG tries to balance instances evenly across AZs. With min=4 and 2 AZs, you get 2 instances per AZ. If one AZ becomes unhealthy or unavailable, ASG launches replacement instances in the remaining AZs. All subnets must be in the same VPC. For high availability, always use at least 2 AZs (preferably 3).</p>
+
+            <p><strong>Common gotcha:</strong> If you specify subnets from only one AZ, you lose multi-AZ resilience even though you're using Auto Scaling. Also, some instance types aren't available in all AZs - if your ASG tries to launch in an AZ without capacity for your instance type, launches fail. Check CloudWatch metrics for FailedAZRebalance to catch this.</p>
+          </div>
+        </div>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">EC2</span></div><code class="language-bash"># Get ALL subnet IDs for ASG
+export ALL_SUBNETS=$(aws ec2 describe-subnets \
+  --filters "Name=vpc-id,Values=$VPC_ID" \
+  --query "Subnets[*].SubnetId" \
+  --output text | tr '\t' ',')
+
+# Create Auto Scaling Group
+aws autoscaling create-auto-scaling-group \
+  --auto-scaling-group-name web-app-asg \
+  --launch-template LaunchTemplateName=web-app-template \
+  --min-size 2 \
+  --max-size 4 \
+  --desired-capacity 2 \
+  --target-group-arns $TG_ARN \
+  --vpc-zone-identifier "$ALL_SUBNETS" \
+  --health-check-type ELB \
+  --health-check-grace-period 300</code></pre>
+
+        <p><strong>Wait a few minutes</strong> for instances to launch.</p>
+
+        <pre><code class="language-bash"># Check instances
+aws autoscaling describe-auto-scaling-groups \
+  --auto-scaling-group-names web-app-asg
+
+# Test load balancer (should round-robin between instances)
+for i in {1..10}; do
+  curl http://$ALB_DNS | jq .hostname
+  sleep 1
+done</code></pre>
+
+        <p><strong>You should see different hostnames!</strong> Traffic is being distributed across multiple servers.</p>
+
+        <h3>Step 16: Test Auto Scaling</h3>
+        <p><strong>Create scaling policies based on CPU:</strong></p>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Scaling Policies?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Scaling policies define the rules for when and how Auto Scaling should add or remove instances. For example: "when CPU usage &gt; 70% for 5 minutes, add 2 instances" or "when request count &lt; 100 for 10 minutes, remove 1 instance". Policies can be triggered by CloudWatch alarms or target tracking metrics.</p>
+
+            <p><strong>Why we need it:</strong> Without policies, Auto Scaling would just maintain a fixed desired capacity. Policies make it truly automatic - they respond to actual load. When traffic increases, CPU spikes, policies detect it and scale up. When traffic decreases, policies scale down to save money. This adapts your infrastructure to demand without human intervention.</p>
+
+            <p><strong>Key details:</strong> There are three types: Target Tracking (maintain a metric at a target value, like "keep CPU at 50%"), Step Scaling (scale by different amounts based on alarm severity), and Simple Scaling (add/remove a fixed number when alarm triggers). Policies have cooldown periods to prevent rapid scaling thrashing.</p>
+
+            <p><strong>Common gotcha:</strong> Over-aggressive policies cause thrashing - scale up, load distributes, CPU drops, scale down, CPU spikes, repeat. Use longer evaluation periods (5-10 minutes) and appropriate cooldowns (5-10 minutes). Also, scaling up is fast but scaling down should be slower to avoid dropping capacity prematurely during temporary traffic dips.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What does ChangeInCapacity mean?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> ChangeInCapacity is an adjustment type that adds or removes a specific number of instances. If the scaling adjustment is +1, it increases desired capacity by 1 instance. If it's -2, it decreases by 2 instances. The change is relative to the current capacity, not absolute.</p>
+
+            <p><strong>Why we need it:</strong> Different adjustment types give you control over how aggressively to scale. ChangeInCapacity is simple and predictable - "add 1 instance" regardless of current size. Other types include PercentChangeInCapacity (scale by percentage) and ExactCapacity (set to a specific number). For most use cases, ChangeInCapacity is the most intuitive.</p>
+
+            <p><strong>Key details:</strong> With ChangeInCapacity, if desired=4 and adjustment=+2, the new desired becomes 6. The change respects min/max limits - if max=5 and you try to add 3 when desired=4, it caps at 5. Positive numbers scale up (add instances), negative numbers scale down (remove instances).</p>
+
+            <p><strong>Common gotcha:</strong> ChangeInCapacity doesn't scale proportionally to load. If you have 10 instances and need 50% more capacity, +1 instance isn't enough. Consider PercentChangeInCapacity for larger fleets. Also, scaling by +1/-1 works for small fleets but is too slow for large ones - adjust based on your fleet size and traffic patterns.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are CloudWatch Alarms and how do they trigger scaling?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> CloudWatch Alarms monitor metrics (like CPU usage, request count, custom metrics) and change state when thresholds are crossed. States are OK (metric is fine), ALARM (threshold breached), or INSUFFICIENT_DATA (not enough data). When an alarm enters ALARM state, it can trigger actions like executing a scaling policy.</p>
+
+            <p><strong>Why we need it:</strong> Metrics alone don't trigger actions - you need alarms to watch metrics and react. An alarm might say "if average CPU &gt; 70% for 2 consecutive 5-minute periods, enter ALARM state and execute the scale-up policy". This separates monitoring (collecting data) from acting (scaling), making systems more flexible and observable.</p>
+
+            <p><strong>Key details:</strong> Alarms evaluate metrics at regular intervals (period). Multiple evaluation periods prevent false alarms from brief spikes. For example: period=300 seconds (5 minutes), evaluation periods=2 means the alarm needs CPU &gt; 70% for 10 minutes total before triggering. Alarms can trigger SNS notifications, Auto Scaling policies, or EC2 actions.</p>
+
+            <p><strong>Common gotcha:</strong> Setting evaluation periods too low causes false alarms from brief traffic spikes. Setting too high means slow response to real issues. A good rule: 2-3 evaluation periods of 5 minutes each (10-15 minutes total) balances responsiveness with stability. Also, alarms cost $0.10/month each - not much individually, but hundreds of alarms add up.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Target Tracking vs Simple Scaling - which to use?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Target Tracking automatically adjusts capacity to maintain a metric at a target value (like "keep CPU at 50%"). Simple Scaling adds/removes a fixed number of instances when an alarm triggers. Target Tracking is hands-off and adaptive; Simple Scaling gives you precise control.</p>
+
+            <p><strong>Why we need it:</strong> Target Tracking is easier - just set "maintain CPU at 50%" and AWS figures out how many instances to add or remove. Simple Scaling gives more control - you define exactly when to scale and by how much. For most applications, Target Tracking is better because it self-adjusts. Use Simple Scaling only when you have specific scaling requirements that Target Tracking can't handle.</p>
+
+            <p><strong>Key details:</strong> Target Tracking creates and manages CloudWatch alarms automatically - you don't need to create them manually. It can scale on predefined metrics (CPU, network, request count) or custom metrics. Simple Scaling requires you to create CloudWatch alarms yourself and link them to policies. Target Tracking typically responds faster because it's more aggressive.</p>
+
+            <p><strong>Common gotcha:</strong> Target Tracking only scales based on one metric at a time (though you can have multiple policies). If you need complex logic like "scale up if CPU &gt; 70% AND memory &gt; 80%", you need Simple Scaling with custom metrics. Also, Target Tracking won't scale below min capacity to hit the target - if target is 30% CPU but min=2 instances only use 20% CPU, it won't scale down further.</p>
+          </div>
+        </div>
+
+        <pre><code class="language-bash"># Scale up when CPU &gt; 70%
+aws autoscaling put-scaling-policy \
+  --auto-scaling-group-name web-app-asg \
+  --policy-name scale-up \
+  --scaling-adjustment 1 \
+  --adjustment-type ChangeInCapacity
+
+# Scale down when CPU &lt; 30%
+aws autoscaling put-scaling-policy \
+  --auto-scaling-group-name web-app-asg \
+  --policy-name scale-down \
+  --scaling-adjustment -1 \
+  --adjustment-type ChangeInCapacity</code></pre>
+
+        <p><strong>To test</strong> (load testing):</p>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>How do you test scaling with ab or curl?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> ab (Apache Bench) is a command-line tool for load testing web servers. The command "ab -n 10000 -c 100 http://example.com/" sends 10,000 requests using 100 concurrent connections. This simulates traffic and stresses your servers. curl is a simpler tool that sends single requests, useful for basic testing but not for load simulation.</p>
+
+            <p><strong>Why we need it:</strong> To verify Auto Scaling works, you need to generate enough load to trigger scaling policies. Normal browsing won't do it - you need sustained high CPU or request rates. Load testing tools like ab, wrk, or hey let you create artificial traffic spikes to verify your scaling policies respond correctly and your infrastructure handles the load.</p>
+
+            <p><strong>Key details:</strong> ab parameters: -n (total requests), -c (concurrent connections), -t (time limit in seconds). For testing scaling, use high concurrency (100-500) for several minutes. Watch CloudWatch metrics during the test - you should see CPU rise, alarms trigger, and new instances launch. After stopping the test, verify instances scale back down.</p>
+
+            <p><strong>Common gotcha:</strong> Load testing from your laptop might be limited by your internet connection or NAT gateway limits. For serious testing, run the load test from EC2 instances in the same region. Also, remember that Auto Scaling takes 2-5 minutes to launch instances, so your first spike might still cause slowdowns. Real scaling shines during sustained elevated load, not sudden spikes.</p>
+          </div>
+        </div>
+
+        <pre><code># Install stress testing tool on EC2 instances and run load
+# Or use: ab -n 10000 -c 100 http://$ALB_DNS/</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-02-5.html" class="btn btn-secondary">← Previous: Load Balancer</a>
+          <a href="lesson-02-7.html" class="btn btn-primary">Next: CloudWatch + Cleanup →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

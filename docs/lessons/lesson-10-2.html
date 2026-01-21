@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 10: CloudWatch Logs Insights - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 10</h2>
+        <div class="lesson-title">Observability - Know What&#39;s Happening</div>
+        <div class="lesson-meta">
+          <span>~6 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 33.33%;"></div>
+      </div>
+      <div class="progress-text">Step 2 of 6</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-10.html">
+<span class="step-number">1</span>
+<span class="step-title">Advanced CloudWatch Metrics</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-10-2.html">
+<span class="step-number">2</span>
+<span class="step-title">CloudWatch Logs Insights</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-3.html">
+<span class="step-number">3</span>
+<span class="step-title">CloudWatch Alarms</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-4.html">
+<span class="step-number">4</span>
+<span class="step-title">X-Ray Distributed Tracing</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-5.html">
+<span class="step-number">5</span>
+<span class="step-title">CloudWatch Synthetics</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Container Insights + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li class="current">
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 10 - Part 2</span>
+        <h1>CloudWatch Logs Insights</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 2: CloudWatch Logs Insights (1 hour)</h2>
+
+        <h3>Step 2: Create Log Group and Stream Logs</h3>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">CloudWatch Logs</span></div><code class="language-bash"># Create log group
+aws logs create-log-group --log-group-name /app/monitored-app
+
+# Create log stream
+aws logs create-log-stream \
+  --log-group-name /app/monitored-app \
+  --log-stream-name app-logs-$(date +%Y%m%d)</code></pre>
+
+        <p>Update app to send logs:</p>
+
+        <pre><code class="language-javascript">// Add to monitored-app/index.js
+const { CloudWatchLogsClient, PutLogEventsCommand } = require('@aws-sdk/client-cloudwatch-logs');
+const logsClient = new CloudWatchLogsClient({});
+
+async function logToCloudWatch(message, level = 'INFO') {
+  try {
+    await logsClient.send(new PutLogEventsCommand({
+      logGroupName: '/app/monitored-app',
+      logStreamName: `app-logs-${new Date().toISOString().split('T')[0].replace(/-/g, '')}`,
+      logEvents: [
+        {
+          message: JSON.stringify({ level, message, timestamp: new Date().toISOString() }),
+          timestamp: Date.now()
+        }
+      ]
+    }));
+  } catch (error) {
+    console.error('Failed to send logs:', error);
+  }
+}
+
+// Use in order endpoint
+app.post('/order', express.json(), async (req, res) =&gt; {
+  // ... existing code
+  await logToCloudWatch(`Order placed: ${amount}`);
+  // ...
+});</code></pre>
+
+        <h3>Step 3: Query Logs with CloudWatch Insights</h3>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">CloudWatch Logs</span></div><code class="language-bash"># Query logs for errors
+aws logs start-query \
+  --log-group-name /app/monitored-app \
+  --start-time $(date -u -v-1H +%s) \
+  --end-time $(date -u +%s) \
+  --query-string 'fields @timestamp, @message | filter level = "ERROR" | sort @timestamp desc | limit 20'
+
+# Get query ID from output
+export QUERY_ID="paste-query-id"
+
+# Get results (wait a moment for query to complete)
+aws logs get-query-results --query-id $QUERY_ID</code></pre>
+
+        <p><strong>Common queries:</strong></p>
+
+        <pre><code>-- Find slow requests
+fields @timestamp, requestDuration
+| filter requestDuration &gt; 1000
+| sort requestDuration desc
+| limit 20
+
+-- Count errors by hour
+stats count() by bin(1h) as hour
+| filter level = "ERROR"
+
+-- Find high revenue orders
+fields @timestamp, amount
+| filter amount &gt; 100
+| sort amount desc</code></pre>
+
+        <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 15px; margin: 20px 0;">
+          <strong>Pro Tip:</strong> CloudWatch Logs Insights uses a SQL-like query language. You can save frequently used queries for quick access in the console.
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-10.html" class="btn btn-secondary">← Previous: Advanced CloudWatch Metrics</a>
+          <a href="lesson-10-3.html" class="btn btn-primary">Next: CloudWatch Alarms →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

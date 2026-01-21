@@ -1,0 +1,193 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-12-2.html
+lessonNumber: 12
+lessonTitle: "Victory Lap - Build Something Amazing!"
+duration: "~10-20 hours"
+cost: "$10-20"
+stepNumber: 2
+totalSteps: 8
+progress: 25
+title: "Lesson 12: Infrastructure Setup - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-12.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Capstone Overview</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-12-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Infrastructure Setup</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">Processing Pipeline</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">API Layer</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Frontend Integration</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">CI/CD Pipeline</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Monitoring &amp; Cost Optimization</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-8.html">
+  <span class="step-number">8</span>
+  <span class="step-title">Deliverables &amp; Next Steps</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 12 - Part 2</span>
+        <h1>Infrastructure Setup</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 1: Infrastructure Setup (2 hours)</h2>
+
+        <h3>Step 1: Create Terraform Configuration</h3>
+        <p>Create <code>main.tf</code>:</p>
+
+        <pre><code class="language-terraform">terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~&gt; 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+# S3 buckets
+resource "aws_s3_bucket" "uploads" {
+  bucket = "video-uploads-${data.aws_caller_identity.current.account_id}"
+}
+
+resource "aws_s3_bucket" "processed" {
+  bucket = "video-processed-${data.aws_caller_identity.current.account_id}"
+}
+
+resource "aws_s3_bucket_versioning" "uploads" {
+  bucket = aws_s3_bucket.uploads.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_encryption" "uploads" {
+  bucket = aws_s3_bucket.uploads.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+# DynamoDB table
+resource "aws_dynamodb_table" "videos" {
+  name           = "video-catalog"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "videoId"
+
+  attribute {
+    name = "videoId"
+    type = "S"
+  }
+
+  attribute {
+    name = "uploadedAt"
+    type = "N"
+  }
+
+  global_secondary_index {
+    name            = "UploadedAtIndex"
+    hash_key        = "uploadedAt"
+    projection_type = "ALL"
+  }
+}
+
+# CloudFront distribution
+resource "aws_cloudfront_distribution" "video_cdn" {
+  enabled = true
+
+  origin {
+    domain_name = aws_s3_bucket.processed.bucket_regional_domain_name
+    origin_id   = "S3-processed-videos"
+  }
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-processed-videos"
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+
+data "aws_caller_identity" "current" {}
+
+output "upload_bucket" {
+  value = aws_s3_bucket.uploads.bucket
+}
+
+output "cdn_domain" {
+  value = aws_cloudfront_distribution.video_cdn.domain_name
+}</code></pre>
+
+        <p>Deploy:</p>
+
+        <pre><code class="language-bash">terraform init
+terraform apply</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-12.html" class="btn btn-secondary">← Previous: Capstone Overview</a>
+          <a href="lesson-12-3.html" class="btn btn-primary">Next: Processing Pipeline →</a>
+        </div>
+      </div>

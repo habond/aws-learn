@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 12: Processing Pipeline - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 12</h2>
+        <div class="lesson-title">Victory Lap - Build Something Amazing!</div>
+        <div class="lesson-meta">
+          <span>~10-20 hours</span>
+          <span>$10-20</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 37.5%;"></div>
+      </div>
+      <div class="progress-text">Step 3 of 8</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-12.html">
+<span class="step-number">1</span>
+<span class="step-title">Capstone Overview</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Infrastructure Setup</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-12-3.html">
+<span class="step-number">3</span>
+<span class="step-title">Processing Pipeline</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-4.html">
+<span class="step-number">4</span>
+<span class="step-title">API Layer</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Frontend Integration</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-6.html">
+<span class="step-number">6</span>
+<span class="step-title">CI/CD Pipeline</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Monitoring &amp; Cost Optimization</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-8.html">
+<span class="step-number">8</span>
+<span class="step-title">Deliverables &amp; Next Steps</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li class="current">
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 12 - Part 3</span>
+        <h1>Video Processing Pipeline</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 2: Video Processing Pipeline (3 hours)</h2>
+
+        <h3>Step 2: Create Processing Lambda Functions</h3>
+        <p>Create <code>thumbnail-generator/index.js</code>:</p>
+
+        <pre><code class="language-javascript">const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
+const ffmpeg = require('fluent-ffmpeg');
+const fs = require('fs');
+const path = require('path');
+
+const s3 = new S3Client({});
+const ddbClient = new DynamoDBClient({});
+const ddb = DynamoDBDocumentClient.from(ddbClient);
+
+exports.handler = async (event) =&gt; {
+  const { videoId, bucket, key } = event;
+
+  const inputPath = `/tmp/${videoId}.mp4`;
+  const outputPath = `/tmp/${videoId}-thumb.jpg`;
+
+  try {
+    // Download video
+    const getCommand = new GetObjectCommand({ Bucket: bucket, Key: key });
+    const videoData = await s3.send(getCommand);
+
+    fs.writeFileSync(inputPath, videoData.Body);
+
+    // Generate thumbnail at 2 second mark
+    await new Promise((resolve, reject) =&gt; {
+      ffmpeg(inputPath)
+        .screenshots({
+          timestamps: ['2'],
+          filename: path.basename(outputPath),
+          folder: '/tmp'
+        })
+        .on('end', resolve)
+        .on('error', reject);
+    });
+
+    // Upload thumbnail
+    const thumbnailData = fs.readFileSync(outputPath);
+    const thumbnailKey = `thumbnails/${videoId}.jpg`;
+
+    await s3.send(new PutObjectCommand({
+      Bucket: process.env.PROCESSED_BUCKET,
+      Key: thumbnailKey,
+      Body: thumbnailData,
+      ContentType: 'image/jpeg'
+    }));
+
+    // Update DynamoDB
+    await ddb.send(new UpdateCommand({
+      TableName: 'video-catalog',
+      Key: { videoId },
+      UpdateExpression: 'SET thumbnailUrl = :url',
+      ExpressionAttributeValues: {
+        ':url': `https://${process.env.CDN_DOMAIN}/${thumbnailKey}`
+      }
+    }));
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ thumbnailUrl: thumbnailKey })
+    };
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  } finally {
+    // Cleanup
+    [inputPath, outputPath].forEach(file =&gt; {
+      if (fs.existsSync(file)) fs.unlinkSync(file);
+    });
+  }
+};</code></pre>
+
+        <h3>Step 3: Create Step Functions Workflow</h3>
+
+        <pre><code class="language-bash">{
+  "Comment": "Video processing workflow",
+  "StartAt": "ExtractMetadata",
+  "States": {
+    "ExtractMetadata": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:ACCOUNT:function:extract-metadata",
+      "Next": "ParallelProcessing"
+    },
+    "ParallelProcessing": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "GenerateThumbnail",
+          "States": {
+            "GenerateThumbnail": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:ACCOUNT:function:generate-thumbnail",
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "ModerateContent",
+          "States": {
+            "ModerateContent": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::aws-sdk:rekognition:startContentModeration",
+              "Parameters": {
+                "Video": {
+                  "S3Object": {
+                    "Bucket.$": "$.bucket",
+                    "Name.$": "$.key"
+                  }
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "TranscodeVideo",
+          "States": {
+            "TranscodeVideo": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::mediaconvert:createJob.sync",
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "UpdateCatalog"
+    },
+    "UpdateCatalog": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:ACCOUNT:function:update-catalog",
+      "Next": "SendNotification"
+    },
+    "SendNotification": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "arn:aws:sns:us-east-1:ACCOUNT:video-processed",
+        "Message.$": "$.notification"
+      },
+      "End": true
+    }
+  }
+}</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-12-2.html" class="btn btn-secondary">← Previous: Infrastructure Setup</a>
+          <a href="lesson-12-4.html" class="btn btn-primary">Next: API Layer →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

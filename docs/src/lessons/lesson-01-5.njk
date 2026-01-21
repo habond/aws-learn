@@ -1,0 +1,284 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-01-5.html
+lessonNumber: 1
+lessonTitle: "Your First Internet Empire"
+duration: "~6 hours"
+cost: "$1-2"
+stepNumber: 5
+totalSteps: 8
+progress: 62.5
+title: "Lesson 1: Custom Domain - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-01.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Overview + AWS Setup</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Build Your Website</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">S3 Storage</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">CloudFront CDN</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-01-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Custom Domain</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">CloudWatch Monitoring</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Make Updates</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-8.html">
+  <span class="step-number">8</span>
+  <span class="step-title">CLI Practice + Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 1 - Part 5</span>
+        <h1>Route 53 - Custom Domain</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 5: Route 53 - Custom Domain (1.5 hours)</h2>
+
+        <h3>Step 13: Register a Domain (Optional)</h3>
+        <p><strong>If you want a custom domain</strong> (costs ~$12/year):</p>
+        <ol>
+          <li>Go to Route 53 → Registered domains → Register domain</li>
+          <li>Search for available domain</li>
+          <li>Add to cart and complete purchase</li>
+          <li><strong>Takes 10-15 minutes</strong> to register</li>
+        </ol>
+
+        <p><strong>Skip this step if</strong>:</p>
+        <ul>
+          <li>You already have a domain</li>
+          <li>You don't want to spend $12</li>
+          <li>You're fine with the CloudFront URL</li>
+        </ul>
+
+        <h3>Step 14: Create Hosted Zone</h3>
+        <pre><code class="language-bash"># If you registered domain via Route 53, hosted zone is auto-created
+# Otherwise:
+aws route53 create-hosted-zone \
+  --name yourdomain.com \
+  --caller-reference $(date +%s)</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is a Hosted Zone?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A hosted zone is a container for DNS records for your domain. It's like a database that stores all the routing rules for yourdomain.com: where www points to, where mail goes, where the root domain resolves, etc.</p>
+
+            <p><strong>Why we need it:</strong> You own the domain name, but you need somewhere to store the instructions "when someone types mysite.com, send them to this CloudFront distribution". The hosted zone holds these instructions. Route 53 manages the hosted zone and answers DNS queries.</p>
+
+            <p><strong>Key details:</strong> Each hosted zone costs $0.50/month. When you register a domain through Route 53, it auto-creates a hosted zone. If you bought your domain elsewhere (GoDaddy, Namecheap), you create a hosted zone in Route 53, then update your domain's nameservers to point to Route 53's servers.</p>
+
+            <p><strong>Common gotcha:</strong> Creating a hosted zone doesn't automatically connect it to your domain! You must copy the 4 nameserver addresses (NS records) from the hosted zone and enter them at your domain registrar. Until you do this, DNS queries won't reach Route 53.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is caller-reference and why does it use $(date +%s)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Caller-reference is a unique string you provide when creating a hosted zone. It's used for idempotency - ensuring the same operation doesn't happen twice. $(date +%s) generates the current Unix timestamp in seconds.</p>
+
+            <p><strong>Why we need it:</strong> Imagine your network glitches and the command runs twice. Without caller-reference, you'd create two hosted zones and get billed for both. With it, AWS says "I already created a zone with this caller-reference, here it is" instead of creating a duplicate.</p>
+
+            <p><strong>Key details:</strong> The value doesn't matter, it just needs to be unique per operation. Using timestamp works because you won't run the same command at the exact same second. Some people use UUIDs or random strings. Once created, you can't change the caller-reference.</p>
+
+            <p><strong>Common gotcha:</strong> If you rerun the command with the same caller-reference, it returns the existing zone (not an error). This is actually helpful! But if you wanted to create a second zone for the same domain (for testing), you'd need a different caller-reference. Most people don't need multiple zones for one domain.</p>
+          </div>
+        </div>
+
+        <h3>Step 15: Point Domain to CloudFront</h3>
+        <ol>
+          <li>Go to Route 53 → Hosted zones → Your domain</li>
+          <li>Click "Create record"</li>
+          <li><strong>Record name</strong>: Leave empty (for root domain) or <code>www</code></li>
+          <li><strong>Record type</strong>: A</li>
+          <li><strong>Alias</strong>: Yes</li>
+          <li><strong>Route traffic to</strong>: CloudFront distribution</li>
+          <li><strong>Choose your distribution</strong> from dropdown</li>
+          <li>Click "Create records"</li>
+        </ol>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is an A Record and what are the different DNS record types?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> An A record maps a domain name to an IPv4 address (like 192.168.1.1). It's the most basic DNS record - it says "when someone visits this domain, send them to this IP address". Other common types: AAAA (IPv6), CNAME (alias to another domain), MX (mail server).</p>
+
+            <p><strong>Why we need it:</strong> Browsers speak IP addresses, humans speak domain names. A records are the bridge. When you type "google.com", your computer asks DNS "what's the A record for google.com?" and gets back an IP it can connect to.</p>
+
+            <p><strong>Key details:</strong> A records only map to IPs, not other domains. If you want "www.mysite.com" to point to "mysite.com", use CNAME. If you want the root domain, use A record. You can have multiple A records for load balancing (round-robin DNS).</p>
+
+            <p><strong>Common gotcha:</strong> You can't use CNAME for the root domain (mysite.com) - only for subdomains (www.mysite.com). This is a DNS specification limitation. That's why AWS invented Alias records (see next box) - they work like CNAMEs but are allowed for root domains.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is an Alias Record and why is it special?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Alias records are AWS's special extension to DNS. They look like A records but point to AWS resources (CloudFront, S3, load balancers) by name instead of IP. Route 53 automatically resolves the current IP behind the scenes.</p>
+
+            <p><strong>Why we need it:</strong> CloudFront distributions don't have fixed IPs - AWS changes them constantly. You can't create a normal A record pointing to CloudFront. Alias records solve this by dynamically looking up CloudFront's current IPs. Plus, they're free (normal queries cost $0.40 per million).</p>
+
+            <p><strong>Key details:</strong> Alias records only work in Route 53, only for AWS resources, and are free. They can be used for root domains (unlike CNAMEs). When you create one, Route 53 shows a dropdown of your CloudFront distributions, S3 buckets, etc. - just select the resource.</p>
+
+            <p><strong>Common gotcha:</strong> Alias records only work for resources in the same AWS account. If CloudFront is in account A and Route 53 in account B, you can't use alias - you'd need a CNAME (which won't work for root domain). Also, alias records to CloudFront require you've added the domain to the distribution first.</p>
+          </div>
+        </div>
+
+        <p><strong>DNS propagation takes 5-60 minutes</strong>. Be patient!</p>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is DNS Propagation and why does it take time?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> DNS propagation is the time it takes for DNS changes to spread across the internet. When you update a record in Route 53, millions of DNS servers worldwide need to learn about the change. This doesn't happen instantly.</p>
+
+            <p><strong>Why we need it:</strong> DNS servers cache records to reduce load - they don't check for updates every second. When you change a record, some servers still have the old cached version. Over time (minutes to hours), caches expire and servers fetch the new record. Eventually everyone has the new version.</p>
+
+            <p><strong>Key details:</strong> TTL (Time To Live) controls cache duration. Route 53 defaults to 300 seconds (5 minutes) for new records. If your old record had a 24-hour TTL, propagation takes up to 24 hours! Lower TTL = faster updates but more DNS queries (costs more).</p>
+
+            <p><strong>Common gotcha:</strong> "It works for me but not my friend!" - You're seeing the new record, they're seeing cached old one. Solution: wait, or flush their DNS cache (ipconfig /flushdns on Windows, sudo dscacheutil -flushcache on Mac). Testing with dig or nslookup shows you what DNS servers are returning, not what's cached locally.</p>
+          </div>
+        </div>
+
+        <h3>Step 16: Add SSL Certificate (HTTPS)</h3>
+        <p><strong>CloudFront provides free SSL</strong> via AWS Certificate Manager!</p>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are SSL/TLS Certificates and why do we need them?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> SSL/TLS certificates are digital documents that prove your website is who it claims to be and enable encrypted (HTTPS) connections. They're issued by trusted Certificate Authorities (CAs) after verifying you own the domain.</p>
+
+            <p><strong>Why we need it:</strong> Without HTTPS, all traffic between users and your site is readable by anyone on the network (coffee shop WiFi, ISPs, hackers). Browsers show scary "Not Secure" warnings on HTTP sites. Search engines rank HTTPS sites higher. It's basically mandatory in 2026.</p>
+
+            <p><strong>Key details:</strong> Certificates contain your domain name, your public key, and the CA's signature. Browsers trust certain CAs (like AWS ACM). When you visit an HTTPS site, the browser verifies the certificate is valid, not expired, and matches the domain. Then it encrypts all traffic using the public key.</p>
+
+            <p><strong>Common gotcha:</strong> Certificates expire (usually after 1 year). ACM auto-renews them as long as DNS validation records remain in place. If you delete those records, renewal fails and your site breaks when the cert expires. Set a calendar reminder to check cert expiration dates!</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is ACM (AWS Certificate Manager)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> ACM is AWS's service for creating and managing SSL/TLS certificates. It's completely free - AWS acts as the Certificate Authority and handles all the complexity of certificate management.</p>
+
+            <p><strong>Why we need it:</strong> Traditional SSL certificates cost $50-500/year and require manual renewal, downloading files, uploading to servers. ACM is free, integrates with AWS services (CloudFront, load balancers), and auto-renews. You'd be crazy not to use it for AWS projects.</p>
+
+            <p><strong>Key details:</strong> ACM certificates can't be exported or used outside AWS - they're locked to AWS services. For CloudFront, the certificate MUST be requested in us-east-1 region (even if your resources are elsewhere). You can add multiple domains to one certificate (yourdomain.com, www.yourdomain.com, *.yourdomain.com).</p>
+
+            <p><strong>Common gotcha:</strong> Requesting a certificate in the wrong region is the #1 mistake. CloudFront only sees certificates in us-east-1. If you're in eu-west-1 working on your site and request a cert there, CloudFront won't find it. Always switch to us-east-1 first!</p>
+          </div>
+        </div>
+
+        <ol>
+          <li>Go to AWS Certificate Manager (ACM) - <strong>MUST be in us-east-1 region</strong></li>
+          <li>Request certificate</li>
+          <li>Add domain names: <code>yourdomain.com</code> and <code>www.yourdomain.com</code></li>
+          <li>Validation method: DNS validation</li>
+          <li>Click "Create records in Route 53" (easy mode!)</li>
+          <li>Wait for validation (~5-10 minutes)</li>
+        </ol>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is DNS Validation and how does it prove you own the domain?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> DNS validation proves you control a domain by having you create a specific DNS record with a random value ACM provides. If ACM can query DNS and find that record, you must control the domain's DNS - therefore you own it.</p>
+
+            <p><strong>Why we need it:</strong> ACM can't just give anyone a certificate for google.com - they need proof you own it. DNS validation is automated and fast (5-10 minutes). The alternative is email validation (ACM sends email to admin@yourdomain.com and you click a link), which is slower.</p>
+
+            <p><strong>Key details:</strong> ACM gives you a CNAME record name and value. You add it to Route 53. ACM periodically checks if the record exists. Once verified, certificate status changes to "Issued". Don't delete the validation record - ACM checks it periodically for auto-renewal.</p>
+
+            <p><strong>Common gotcha:</strong> If your domain's nameservers aren't pointing to Route 53 yet, the validation record exists in Route 53 but isn't visible to the internet - validation fails. Make sure nameservers are updated and propagated before requesting certificates. Also, validation records must remain forever for auto-renewal to work.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Why must CloudFront certificates be in us-east-1?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> CloudFront is a global service with no regional boundaries, but its control plane (where configurations are stored) is in us-east-1. All CloudFront-related resources, including ACM certificates, must be in us-east-1 to be visible to CloudFront.</p>
+
+            <p><strong>Why we need it:</strong> When CloudFront serves HTTPS traffic from an edge location in Tokyo, it needs access to your certificate. Rather than replicating certificates to every region, AWS keeps them centrally in us-east-1 where CloudFront's master config lives. It's an architectural decision.</p>
+
+            <p><strong>Key details:</strong> This only applies to CloudFront. Certificates for load balancers, API Gateway, etc. should be in the same region as those resources. You can have multiple ACM certificates for the same domain in different regions for different services.</p>
+
+            <p><strong>Common gotcha:</strong> You create a certificate in eu-west-1 (where your S3 bucket is), then can't figure out why CloudFront doesn't see it. Check the region dropdown! ACM certificates are regional resources - they don't appear in other regions. Always verify you're in us-east-1 before requesting CloudFront certificates.</p>
+          </div>
+        </div>
+
+        <p><strong>Update CloudFront</strong>:</p>
+        <ol>
+          <li>Go to CloudFront → Your distribution → Edit</li>
+          <li><strong>Alternate domain names</strong>: Add <code>yourdomain.com</code></li>
+          <li><strong>Custom SSL certificate</strong>: Select your ACM certificate</li>
+          <li>Save changes</li>
+        </ol>
+
+        <p><strong>Wait for deployment</strong> (~10-15 minutes again ☕)</p>
+
+        <h3>Step 17: Celebrate!</h3>
+        <p>Visit <code>https://yourdomain.com</code> - you now own a piece of the internet!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-01-4.html" class="btn btn-secondary">← Previous: CloudFront CDN</a>
+          <a href="lesson-01-6.html" class="btn btn-primary">Next: CloudWatch Monitoring →</a>
+        </div>
+      </div>

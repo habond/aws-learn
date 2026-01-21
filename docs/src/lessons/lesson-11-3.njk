@@ -1,0 +1,141 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-11-3.html
+lessonNumber: 11
+lessonTitle: "Security Deep Dive"
+duration: "~8 hours"
+cost: "$2-3"
+stepNumber: 3
+totalSteps: 7
+progress: 42.9
+title: "Lesson 11: Security Deep Dive - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-11.html">
+  <span class="step-number">1</span>
+  <span class="step-title">IAM Deep Dive</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Data Encryption with KMS</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-11-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">GuardDuty Threat Detection</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">WAF Protection</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">CloudTrail Auditing</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Security Hub</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Secrets Rotation &amp; Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 11 - Part 3</span>
+        <h1>GuardDuty Threat Detection</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 3: GuardDuty Threat Detection (1 hour)</h2>
+
+        <h3>Step 10: Enable GuardDuty</h3>
+        <pre><code class="language-bash"># Enable GuardDuty
+aws guardduty create-detector --enable
+
+export DETECTOR_ID=$(aws guardduty list-detectors --query 'DetectorIds[0]' --output text)
+
+echo "GuardDuty Detector ID: $DETECTOR_ID"
+
+# Create SNS topic for findings
+aws sns create-topic --name guardduty-findings
+
+export GUARDDUTY_TOPIC_ARN=$(aws sns list-topics \
+  --query "Topics[?contains(TopicArn, 'guardduty-findings')].TopicArn" \
+  --output text)
+
+# Subscribe email
+aws sns subscribe \
+  --topic-arn $GUARDDUTY_TOPIC_ARN \
+  --protocol email \
+  --notification-endpoint your-email@example.com</code></pre>
+
+        <div style="background: var(--warning-bg); border-left: 4px solid var(--warning-color); padding: 15px; margin: 20px 0;">
+          <strong>Important:</strong> Replace <code>your-email@example.com</code> with your actual email address. You'll receive a confirmation email - make sure to confirm the subscription!
+        </div>
+
+        <h3>Step 11: Create EventBridge Rule for GuardDuty</h3>
+        <pre><code class="language-bash"># Create rule to forward findings to SNS
+aws events put-rule \
+  --name guardduty-findings-rule \
+  --event-pattern '{
+    "source": ["aws.guardduty"],
+    "detail-type": ["GuardDuty Finding"]
+  }'
+
+# Add SNS as target
+aws events put-targets \
+  --rule guardduty-findings-rule \
+  --targets "Id"="1","Arn"="$GUARDDUTY_TOPIC_ARN"
+
+# Give EventBridge permission to publish to SNS
+aws sns set-topic-attributes \
+  --topic-arn $GUARDDUTY_TOPIC_ARN \
+  --attribute-name Policy \
+  --attribute-value '{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Principal": {
+          "Service": "events.amazonaws.com"
+        },
+        "Action": "SNS:Publish",
+        "Resource": "'"$GUARDDUTY_TOPIC_ARN"'"
+      }
+    ]
+  }'
+
+# Generate test finding
+aws guardduty create-sample-findings \
+  --detector-id $DETECTOR_ID \
+  --finding-types UnauthorizedAccess:EC2/MaliciousIPCaller.Custom
+
+# Check findings
+aws guardduty list-findings --detector-id $DETECTOR_ID</code></pre>
+
+        <div style="background: var(--info-bg); border-left: 4px solid var(--info-color); padding: 15px; margin: 20px 0;">
+          <strong>What's happening?</strong> GuardDuty continuously monitors your AWS account for malicious activity and unauthorized behavior. When it detects a threat, EventBridge catches the finding and sends you an email notification via SNS. This gives you real-time security alerts!
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-11-2.html" class="btn btn-secondary">← Previous: Data Encryption with KMS</a>
+          <a href="lesson-11-4.html" class="btn btn-primary">Next: WAF Protection →</a>
+        </div>
+      </div>

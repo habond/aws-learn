@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 10: Container Insights + Cleanup - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 10</h2>
+        <div class="lesson-title">Observability - Know What&#39;s Happening</div>
+        <div class="lesson-meta">
+          <span>~6 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 100%;"></div>
+      </div>
+      <div class="progress-text">Step 6 of 6</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-10.html">
+<span class="step-number">1</span>
+<span class="step-title">Advanced CloudWatch Metrics</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-2.html">
+<span class="step-number">2</span>
+<span class="step-title">CloudWatch Logs Insights</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-3.html">
+<span class="step-number">3</span>
+<span class="step-title">CloudWatch Alarms</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-4.html">
+<span class="step-number">4</span>
+<span class="step-title">X-Ray Distributed Tracing</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-5.html">
+<span class="step-number">5</span>
+<span class="step-title">CloudWatch Synthetics</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-10-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Container Insights + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li class="current">
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 10 - Part 6</span>
+        <h1>Container Insights + Cleanup</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 6: Container Insights (30 minutes)</h2>
+
+        <h3>Step 10: Enable Container Insights for ECS</h3>
+
+        <pre><code class="language-python"># Enable Container Insights on cluster (if you have one from Lesson 5)
+aws ecs put-account-setting \
+  --name containerInsights \
+  --value enabled
+
+# For existing cluster
+aws ecs update-cluster-settings \
+  --cluster task-manager-cluster \
+  --settings name=containerInsights,value=enabled
+
+# View metrics in CloudWatch:
+# CloudWatch → Container Insights → Performance monitoring</code></pre>
+
+        <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 15px; margin: 20px 0;">
+          <strong>What is Container Insights?</strong>
+          <p style="margin: 10px 0 0 0;">Container Insights automatically collects, aggregates, and summarizes metrics and logs from your containerized applications. It provides dashboards for CPU, memory, network, and storage metrics at the cluster, service, and task level.</p>
+        </div>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Challenges (Optional)</h2>
+
+        <h3>Easy</h3>
+        <ul>
+          <li>Create composite alarms (multiple conditions)</li>
+          <li>Add more custom metrics</li>
+          <li>Create weekly metric reports</li>
+        </ul>
+
+        <h3>Medium</h3>
+        <ul>
+          <li>Set up anomaly detection with CloudWatch</li>
+          <li>Create Lambda for custom log processing</li>
+          <li>Build Grafana dashboard connected to CloudWatch</li>
+          <li>Implement distributed tracing for microservices</li>
+        </ul>
+
+        <h3>Hard</h3>
+        <ul>
+          <li>Create ML-powered anomaly detection</li>
+          <li>Build custom metric correlation analysis</li>
+          <li>Implement auto-remediation with Lambda</li>
+          <li>Create cost attribution by metric</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Troubleshooting</h2>
+
+        <h3>Custom metrics not appearing?</h3>
+        <ul>
+          <li>Wait 1-2 minutes for metric to appear</li>
+          <li>Check namespace is correct</li>
+          <li>Verify IAM permissions</li>
+          <li>Check CloudWatch API limits</li>
+        </ul>
+
+        <h3>X-Ray traces not showing?</h3>
+        <ul>
+          <li>Verify X-Ray daemon is running</li>
+          <li>Check IAM permissions</li>
+          <li>Ensure app is instrumented correctly</li>
+          <li>Check UDP port 2000 is accessible</li>
+        </ul>
+
+        <h3>Logs not appearing?</h3>
+        <ul>
+          <li>Verify log group exists</li>
+          <li>Check log stream name</li>
+          <li>Ensure IAM permissions</li>
+          <li>Check for API throttling</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Cleanup</h2>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">CloudWatch</span><span class="code-service-badge">CloudWatch Logs</span><span class="code-service-badge">S3</span><span class="code-service-badge">SNS</span></div><code class="language-bash"># Stop app
+kill $APP_PID
+
+# Delete alarms
+aws cloudwatch delete-alarms --alarm-names high-error-rate slow-requests low-order-count
+
+# Delete dashboard
+aws cloudwatch delete-dashboards --dashboard-names application-monitoring
+
+# Delete log group
+aws logs delete-log-group --log-group-name /app/monitored-app
+
+# Delete SNS topic
+aws sns delete-topic --topic-arn $ALERT_TOPIC_ARN
+
+# Delete S3 bucket
+aws s3 rb s3://$CANARY_BUCKET --force</code></pre>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>What You Learned</h2>
+
+        <ul>
+          <li>Created custom CloudWatch metrics</li>
+          <li>Built comprehensive dashboards</li>
+          <li>Queried logs with Logs Insights</li>
+          <li>Set up CloudWatch alarms</li>
+          <li>Implemented distributed tracing with X-Ray</li>
+          <li>Created synthetic monitors</li>
+          <li>Enabled Container Insights</li>
+          <li>Understood observability best practices</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>The Three Pillars of Observability</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
+          <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 15px;">
+            <h3 style="margin-top: 0;">Metrics</h3>
+            <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+              <li>What happened (counts, rates, durations)</li>
+              <li>Aggregated data</li>
+              <li>Good for alerting</li>
+            </ul>
+          </div>
+
+          <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 15px;">
+            <h3 style="margin-top: 0;">Logs</h3>
+            <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+              <li>Why it happened (detailed events)</li>
+              <li>Full context</li>
+              <li>Good for debugging</li>
+            </ul>
+          </div>
+
+          <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px;">
+            <h3 style="margin-top: 0;">Traces</h3>
+            <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+              <li>How it happened (request flow)</li>
+              <li>Distributed systems</li>
+              <li>Good for performance analysis</li>
+            </ul>
+          </div>
+        </div>
+
+        <p><strong>Use all three together for complete observability!</strong></p>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Next Steps</h2>
+        <p>Head to <strong>Lesson 11: Security Deep Dive</strong> to lock down your AWS environment with IAM, WAF, GuardDuty, KMS, and security best practices!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-10-5.html" class="btn btn-secondary">← Previous: CloudWatch Synthetics</a>
+          <a href="lesson-11.html" class="btn btn-primary">Next Lesson: Security Deep Dive →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

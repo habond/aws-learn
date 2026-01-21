@@ -1,0 +1,374 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-07-4.html
+lessonNumber: 7
+lessonTitle: "Event-Driven Chaos"
+duration: "~8 hours"
+cost: "$2-3"
+stepNumber: 4
+totalSteps: 5
+progress: 80
+title: "Lesson 7: Step Functions - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-07.html">
+  <span class="step-number">1</span>
+  <span class="step-title">SNS Topics</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-07-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">SQS Queues</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-07-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">EventBridge</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-07-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">Step Functions</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-07-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Complete Integration</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 7 - Part 4</span>
+        <h1>Step Functions (Workflow Orchestration)</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 4: Step Functions (Workflow Orchestration) (2.5 hours)</h2>
+
+        <h3>Step 11: Create Step Functions Role</h3>
+        <pre><code class="language-bash"># Create trust policy
+cat &gt; step-functions-trust-policy.json &lt;&lt; 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "states.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+
+aws iam create-role \
+  --role-name order-step-functions-role \
+  --assume-role-policy-document file://step-functions-trust-policy.json
+
+# Attach Lambda invoke policy
+cat &gt; step-functions-policy.json &lt;&lt; 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sns:Publish"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+
+aws iam put-role-policy \
+  --role-name order-step-functions-role \
+  --policy-name StepFunctionsExecutionPolicy \
+  --policy-document file://step-functions-policy.json
+
+export STEP_ROLE_ARN=$(aws iam get-role \
+  --role-name order-step-functions-role \
+  --query 'Role.Arn' \
+  --output text)</code></pre>
+
+        <h3>Step 12: Create Lambda Functions for Each Step</h3>
+        <p>Create <code>validate-payment/index.js</code>:</p>
+        <pre><code class="language-javascript">exports.handler = async (event) =&gt; {
+  console.log('Validating payment for order:', event.orderId);
+
+  // Simulate payment validation
+  const isValid = Math.random() &gt; 0.2; // 80% success rate
+
+  if (!isValid) {
+    throw new Error('Payment validation failed');
+  }
+
+  return {
+    ...event,
+    paymentValidated: true,
+    paymentId: `PAY-${Date.now()}`
+  };
+};</code></pre>
+
+        <p>Create <code>check-inventory/index.js</code>:</p>
+        <pre><code class="language-javascript">exports.handler = async (event) =&gt; {
+  console.log('Checking inventory for order:', event.orderId);
+
+  // Simulate inventory check
+  const inStock = Math.random() &gt; 0.1; // 90% in stock
+
+  if (!inStock) {
+    throw new Error('Item out of stock');
+  }
+
+  return {
+    ...event,
+    inventoryReserved: true,
+    estimatedShipping: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+  };
+};</code></pre>
+
+        <p>Create <code>process-order/index.js</code>:</p>
+        <pre><code class="language-javascript">exports.handler = async (event) =&gt; {
+  console.log('Processing order:', event.orderId);
+
+  // Simulate order processing
+  await new Promise(resolve =&gt; setTimeout(resolve, 1000));
+
+  return {
+    ...event,
+    status: 'processed',
+    processedAt: new Date().toISOString()
+  };
+};</code></pre>
+
+        <p>Create <code>send-notification/index.js</code>:</p>
+        <pre><code class="language-javascript">const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
+const sns = new SNSClient({});
+
+exports.handler = async (event) =&gt; {
+  console.log('Sending notification for order:', event.orderId);
+
+  const message = `Order ${event.orderId} has been ${event.status}!
+Customer: ${event.customer}
+Amount: $${event.amount}
+Estimated Shipping: ${event.estimatedShipping || 'TBD'}`;
+
+  await sns.send(new PublishCommand({
+    TopicArn: process.env.NOTIFICATION_TOPIC_ARN,
+    Subject: `Order ${event.orderId} Update`,
+    Message: message
+  }));
+
+  return {
+    ...event,
+    notificationSent: true
+  };
+};</code></pre>
+
+        <p>Deploy all functions:</p>
+        <pre><code class="language-bash"># Validate payment
+cd validate-payment
+zip function.zip index.js
+aws lambda create-function \
+  --function-name validate-payment \
+  --runtime nodejs20.x \
+  --role $LAMBDA_ROLE_ARN \
+  --handler index.handler \
+  --zip-file fileb://function.zip \
+  --timeout 10
+cd ..
+
+# Check inventory
+cd check-inventory
+zip function.zip index.js
+aws lambda create-function \
+  --function-name check-inventory \
+  --runtime nodejs20.x \
+  --role $LAMBDA_ROLE_ARN \
+  --handler index.handler \
+  --zip-file fileb://function.zip \
+  --timeout 10
+cd ..
+
+# Process order
+cd process-order
+zip function.zip index.js
+aws lambda create-function \
+  --function-name process-order \
+  --runtime nodejs20.x \
+  --role $LAMBDA_ROLE_ARN \
+  --handler index.handler \
+  --zip-file fileb://function.zip \
+  --timeout 10
+cd ..
+
+# Send notification (needs SNS client)
+cd send-notification
+npm init -y
+npm install @aws-sdk/client-sns
+zip -r function.zip .
+aws lambda create-function \
+  --function-name send-notification \
+  --runtime nodejs20.x \
+  --role $LAMBDA_ROLE_ARN \
+  --handler index.handler \
+  --zip-file fileb://function.zip \
+  --timeout 10 \
+  --environment "Variables={NOTIFICATION_TOPIC_ARN=$NOTIFICATION_TOPIC_ARN}"
+cd ..</code></pre>
+
+        <h3>Step 13: Create Step Functions State Machine</h3>
+        <p>Create <code>state-machine.json</code>:</p>
+        <pre><code class="language-bash">{
+  "Comment": "Order processing workflow",
+  "StartAt": "ValidatePayment",
+  "States": {
+    "ValidatePayment": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:ACCOUNT_ID:function:validate-payment",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "PaymentFailed"
+        }
+      ],
+      "Next": "CheckInventory"
+    },
+    "CheckInventory": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:ACCOUNT_ID:function:check-inventory",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "InventoryFailed"
+        }
+      ],
+      "Next": "ProcessOrder"
+    },
+    "ProcessOrder": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:ACCOUNT_ID:function:process-order",
+      "Next": "SendNotification"
+    },
+    "SendNotification": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:ACCOUNT_ID:function:send-notification",
+      "Next": "OrderComplete"
+    },
+    "OrderComplete": {
+      "Type": "Succeed"
+    },
+    "PaymentFailed": {
+      "Type": "Fail",
+      "Error": "PaymentValidationError",
+      "Cause": "Payment could not be validated"
+    },
+    "InventoryFailed": {
+      "Type": "Fail",
+      "Error": "InventoryError",
+      "Cause": "Item out of stock"
+    }
+  }
+}</code></pre>
+
+        <p>Replace ACCOUNT_ID and create state machine:</p>
+        <pre><code class="language-bash">export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+# Update ARNs in state machine definition
+sed -i.bak "s/ACCOUNT_ID/$ACCOUNT_ID/g" state-machine.json
+
+# Create state machine
+aws stepfunctions create-state-machine \
+  --name order-processing-workflow \
+  --definition file://state-machine.json \
+  --role-arn $STEP_ROLE_ARN
+
+export STATE_MACHINE_ARN=$(aws stepfunctions list-state-machines \
+  --query "stateMachines[?name=='order-processing-workflow'].stateMachineArn" \
+  --output text)
+
+echo "State Machine ARN: $STATE_MACHINE_ARN"</code></pre>
+
+        <h3>Step 14: Execute Workflow</h3>
+        <pre><code class="language-bash"># Start execution
+aws stepfunctions start-execution \
+  --state-machine-arn $STATE_MACHINE_ARN \
+  --input '{
+    "orderId": "ORD-12345",
+    "customer": "Alice Johnson",
+    "amount": 299.99,
+    "items": [
+      {"product": "Laptop", "quantity": 1}
+    ]
+  }'
+
+# Get execution ARN from output, then check status
+export EXECUTION_ARN="paste-execution-arn-here"
+
+aws stepfunctions describe-execution --execution-arn $EXECUTION_ARN
+
+# View execution history
+aws stepfunctions get-execution-history --execution-arn $EXECUTION_ARN
+
+# Or view in console: Step Functions → State machines → order-processing-workflow</code></pre>
+
+        <p><strong>Check your email for notification!</strong></p>
+
+        <h3>Step 15: Test Error Handling</h3>
+        <pre><code class="language-bash"># This might fail at payment validation (20% failure rate)
+# Try multiple times to see retry logic and error handling
+for i in {1..5}; do
+  aws stepfunctions start-execution \
+    --state-machine-arn $STATE_MACHINE_ARN \
+    --name "execution-$i" \
+    --input "{\"orderId\":\"ORD-$(date +%s)\",\"customer\":\"Test User\",\"amount\":$((RANDOM % 500 + 50))}"
+
+  sleep 2
+done
+
+# View in console to see success/failure patterns</code></pre>
+
+        <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0;">
+          <strong>Why Step Functions?</strong>
+          <p>Step Functions let you orchestrate complex workflows with error handling, retries, parallel execution, and conditional branching - all without managing servers or writing orchestration code.</p>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-07-3.html" class="btn btn-secondary">← Previous: EventBridge</a>
+          <a href="lesson-07-5.html" class="btn btn-primary">Next: Complete Integration →</a>
+        </div>
+      </div>

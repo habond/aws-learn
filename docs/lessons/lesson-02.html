@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 2: Renting Computers - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 2</h2>
+        <div class="lesson-title">Renting Computers in Someone Else&#39;s Basement</div>
+        <div class="lesson-meta">
+          <span>~8 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 14.3%;"></div>
+      </div>
+      <div class="progress-text">Step 1 of 7</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li class="active">
+<a href="lesson-02.html">
+<span class="step-number">1</span>
+<span class="step-title">VPC Basics</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-2.html">
+<span class="step-number">2</span>
+<span class="step-title">SSH Key Pair</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-3.html">
+<span class="step-number">3</span>
+<span class="step-title">Launch EC2 Instance</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-4.html">
+<span class="step-number">4</span>
+<span class="step-title">Deploy Application</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Load Balancer</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Auto Scaling</span>
+</a>
+</li>
+<li>
+<a href="lesson-02-7.html">
+<span class="step-number">7</span>
+<span class="step-title">CloudWatch + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li class="current">
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 2 - Part 1</span>
+        <h1>Renting Computers in Someone Else's Basement</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>What You're Building</h2>
+        <p>Deploy a real web application on EC2 (virtual servers). You'll set up networking, load balancers, auto-scaling, and make something that can handle actual traffic. Build something useful or ridiculous - your choice!</p>
+
+        <div class="aws-services-summary">
+          <h3>AWS Services Used in This Lesson</h3>
+          <div class="aws-services-grid">
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/ec2/" target="_blank" rel="noopener noreferrer">
+                <strong>EC2</strong>
+                <span>Virtual servers in the cloud</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/vpc/" target="_blank" rel="noopener noreferrer">
+                <strong>VPC</strong>
+                <span>Virtual Private Cloud networking</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html" target="_blank" rel="noopener noreferrer">
+                <strong>Security Groups</strong>
+                <span>Firewall rules for instances</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/elasticloadbalancing/" target="_blank" rel="noopener noreferrer">
+                <strong>Application Load Balancer</strong>
+                <span>Distribute traffic across servers</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/autoscaling/" target="_blank" rel="noopener noreferrer">
+                <strong>Auto Scaling</strong>
+                <span>Automatically scale server capacity</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/cloudwatch/" target="_blank" rel="noopener noreferrer">
+                <strong>CloudWatch</strong>
+                <span>Monitoring and logging</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <h2>What You'll Learn</h2>
+        <ul>
+          <li><strong>EC2</strong>: Virtual servers in the cloud</li>
+          <li><strong>VPC</strong>: Virtual Private Cloud (your own network)</li>
+          <li><strong>Security Groups</strong>: Firewall rules</li>
+          <li><strong>Elastic Load Balancer (ALB)</strong>: Distribute traffic across servers</li>
+          <li><strong>Auto Scaling</strong>: Automatically add/remove servers based on load</li>
+          <li><strong>CloudWatch</strong>: Monitor server health and metrics</li>
+        </ul>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is EC2 (Elastic Compute Cloud)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> EC2 is Amazon's service for renting virtual servers (computers) in the cloud. Instead of buying physical hardware, you rent compute capacity by the hour. These virtual machines can run Linux, Windows, or other operating systems, and you can install whatever software you need.</p>
+
+            <p><strong>Why we need it:</strong> Running your own physical servers is expensive and inflexible. You pay upfront for hardware, wait for delivery, handle maintenance, and you're stuck with that capacity. EC2 lets you launch a server in minutes, pay only for what you use, and scale up or down instantly. Perfect for learning, startups, or handling variable workloads.</p>
+
+            <p><strong>Key details:</strong> EC2 instances come in different types (t2.micro, m5.large, etc.) optimized for different workloads - some for general use, others for memory-intensive or compute-heavy tasks. You choose the operating system (AMI), instance type, and network settings. The t2.micro instance type is part of AWS's free tier - 750 hours per month free for the first year.</p>
+
+            <p><strong>Common gotcha:</strong> Stopping an instance is not the same as terminating it. Stopped instances don't incur compute charges but still charge for attached storage. Terminated instances are permanently deleted. Also, instances without Elastic IPs get new public IPs every time they start, which can break your configurations if you hardcode IP addresses.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is ALB (Application Load Balancer)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> An Application Load Balancer distributes incoming web traffic across multiple servers. Think of it as a traffic cop at an intersection - it sees requests coming in and directs each one to the server that's best able to handle it, spreading the load evenly.</p>
+
+            <p><strong>Why we need it:</strong> A single server can only handle so many requests. If you get a traffic spike, one server might crash. Load balancers let you run multiple identical servers, distributing traffic between them. If one server fails, the load balancer stops sending it traffic. This gives you both higher capacity and better reliability.</p>
+
+            <p><strong>Key details:</strong> ALBs work at layer 7 (HTTP/HTTPS level), meaning they can route based on URL paths or hostnames. They automatically health check your servers and only send traffic to healthy ones. ALBs integrate with Auto Scaling Groups to automatically adjust to changing server counts. You get a DNS name (like my-alb-123456.us-east-1.elb.amazonaws.com) that stays constant even as backend servers change.</p>
+
+            <p><strong>Common gotcha:</strong> Load balancers themselves aren't free - they cost about $16-20/month even if barely used. Also, the ALB DNS name can take several minutes to propagate after creation. Never point A records directly at backend IPs - always use the load balancer's DNS name with a CNAME, because backend IPs change frequently.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is Auto Scaling?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Auto Scaling automatically adjusts the number of running servers based on demand. When traffic increases, it launches more servers. When traffic decreases, it terminates extras. You define minimum, maximum, and desired capacity, plus rules for when to scale.</p>
+
+            <p><strong>Why we need it:</strong> Traffic isn't constant - you might have 100 users at 3am and 10,000 at peak hours. Manually starting and stopping servers is tedious and error-prone. Auto Scaling handles it automatically, ensuring you have enough capacity during spikes without paying for idle servers during quiet periods. It also replaces failed instances automatically.</p>
+
+            <p><strong>Key details:</strong> Auto Scaling uses a Launch Template (the recipe for new instances) and CloudWatch metrics (like CPU usage) to make decisions. You can scale based on schedules, metrics, or manually. The health check grace period gives new instances time to start before checking if they're healthy. Multi-AZ Auto Scaling distributes instances across availability zones for resilience.</p>
+
+            <p><strong>Common gotcha:</strong> Scaling isn't instant - it takes 2-5 minutes to launch and boot a new instance. If your traffic spikes faster than that, you might still experience slowdowns. Also, Auto Scaling can get expensive if you set max capacity too high and forget - a runaway scaling event could launch dozens of instances. Always set reasonable maximums and enable billing alarms.</p>
+          </div>
+        </div>
+
+        <h2>Prerequisites</h2>
+        <ul>
+          <li>Completed Lesson 1</li>
+          <li>AWS CLI configured</li>
+          <li>SSH key pair ready (or we'll create one)</li>
+          <li>Node.js or Python installed locally (for testing)</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Project Ideas</h2>
+        <p>Pick one (or create your own!):</p>
+
+        <h3>Option 1: Discord/Slack Bot Dashboard</h3>
+        <p>Web dashboard for a bot you build</p>
+
+        <h3>Option 2: Personal API</h3>
+        <p>API that does something useful (weather aggregator, bookmark manager, etc.)</p>
+
+        <h3>Option 3: Simple Web App</h3>
+        <p>Todo app, notes app, URL shortener - something with a database</p>
+
+        <h3>Option 4: Proxy/Aggregator</h3>
+        <p>Combine multiple APIs into one useful endpoint</p>
+
+        <p><strong>For this lesson, we'll build a simple Node.js app</strong>, but use whatever you're comfortable with!</p>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Part 1: Understand VPC Basics (1 hour)</h2>
+
+        
+
+        <h3>What is a VPC?</h3>
+        <p>Your own private network in AWS. Think of it like your home network, but in the cloud.</p>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is a VPC (Virtual Private Cloud)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A VPC is your own isolated section of AWS's massive data center network. It's like renting an entire floor in an office building - you get your own space that's separate from everyone else's, with your own doors, locks, and layout.</p>
+
+            <p><strong>Why we need it:</strong> Without a VPC, all your servers would be exposed directly to the internet with no protection. A VPC creates a private network where your servers can talk to each other securely, and you control exactly what can reach them from the outside world. It's the foundation of network security in AWS.</p>
+
+            <p><strong>Key details:</strong> Every AWS account gets a default VPC in each region, ready to use. You define the IP address range for your VPC (like 10.0.0.0/16), and then carve it into smaller subnets. Resources inside the same VPC can communicate freely by default, but you control internet access explicitly.</p>
+
+            <p><strong>Common gotcha:</strong> Beginners often confuse VPCs with security groups or subnets. Think of it this way: VPC is the whole building, subnets are the rooms, security groups are the locks on individual doors. Also, VPCs are region-specific - if you work in us-east-1, you can't use a VPC from us-west-2.</p>
+          </div>
+        </div>
+
+        <ul>
+          <li><strong>Subnets</strong>: Sections of your network (public vs private)</li>
+          <li><strong>Internet Gateway</strong>: How your VPC connects to the internet</li>
+          <li><strong>Route Tables</strong>: Rules for how traffic flows</li>
+          <li><strong>Security Groups</strong>: Firewall rules for your servers</li>
+        </ul>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Subnets?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Subnets divide your VPC into smaller networks. Think of them as different departments in your office building - accounting on floor 3, engineering on floor 4. There are two types: public subnets (can reach the internet directly) and private subnets (no direct internet access).</p>
+
+            <p><strong>Why we need it:</strong> You don't want your database servers exposed to the internet, but you do want web servers accessible. Subnets let you organize resources by access needs. Web servers go in public subnets, databases in private subnets. Each subnet exists in a specific availability zone, helping you build resilient architectures.</p>
+
+            <p><strong>Key details:</strong> A subnet is "public" only if it has a route to an Internet Gateway. Otherwise it's private. When you launch an EC2 instance, you must specify which subnet to place it in. Each subnet gets a portion of your VPC's IP range - for example, VPC 10.0.0.0/16 might have subnet 10.0.1.0/24 for public web servers and 10.0.2.0/24 for private databases.</p>
+
+            <p><strong>Common gotcha:</strong> Just because a subnet CAN access the internet doesn't mean instances in it automatically get public IPs. You must explicitly assign or enable auto-assign public IPs. Also, putting something in a private subnet doesn't make it magically secure - you still need security groups and proper access controls.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is an Internet Gateway?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> An Internet Gateway (IGW) is AWS's doorway between your VPC and the public internet. It's like the main entrance to your office building - the only way in or out for internet traffic. One VPC can have one IGW attached.</p>
+
+            <p><strong>Why we need it:</strong> By default, VPCs are completely isolated - nothing gets in or out. If you want your web servers to be reachable from the internet, or if instances need to download updates from the internet, you need an IGW. It handles the translation between your private VPC IP addresses and public internet addresses.</p>
+
+            <p><strong>Key details:</strong> The IGW itself is highly available and scales automatically - you never worry about it being a bottleneck. For a subnet to use the IGW, you must add a route in the subnet's route table pointing 0.0.0.0/0 (all internet traffic) to the IGW. The default VPC comes with an IGW already attached and configured.</p>
+
+            <p><strong>Common gotcha:</strong> Just attaching an IGW to your VPC doesn't make everything internet-accessible. You also need: (1) a route table entry pointing to the IGW, (2) a public IP address on the instance, and (3) security group rules allowing the traffic. Forgetting any one of these means no internet access.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Route Tables?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A route table is a set of rules (routes) that determine where network traffic should go. Think of it like GPS directions for data packets - "if you're going to 10.0.1.5, stay local; if you're going to google.com, use the Internet Gateway."</p>
+
+            <p><strong>Why we need it:</strong> Networks need instructions on how to forward traffic. Without route tables, data packets wouldn't know whether to stay inside the VPC or go out to the internet. Route tables are what make a subnet "public" or "private" - a public subnet has a route to an Internet Gateway, a private subnet doesn't.</p>
+
+            <p><strong>Key details:</strong> Every subnet must be associated with exactly one route table. Each VPC has a main route table that applies by default. Routes have a destination (where traffic is going) and a target (where to send it). The most specific route wins - a route for 10.0.1.0/24 takes precedence over 10.0.0.0/16.</p>
+
+            <p><strong>Common gotcha:</strong> The "local" route (traffic within the VPC) can't be deleted or modified - it's automatic. When troubleshooting connectivity, check route tables first. A common mistake is editing the main route table instead of creating a custom one for public subnets, which can accidentally expose private resources.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Security Groups?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Security groups are virtual firewalls that control traffic to and from your EC2 instances. They work at the instance level, not the subnet level. Think of them as bouncers at a club - they check every request coming in or going out and only allow what's on the approved list.</p>
+
+            <p><strong>Why we need it:</strong> Even with a VPC and proper subnets, you need fine-grained control over what can talk to each server. Security groups let you say "this web server only accepts HTTP/HTTPS from the internet and SSH from my IP address" or "this database only accepts connections from web servers, nothing else."</p>
+
+            <p><strong>Key details:</strong> Security groups are stateful - if you allow inbound traffic, the response is automatically allowed back out. Rules specify protocol (TCP/UDP), port range, and source/destination (IP addresses or other security groups). By default, all outbound traffic is allowed and all inbound traffic is denied.</p>
+
+            <p><strong>Common gotcha:</strong> Security groups only control traffic that reaches the instance - they don't help if your route table doesn't send traffic there in the first place. Also, you can't block specific IPs with security groups (they're allow-only) - use Network ACLs for that. Finally, changes to security groups take effect immediately, which is great for fixing issues but risky if you make a mistake.</p>
+          </div>
+        </div>
+
+        <h3>Step 1: Explore Default VPC</h3>
+        <p>AWS creates a default VPC for you. Let's use it first to keep things simple.</p>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">EC2</span></div><code class="language-bash"># List your VPCs
+aws ec2 describe-vpcs
+
+# Get your default VPC ID
+export VPC_ID=$(aws ec2 describe-vpcs \
+  --filters "Name=isDefault,Values=true" \
+  --query "Vpcs[0].VpcId" \
+  --output text)
+
+echo "Default VPC: $VPC_ID"
+
+# List subnets in your VPC
+aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID"</code></pre>
+
+        <p><strong>Note the subnet IDs</strong> - you'll need them later.</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="../index.html" class="btn btn-secondary">Back to Home</a>
+          <a href="lesson-02-2.html" class="btn btn-primary">Next: SSH Key Pair →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

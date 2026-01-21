@@ -1,0 +1,102 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-04-5.html
+lessonNumber: 4
+lessonTitle: "Automate All The Things!"
+duration: "~7 hours"
+cost: "~$1"
+stepNumber: 5
+totalSteps: 7
+progress: 71.4
+title: "Lesson 4: Test & Iterate - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-04.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Overview + Terraform Setup</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">DynamoDB with Terraform</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">Lambda Functions</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">API Gateway</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-04-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Test &amp; Iterate</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Advanced Terraform</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Destroy &amp; Rebuild</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 4 - Part 5</span>
+        <h1>Test &amp; Iterate</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 5: Test &amp; Iterate (1 hour)</h2>
+
+        <h3>Step 17: Test Your Infrastructure</h3>
+        <pre><code class="language-bash"># Create short URL
+curl -X POST $API_ENDPOINT/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://terraform.io"}'
+
+# Test redirect
+curl -I $API_ENDPOINT/abc123
+
+# Check stats
+curl $API_ENDPOINT/stats/abc123</code></pre>
+
+        <p><strong>It works!</strong> And you did it all with Terraform.</p>
+
+        <h3>Step 18: Make Changes and Re-deploy</h3>
+        <p>Try changing something:</p>
+        <pre><code class="language-terraform"># In main.tf, change Lambda memory
+resource "aws_lambda_function" "shorten" {
+  # ... other config
+  memory_size = 512  # Changed from 256
+}</code></pre>
+
+        <pre><code class="language-bash"># See what will change
+terraform plan
+
+# Apply changes
+terraform apply</code></pre>
+
+        <p><strong>Terraform only updates what changed!</strong> This is the power of IaC.</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-04-4.html" class="btn btn-secondary">← Previous: API Gateway</a>
+          <a href="lesson-04-6.html" class="btn btn-primary">Next: Advanced Terraform →</a>
+        </div>
+      </div>

@@ -1,0 +1,269 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-01.html
+lessonNumber: 1
+lessonTitle: "Your First Internet Empire"
+duration: "~6 hours"
+cost: "$1-2"
+stepNumber: 1
+totalSteps: 8
+progress: 12.5
+title: "Lesson 1: Your First Internet Empire - AWS Learning Tutorial"
+tocContent: |
+  <li class="active">
+  <a href="lesson-01.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Overview + AWS Setup</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Build Your Website</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">S3 Storage</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">CloudFront CDN</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Custom Domain</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">CloudWatch Monitoring</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Make Updates</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-01-8.html">
+  <span class="step-number">8</span>
+  <span class="step-title">CLI Practice + Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 1 - Part 1</span>
+        <h1>Your First Internet Empire</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>What You're Building</h2>
+        <p>Deploy your own corner of the internet: a lightning-fast static website with a custom domain, served globally via CDN. You'll build something ridiculous and fun (because why not?) while learning the fundamentals of AWS.</p>
+
+        <h2>What You'll Learn</h2>
+        <ul>
+          <li><strong>S3</strong>: Object storage and static website hosting</li>
+          <li><strong>CloudFront</strong>: Content Delivery Network (CDN)</li>
+          <li><strong>Route 53</strong>: DNS and domain management</li>
+          <li><strong>IAM</strong>: Identity and Access Management</li>
+          <li><strong>AWS CLI</strong>: Command-line superpowers</li>
+          <li><strong>CloudWatch</strong>: Basic monitoring</li>
+        </ul>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is S3 (Simple Storage Service)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> S3 is object storage - a place to store files (objects) in containers called buckets. Think of it like Dropbox or Google Drive, but designed for applications rather than humans.</p>
+
+            <p><strong>Why we need it:</strong> Traditional file systems are tied to specific servers. If the server dies, your files are gone. S3 stores files redundantly across multiple data centers, making them virtually indestructible and accessible from anywhere on the internet.</p>
+
+            <p><strong>Key details:</strong> Each file gets a unique URL. You pay only for what you store and transfer (pennies per GB). S3 has 99.999999999% durability - if you upload 10 million files, you might lose one every 10,000 years.</p>
+
+            <p><strong>Common gotcha:</strong> S3 is not a file system - you can't "navigate folders" like on your computer. What looks like folders are just file names with slashes (like photos/vacation.jpg). This matters when you write code to access files.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is CloudFront (CDN)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> CloudFront is a Content Delivery Network - a global network of servers (called edge locations) that cache copies of your files close to your users. Amazon has 400+ edge locations worldwide.</p>
+
+            <p><strong>Why we need it:</strong> If your files are stored in Virginia but your user is in Tokyo, every request travels 11,000 km round-trip (taking 200-500ms). CloudFront caches files in Tokyo, so the same request takes 5-20ms - that's 10-100x faster!</p>
+
+            <p><strong>Key details:</strong> First user in a region gets files from origin (S3), then CloudFront caches them locally. Subsequent users get cached copies instantly. You control cache duration (TTL) - images might cache for days, HTML for minutes.</p>
+
+            <p><strong>Common gotcha:</strong> When you update your website, old versions stay cached until expiration or you manually invalidate them. This is why your changes might not appear immediately - CloudFront is still serving the old cached version.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is Route 53 and why is it called that?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Route 53 is AWS's DNS service. DNS (Domain Name System) translates human-readable domain names like "google.com" into IP addresses like "142.250.80.46" that computers use to find servers.</p>
+
+            <p><strong>Why we need it:</strong> Nobody wants to remember that your website is at 52.219.47.181. DNS lets people use yourdomain.com instead. Route 53 also handles domain registration, so you can buy and manage domains without leaving AWS.</p>
+
+            <p><strong>Key details:</strong> The "53" refers to port 53, the standard port for DNS traffic - it's a nerdy inside joke. Route 53 offers different routing policies: simple (one destination), weighted (split traffic), geolocation (route based on user location), and more.</p>
+
+            <p><strong>Common gotcha:</strong> DNS changes aren't instant - they need to "propagate" across the internet. This can take 5-60 minutes. During this time, some users see the old site, others see the new one. Always make DNS changes during low-traffic periods.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is IAM (Identity and Access Management)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> IAM controls who can access what in your AWS account. It manages users (people), roles (what applications can do), and policies (specific permissions like "can read S3 but not delete").</p>
+
+            <p><strong>Why we need it:</strong> Your root account has unlimited power - it can delete everything and rack up unlimited bills. You never use it for daily work. Instead, create IAM users with only the permissions they need (principle of least privilege).</p>
+
+            <p><strong>Key details:</strong> Users are for humans (with passwords), roles are for applications (no passwords, temporary credentials). Policies define permissions in JSON format. You can attach the same policy to many users/roles.</p>
+
+            <p><strong>Common gotcha:</strong> "Access Denied" errors are usually IAM issues. If something doesn't work, check: Does your user have the right policy? Is the policy correctly written? Are you in the right region? IAM is global, but some resources are region-specific.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Why use AWS CLI instead of the Console?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The AWS CLI (Command Line Interface) is a tool that lets you control AWS services by typing commands instead of clicking through the web console.</p>
+
+            <p><strong>Why we need it:</strong> Clicking through the console is fine for learning, but real workflows need automation. CLI commands can be scripted, repeated, version-controlled, and shared with teammates. "Deploy the app" becomes one command instead of 50 clicks.</p>
+
+            <p><strong>Key details:</strong> Every console action has a CLI equivalent (and vice versa - CLI sometimes has more options). Commands follow the pattern: aws [service] [action] [parameters]. You can output as JSON, table, or text formats.</p>
+
+            <p><strong>Common gotcha:</strong> The CLI uses credentials stored on your computer (~/.aws/credentials). If commands fail with "Unable to locate credentials", run "aws configure" first. Also, some commands use "aws s3" (high-level) and others use "aws s3api" (low-level) - they're different!</p>
+          </div>
+        </div>
+
+        <h2>Prerequisites</h2>
+        <ul>
+          <li>AWS account created</li>
+          <li>AWS CLI installed (<code>aws --version</code> should work)</li>
+          <li>Text editor ready</li>
+          <li>Terminal open</li>
+          <li>Credit card ready for domain (optional, ~$12/year)</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Part 1: AWS Account Setup (30 minutes)</h2>
+
+        <h3>Step 1: Set Up Billing Alerts</h3>
+        <p><strong>Why</strong>: So AWS doesn't surprise you with a $500 bill</p>
+        <ol>
+          <li>Go to AWS Console → Billing Dashboard</li>
+          <li>Click "Billing preferences"</li>
+          <li>Enable "Receive Billing Alerts"</li>
+          <li>Set up a CloudWatch alarm for $10 threshold</li>
+          <li>Add your email</li>
+        </ol>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>How do Billing Alerts work?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Billing Alerts use CloudWatch to monitor your AWS spending and send email notifications when costs exceed thresholds you define (like $10, $50, $100).</p>
+
+            <p><strong>Why we need it:</strong> AWS charges for usage - every API call, every GB stored, every hour a server runs. It's easy to accidentally leave resources running or misconfigure something expensive. A $10 alert catches mistakes before they become $1,000 problems.</p>
+
+            <p><strong>Key details:</strong> Billing data updates every 6-8 hours (not real-time). Set alerts lower than you think - if your threshold is $100, you might get the email when you're already at $150. You can create multiple alarms for different thresholds.</p>
+
+            <p><strong>Common gotcha:</strong> Billing alerts don't stop charges - they only notify you. If you get an alert and ignore it, AWS keeps charging. You must manually stop/delete the expensive resources. Some students set $5 alert, ignore it, and end up with $200 bills.</p>
+          </div>
+        </div>
+
+        <p><strong>CLI equivalent</strong> (we'll do this later):</p>
+        <pre><code># We'll create this via console first to understand the flow</code></pre>
+
+        <h3>Step 2: Create IAM User (You!)</h3>
+        <p><strong>Why</strong>: Never use root account for daily tasks</p>
+        <ol>
+          <li>Go to IAM → Users → Add User</li>
+          <li>Username: <code>your-name-admin</code></li>
+          <li>Enable "AWS Management Console access"</li>
+          <li>Attach policy: <code>AdministratorAccess</code> (we'll lock this down in Lesson 11)</li>
+          <li><strong>Important</strong>: Save credentials somewhere safe!</li>
+          <li>Enable MFA (Multi-Factor Auth) - use phone authenticator app</li>
+        </ol>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is MFA (Multi-Factor Authentication)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> MFA requires two forms of proof to log in: something you know (password) and something you have (phone with authenticator app generating 6-digit codes that change every 30 seconds).</p>
+
+            <p><strong>Why we need it:</strong> Passwords get leaked, stolen, or guessed. Even if someone gets your AWS password, they can't log in without your phone. This is critical because AWS accounts control real money - someone who hacks your account can spin up $10,000 of servers.</p>
+
+            <p><strong>Key details:</strong> Use apps like Google Authenticator, Authy, or 1Password. During setup, AWS shows a QR code - scan it with your app. Save the backup codes somewhere safe (not on your phone!) in case you lose your device.</p>
+
+            <p><strong>Common gotcha:</strong> If you lose your phone without backup codes, you're locked out. AWS support can help but it takes days and requires identity verification. Some people screenshot the QR code during setup - that works but is less secure if your computer gets compromised.</p>
+          </div>
+        </div>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are AWS Regions?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> AWS operates in 30+ geographic regions worldwide (like us-east-1 in Virginia, eu-west-1 in Ireland, ap-southeast-1 in Singapore). Each region is a cluster of data centers completely independent from others.</p>
+
+            <p><strong>Why we need it:</strong> You choose regions based on: where your users are (latency), where data must legally reside (compliance - EU data stays in EU), and cost (some regions are cheaper). Resources in one region don't automatically exist in others.</p>
+
+            <p><strong>Key details:</strong> us-east-1 (Virginia) is special - it's the oldest, cheapest, gets new features first, and is required for some global services like CloudFront SSL certificates. Most tutorials use us-east-1 as the default.</p>
+
+            <p><strong>Common gotcha:</strong> You create an S3 bucket in us-east-1, then switch to eu-west-1 in the console - the bucket "disappears"! It's still there, just in the other region. Always check which region you're viewing. Some resources (like IAM) are global, others (like EC2, S3) are regional.</p>
+          </div>
+        </div>
+
+        <h3>Step 3: Configure AWS CLI</h3>
+        <pre><code class="language-bash"># Configure your CLI with IAM user credentials
+aws configure
+
+# Enter:
+# - AWS Access Key ID
+# - AWS Secret Access Key
+# - Default region: us-east-1 (or your preferred region)
+# - Default output format: json
+
+# Test it works
+aws sts get-caller-identity</code></pre>
+
+        <p>You should see your IAM user info. If so, you're ready to build!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="../index.html" class="btn btn-secondary">Back to Home</a>
+          <a href="lesson-01-2.html" class="btn btn-primary">Next: Build Your Website →</a>
+        </div>
+      </div>

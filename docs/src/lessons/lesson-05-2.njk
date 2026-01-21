@@ -1,0 +1,123 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-05-2.html
+lessonNumber: 5
+lessonTitle: "Containers Are Taking Over"
+duration: "~8 hours"
+cost: "$2-3"
+stepNumber: 2
+totalSteps: 7
+progress: 28.57
+title: "Lesson 5: Push to ECR - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-05.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Docker Basics</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-05-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Push to ECR</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">ECS Cluster with Fargate</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">Application Load Balancer</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">ECS Service</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Scaling and Updates</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Monitoring + Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 5 - Part 2</span>
+        <h1>Push to ECR</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 2: Push to ECR (1 hour)</h2>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is ECR (Elastic Container Registry)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> ECR is AWS's Docker image registry - a secure, scalable place to store and manage your container images. It's like Docker Hub, but private to your AWS account and tightly integrated with other AWS services like ECS and EKS.</p>
+
+            <p><strong>Why we need it:</strong> You can't run containers in ECS directly from your laptop. You need to push images to a registry that ECS can pull from. ECR provides this with automatic encryption, vulnerability scanning, and IAM-based access control. Images in ECR are instantly available to any AWS service in your account.</p>
+
+            <p><strong>Key details:</strong> ECR repositories are region-specific. Image scanning (scanOnPush=true) automatically checks for security vulnerabilities using CVE databases. You can have lifecycle policies to automatically delete old images, saving storage costs. ECR URLs include your account ID and region.</p>
+
+            <p><strong>Common gotcha:</strong> Docker authentication tokens for ECR expire after 12 hours. If you get "unauthorized" errors when pushing/pulling, re-run the aws ecr get-login-password command. Also, make sure your IAM user has ECR permissions (ecr:GetAuthorizationToken, ecr:PutImage, etc.).</p>
+          </div>
+        </div>
+
+        <h3>Step 5: Create ECR Repository</h3>
+        <pre><code class="language-bash"># Create repository
+aws ecr create-repository \
+  --repository-name task-manager \
+  --image-scanning-configuration scanOnPush=true
+
+# Get repository URI
+export ECR_REPO=$(aws ecr describe-repositories \
+  --repository-names task-manager \
+  --query 'repositories[0].repositoryUri' \
+  --output text)
+
+echo "ECR Repository: $ECR_REPO"</code></pre>
+
+        <h3>Step 6: Authenticate Docker to ECR</h3>
+        <pre><code class="language-bash"># Get authentication token and login
+aws ecr get-login-password --region us-east-1 | \
+  docker login --username AWS --password-stdin $ECR_REPO
+
+# You should see "Login Succeeded"</code></pre>
+
+        <h3>Step 7: Tag and Push Image</h3>
+        <pre><code class="language-bash"># Tag image for ECR
+docker tag task-manager:latest $ECR_REPO:latest
+docker tag task-manager:latest $ECR_REPO:v1.0.0
+
+# Push to ECR
+docker push $ECR_REPO:latest
+docker push $ECR_REPO:v1.0.0
+
+# Verify images in ECR
+aws ecr list-images --repository-name task-manager</code></pre>
+
+        <p><strong>Your container is now in AWS!</strong></p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-05.html" class="btn btn-secondary">← Previous: Docker Basics</a>
+          <a href="lesson-05-3.html" class="btn btn-primary">Next: ECS Cluster with Fargate →</a>
+        </div>
+      </div>

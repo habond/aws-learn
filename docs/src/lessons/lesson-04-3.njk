@@ -1,0 +1,333 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-04-3.html
+lessonNumber: 4
+lessonTitle: "Automate All The Things!"
+duration: "~7 hours"
+cost: "~$1"
+stepNumber: 3
+totalSteps: 7
+progress: 42.84
+title: "Lesson 4: Lambda Functions with Terraform - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-04.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Overview + Terraform Setup</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">DynamoDB with Terraform</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-04-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">Lambda Functions</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">API Gateway</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Test &amp; Iterate</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Advanced Terraform</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Destroy &amp; Rebuild</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 4 - Part 3</span>
+        <h1>Lambda Functions with Terraform</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 3: Lambda Functions with Terraform (2 hours)</h2>
+
+        <h3>Step 7: Create Lambda Function Code</h3>
+        <p>Create <code>lambda/shorten/index.js</code> (same as Lesson 3):</p>
+        <pre><code class="language-javascript">const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, PutCommand } = require('@aws-sdk/lib-dynamodb');
+
+const client = new DynamoDBClient({});
+const ddb = DynamoDBDocumentClient.from(client);
+const TABLE_NAME = process.env.TABLE_NAME;
+
+function generateShortCode() {
+  return Math.random().toString(36).substring(2, 8);
+}
+
+exports.handler = async (event) =&gt; {
+  console.log('Event:', JSON.stringify(event));
+
+  try {
+    const body = JSON.parse(event.body);
+    const { url, customCode } = body;
+
+    if (!url) {
+      return {
+        statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'URL is required' })
+      };
+    }
+
+    const shortCode = customCode || generateShortCode();
+
+    const item = {
+      shortCode,
+      originalUrl: url,
+      createdAt: Date.now(),
+      clicks: 0
+    };
+
+    await ddb.send(new PutCommand({
+      TableName: TABLE_NAME,
+      Item: item,
+      ConditionExpression: 'attribute_not_exists(shortCode)'
+    }));
+
+    const baseUrl = process.env.API_ENDPOINT || 'https://your-api.com';
+
+    return {
+      statusCode: 201,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify({
+        shortCode,
+        shortUrl: `${baseUrl}/${shortCode}`,
+        originalUrl: url
+      })
+    };
+  } catch (error) {
+    console.error('Error:', error);
+
+    if (error.name === 'ConditionalCheckFailedException') {
+      return {
+        statusCode: 409,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'Short code already exists' })
+      };
+    }
+
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Internal server error' })
+    };
+  }
+};</code></pre>
+
+        <p>Create <code>lambda/shorten/package.json</code>:</p>
+        <pre><code class="language-bash">{
+  "name": "shorten-function",
+  "version": "1.0.0",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0"
+  }
+}</code></pre>
+
+        <p>Do the same for redirect and stats functions (copy from Lesson 3).</p>
+
+        <h3>Step 8: Define Lambda IAM Role in Terraform</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is an IAM assume role policy?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> An assume role policy (also called a trust policy) defines who is allowed to use this IAM role. It's like saying "I grant permission for Lambda to wear this security badge." The policy doesn't give permissions to do things - it only says who can assume the role.</p>
+
+            <p><strong>Why we need it:</strong> AWS uses a two-step permission model. First, the assume role policy says "Lambda service can use this role." Second, attached policies say "this role can access DynamoDB." This separation prevents services from using roles they shouldn't have access to, even if those roles have powerful permissions.</p>
+
+            <p><strong>Key details:</strong> The Principal field specifies who can assume the role. For Lambda functions, you set it to lambda.amazonaws.com. For EC2 instances, you'd use ec2.amazonaws.com. The Action is always sts:AssumeRole, which is the API call that says "let me use this role."</p>
+
+            <p><strong>Common gotcha:</strong> If Lambda can't invoke your function, check the assume role policy first. A missing or incorrect Principal is a common cause of "AccessDenied" errors. The service must be explicitly allowed to assume the role.</p>
+          </div>
+        </div>
+
+        <p>Add to <code>main.tf</code>:</p>
+        <pre><code class="language-terraform"># IAM role for Lambda functions
+resource "aws_iam_role" "lambda_role" {
+  name = "${var.project_name}-lambda-role-${var.environment}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# Attach basic Lambda execution policy
+resource "aws_iam_role_policy_attachment" "lambda_basic" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# DynamoDB access policy
+resource "aws_iam_role_policy" "lambda_dynamodb" {
+  name = "dynamodb-access"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Scan",
+          "dynamodb:Query"
+        ]
+        Resource = aws_dynamodb_table.url_shortener.arn
+      }
+    ]
+  })
+}</code></pre>
+
+        <p><strong>Notice</strong>: Instead of hardcoding ARNs, we reference <code>aws_dynamodb_table.url_shortener.arn</code>. Terraform handles dependencies!</p>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>How does Terraform handle resource dependencies?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Terraform automatically figures out the order to create resources by analyzing references between them. When you use aws_dynamodb_table.url_shortener.arn, Terraform knows it must create the DynamoDB table before the IAM policy that references it.</p>
+
+            <p><strong>Why we need it:</strong> In AWS, order matters. You can't grant Lambda access to a database that doesn't exist yet. You can't attach a security group to an instance before creating the group. Terraform's dependency graph solves this automatically - you don't have to manually specify "create A, then B, then C."</p>
+
+            <p><strong>Key details:</strong> Terraform builds a directed acyclic graph (DAG) of all resources and creates them in topological order. Resources that don't depend on each other are created in parallel for speed. You can see the dependency graph with terraform graph and visualize it using GraphViz.</p>
+
+            <p><strong>Common gotcha:</strong> Sometimes Terraform can't detect implicit dependencies. For example, if a Lambda function expects a DynamoDB table to exist at runtime but doesn't reference it in Terraform code, you need to add an explicit depends_on block to force the correct order.</p>
+          </div>
+        </div>
+
+        <h3>Step 9: Package Lambda Functions</h3>
+        <p>Add to <code>main.tf</code>:</p>
+        <pre><code class="language-terraform"># Archive Lambda function code
+data "archive_file" "shorten_lambda" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda/shorten"
+  output_path = "${path.module}/lambda/shorten.zip"
+}
+
+data "archive_file" "redirect_lambda" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda/redirect"
+  output_path = "${path.module}/lambda/redirect.zip"
+}
+
+data "archive_file" "stats_lambda" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda/stats"
+  output_path = "${path.module}/lambda/stats.zip"
+}</code></pre>
+
+        <h3>Step 10: Define Lambda Functions</h3>
+        <p>Add to <code>main.tf</code>:</p>
+        <pre><code class="language-terraform"># Shorten Lambda function
+resource "aws_lambda_function" "shorten" {
+  filename         = data.archive_file.shorten_lambda.output_path
+  function_name    = "${var.project_name}-shorten-${var.environment}"
+  role            = aws_iam_role.lambda_role.arn
+  handler         = "index.handler"
+  runtime         = "nodejs20.x"
+  timeout         = 10
+  memory_size     = 256
+  source_code_hash = data.archive_file.shorten_lambda.output_base64sha256
+
+  environment {
+    variables = {
+      TABLE_NAME = aws_dynamodb_table.url_shortener.name
+    }
+  }
+}
+
+# Redirect Lambda function
+resource "aws_lambda_function" "redirect" {
+  filename         = data.archive_file.redirect_lambda.output_path
+  function_name    = "${var.project_name}-redirect-${var.environment}"
+  role            = aws_iam_role.lambda_role.arn
+  handler         = "index.handler"
+  runtime         = "nodejs20.x"
+  timeout         = 10
+  memory_size     = 256
+  source_code_hash = data.archive_file.redirect_lambda.output_base64sha256
+
+  environment {
+    variables = {
+      TABLE_NAME = aws_dynamodb_table.url_shortener.name
+    }
+  }
+}
+
+# Stats Lambda function
+resource "aws_lambda_function" "stats" {
+  filename         = data.archive_file.stats_lambda.output_path
+  function_name    = "${var.project_name}-stats-${var.environment}"
+  role            = aws_iam_role.lambda_role.arn
+  handler         = "index.handler"
+  runtime         = "nodejs20.x"
+  timeout         = 10
+  memory_size     = 256
+  source_code_hash = data.archive_file.stats_lambda.output_base64sha256
+
+  environment {
+    variables = {
+      TABLE_NAME = aws_dynamodb_table.url_shortener.name
+    }
+  }
+}</code></pre>
+
+        <h3>Step 11: Install Dependencies &amp; Deploy</h3>
+        <pre><code class="language-bash"># Install Node dependencies for each function
+cd lambda/shorten &amp;&amp; npm install &amp;&amp; cd ../..
+cd lambda/redirect &amp;&amp; npm install &amp;&amp; cd ../..
+cd lambda/stats &amp;&amp; npm install &amp;&amp; cd ../..
+
+# Apply Terraform changes
+terraform apply</code></pre>
+
+        <p><strong>All three Lambda functions created!</strong></p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-04-2.html" class="btn btn-secondary">← Previous: DynamoDB</a>
+          <a href="lesson-04-4.html" class="btn btn-primary">Next: API Gateway →</a>
+        </div>
+      </div>

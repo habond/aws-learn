@@ -1,0 +1,142 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-04-2.html
+lessonNumber: 4
+lessonTitle: "Automate All The Things!"
+duration: "~7 hours"
+cost: "~$1"
+stepNumber: 2
+totalSteps: 7
+progress: 28.56
+title: "Lesson 4: DynamoDB with Terraform - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-04.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Overview + Terraform Setup</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-04-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">DynamoDB with Terraform</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">Lambda Functions</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">API Gateway</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Test &amp; Iterate</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Advanced Terraform</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Destroy &amp; Rebuild</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 4 - Part 2</span>
+        <h1>DynamoDB with Terraform</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 2: DynamoDB with Terraform (30 minutes)</h2>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is a Terraform Resource?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> In Terraform, a "resource" block defines a piece of infrastructure you want to create. The syntax is resource "type" "name" where type is the AWS resource (like aws_dynamodb_table) and name is what you call it in your Terraform code (like url_shortener).</p>
+
+            <p><strong>Why we need it:</strong> Resources are the building blocks of your infrastructure. Each resource block corresponds to one real thing in AWS - a database, a server, a DNS record, etc. Terraform manages the lifecycle of these resources: creating them, updating them, and deleting them.</p>
+
+            <p><strong>Key details:</strong> The name you give a resource (like "url_shortener") is only used within Terraform for referencing. The actual name in AWS comes from the name parameter inside the block. You can reference other resources using their type and name, like aws_dynamodb_table.url_shortener.arn.</p>
+
+            <p><strong>Common gotcha:</strong> If you rename a resource in Terraform code, Terraform thinks you want to delete the old one and create a new one. Use terraform state mv to rename resources in state instead, or use lifecycle rules to prevent accidental deletion.</p>
+          </div>
+        </div>
+
+        <h3>Step 5: Define DynamoDB Table</h3>
+        <p>Add to <code>main.tf</code>:</p>
+        <pre><code class="language-terraform"># DynamoDB table for URL mappings
+resource "aws_dynamodb_table" "url_shortener" {
+  name         = "${var.project_name}-${var.environment}"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "shortCode"
+
+  attribute {
+    name = "shortCode"
+    type = "S"
+  }
+
+  tags = {
+    Name = "${var.project_name}-table"
+  }
+}</code></pre>
+
+        <p><strong>That's it!</strong> Compare this to the CLI command from Lesson 3. Much cleaner!</p>
+
+        <h3>Step 6: Plan and Apply</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What do terraform plan and terraform apply do?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> terraform plan shows you a preview of what changes Terraform will make without actually making them. terraform apply executes those changes, creating, modifying, or deleting resources in AWS. The plan command is like a dry run or simulation.</p>
+
+            <p><strong>Why we need it:</strong> Infrastructure changes can be dangerous - deleting the wrong database could lose customer data. The plan step lets you review changes before they happen, catching mistakes before they become disasters. It's like the "Are you sure?" dialog but with detailed information about what will change.</p>
+
+            <p><strong>Key details:</strong> The plan output uses symbols: + means create, - means delete, ~ means modify in place, and -/+ means destroy and recreate. Green text shows additions, red shows deletions. Always review the plan carefully, especially anything marked for deletion or recreation.</p>
+
+            <p><strong>Common gotcha:</strong> terraform apply runs a fresh plan before executing, so the plan you reviewed might be slightly outdated if someone else made changes. For critical changes, use terraform apply -auto-approve=false to require manual confirmation even in scripts.</p>
+          </div>
+        </div>
+
+        <pre><code class="language-bash"># Preview what Terraform will create
+terraform plan
+
+# Create the infrastructure
+terraform apply
+
+# Type 'yes' when prompted</code></pre>
+
+        <p><strong>Terraform created your DynamoDB table!</strong> Check the AWS console.</p>
+
+        <pre><code class="language-bash"># View what Terraform created
+terraform show
+
+# List resources Terraform is managing
+terraform state list</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-04.html" class="btn btn-secondary">← Previous: Terraform Setup</a>
+          <a href="lesson-04-3.html" class="btn btn-primary">Next: Lambda Functions →</a>
+        </div>
+      </div>

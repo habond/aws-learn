@@ -1,0 +1,86 @@
+[
+  {
+    "number": 1,
+    "title": "Your First Internet Empire",
+    "shortTitle": "Your First Internet Empire",
+    "duration": "~6 hours",
+    "cost": "$1-2"
+  },
+  {
+    "number": 2,
+    "title": "Renting Computers",
+    "shortTitle": "Renting Computers",
+    "duration": "~8 hours",
+    "cost": "$2-3"
+  },
+  {
+    "number": 3,
+    "title": "Databases That Don't Die",
+    "shortTitle": "Databases That Don't Die",
+    "duration": "~6 hours",
+    "cost": "$2-3"
+  },
+  {
+    "number": 4,
+    "title": "Containers & Orchestration",
+    "shortTitle": "Containers & Orchestration",
+    "duration": "~7 hours",
+    "cost": "$2-4"
+  },
+  {
+    "number": 5,
+    "title": "Serverless Computing",
+    "shortTitle": "Serverless Computing",
+    "duration": "~8 hours",
+    "cost": "$2-3"
+  },
+  {
+    "number": 6,
+    "title": "Data Pipelines",
+    "shortTitle": "Data Pipelines",
+    "duration": "~7 hours",
+    "cost": "$3-4"
+  },
+  {
+    "number": 7,
+    "title": "Event-Driven Chaos",
+    "shortTitle": "Event-Driven Chaos",
+    "duration": "~8 hours",
+    "cost": "$3-5"
+  },
+  {
+    "number": 8,
+    "title": "Big Data Analytics",
+    "shortTitle": "Big Data Analytics",
+    "duration": "~7 hours",
+    "cost": "$3-5"
+  },
+  {
+    "number": 9,
+    "title": "AI/ML Buzzwords",
+    "shortTitle": "AI/ML Buzzwords",
+    "duration": "~6 hours",
+    "cost": "$5-10"
+  },
+  {
+    "number": 10,
+    "title": "Observability",
+    "shortTitle": "Observability",
+    "duration": "~6 hours",
+    "cost": "$2-3"
+  },
+  {
+    "number": 11,
+    "title": "Security Deep Dive",
+    "shortTitle": "Security Deep Dive",
+    "duration": "~8 hours",
+    "cost": "$1-2"
+  },
+  {
+    "number": 12,
+    "title": "Final Project",
+    "shortTitle": "Final Project",
+    "duration": "~10-20 hours",
+    "cost": "$5-15"
+  }
+]

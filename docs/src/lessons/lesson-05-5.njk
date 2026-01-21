@@ -1,0 +1,127 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-05-5.html
+lessonNumber: 5
+lessonTitle: "Containers Are Taking Over"
+duration: "~8 hours"
+cost: "$2-3"
+stepNumber: 5
+totalSteps: 7
+progress: 71.43
+title: "Lesson 5: ECS Service - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-05.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Docker Basics</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Push to ECR</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">ECS Cluster with Fargate</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">Application Load Balancer</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-05-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">ECS Service</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Scaling and Updates</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Monitoring + Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 5 - Part 5</span>
+        <h1>ECS Service</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 5: ECS Service (1.5 hours)</h2>
+
+        <h3>Step 17: Create ECS Service</h3>
+        <pre><code class="language-bash"># Stop the manually-run task first
+aws ecs stop-task \
+  --cluster task-manager-cluster \
+  --task $TASK_ARN
+
+# Create service
+aws ecs create-service \
+  --cluster task-manager-cluster \
+  --service-name task-manager-service \
+  --task-definition task-manager \
+  --desired-count 2 \
+  --launch-type FARGATE \
+  --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_IDS],securityGroups=[$ECS_SG_ID],assignPublicIp=ENABLED}" \
+  --load-balancers "targetGroupArn=$TG_ARN,containerName=task-manager,containerPort=3000" \
+  --health-check-grace-period-seconds 60
+
+# Wait for service to be stable (takes a few minutes)
+aws ecs wait services-stable \
+  --cluster task-manager-cluster \
+  --services task-manager-service
+
+# Check service status
+aws ecs describe-services \
+  --cluster task-manager-cluster \
+  --services task-manager-service</code></pre>
+
+        <h3>Step 18: Test via Load Balancer</h3>
+        <pre><code class="language-bash"># Wait for ALB to be active and targets healthy (may take 2-3 minutes)
+sleep 120
+
+# Test the API
+curl http://$ALB_DNS/health
+curl http://$ALB_DNS/tasks
+
+# Create tasks
+curl -X POST http://$ALB_DNS/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Learn ECS"}'
+
+curl -X POST http://$ALB_DNS/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Deploy with Fargate"}'
+
+# Get all tasks
+curl http://$ALB_DNS/tasks
+
+# Test load balancing (should see different container hostnames)
+for i in {1..10}; do
+  curl -s http://$ALB_DNS/health | jq .timestamp
+  sleep 1
+done</code></pre>
+
+        <p><strong>You have a fully managed containerized application!</strong></p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-05-4.html" class="btn btn-secondary">← Previous: Application Load Balancer</a>
+          <a href="lesson-05-6.html" class="btn btn-primary">Next: Scaling and Updates →</a>
+        </div>
+      </div>

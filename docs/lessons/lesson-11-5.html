@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 11: Security Deep Dive - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 11</h2>
+        <div class="lesson-title">Security Deep Dive</div>
+        <div class="lesson-meta">
+          <span>~8 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 71.4%;"></div>
+      </div>
+      <div class="progress-text">Step 5 of 7</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-11.html">
+<span class="step-number">1</span>
+<span class="step-title">IAM Deep Dive</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Data Encryption with KMS</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-3.html">
+<span class="step-number">3</span>
+<span class="step-title">GuardDuty Threat Detection</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-4.html">
+<span class="step-number">4</span>
+<span class="step-title">WAF Protection</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-11-5.html">
+<span class="step-number">5</span>
+<span class="step-title">CloudTrail Auditing</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Security Hub</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Secrets Rotation &amp; Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li class="current">
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 11 - Part 5</span>
+        <h1>CloudTrail Auditing</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 5: CloudTrail Auditing (1 hour)</h2>
+
+        <h3>Step 15: Enable CloudTrail</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">S3</span><span class="code-service-badge">STS</span></div><code class="language-bash"># Create S3 bucket for CloudTrail logs
+export TRAIL_BUCKET="cloudtrail-logs-$(aws sts get-caller-identity --query Account --output text)"
+aws s3 mb s3://$TRAIL_BUCKET
+
+# Apply bucket policy
+cat &gt; trail-bucket-policy.json &lt;&lt; EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::$TRAIL_BUCKET"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::$TRAIL_BUCKET/AWSLogs/$(aws sts get-caller-identity --query Account --output text)/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
+}
+EOF
+
+aws s3api put-bucket-policy \
+  --bucket $TRAIL_BUCKET \
+  --policy file://trail-bucket-policy.json
+
+# Create trail
+aws cloudtrail create-trail \
+  --name security-audit-trail \
+  --s3-bucket-name $TRAIL_BUCKET \
+  --include-global-service-events \
+  --is-multi-region-trail
+
+# Start logging
+aws cloudtrail start-logging --name security-audit-trail
+
+# Enable log file validation (integrity)
+aws cloudtrail update-trail \
+  --name security-audit-trail \
+  --enable-log-file-validation</code></pre>
+
+        <h3>Step 16: Query CloudTrail Events</h3>
+        <pre><code class="language-bash"># Look up recent events
+aws cloudtrail lookup-events \
+  --lookup-attributes AttributeKey=EventName,AttributeValue=CreateBucket \
+  --max-results 10
+
+# Find who accessed secrets
+aws cloudtrail lookup-events \
+  --lookup-attributes AttributeKey=EventName,AttributeValue=GetSecretValue \
+  --max-results 10
+
+# Find unauthorized access attempts
+aws cloudtrail lookup-events \
+  --lookup-attributes AttributeKey=EventName,AttributeValue=UnauthorizedAccess</code></pre>
+
+        <div style="background: var(--info-bg); border-left: 4px solid var(--info-color); padding: 15px; margin: 20px 0;">
+          <strong>What's CloudTrail?</strong> CloudTrail records every API call made in your AWS account. This creates an audit trail showing who did what, when, and from where. It's essential for compliance, security investigations, and troubleshooting. Think of it as your AWS security camera system.
+        </div>
+
+        <div style="background: var(--warning-bg); border-left: 4px solid var(--warning-color); padding: 15px; margin: 20px 0;">
+          <strong>Best Practice:</strong> Never turn off CloudTrail in production. It's your primary tool for detecting unauthorized access and investigating security incidents. The small storage cost is worth it!
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-11-4.html" class="btn btn-secondary">← Previous: WAF Protection</a>
+          <a href="lesson-11-6.html" class="btn btn-primary">Next: Security Hub →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

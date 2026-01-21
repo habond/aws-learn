@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 12: Deliverables &amp; Next Steps - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 12</h2>
+        <div class="lesson-title">Victory Lap - Build Something Amazing!</div>
+        <div class="lesson-meta">
+          <span>~10-20 hours</span>
+          <span>$10-20</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 100%;"></div>
+      </div>
+      <div class="progress-text">Step 8 of 8</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-12.html">
+<span class="step-number">1</span>
+<span class="step-title">Capstone Overview</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Infrastructure Setup</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-3.html">
+<span class="step-number">3</span>
+<span class="step-title">Processing Pipeline</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-4.html">
+<span class="step-number">4</span>
+<span class="step-title">API Layer</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Frontend Integration</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-6.html">
+<span class="step-number">6</span>
+<span class="step-title">CI/CD Pipeline</span>
+</a>
+</li>
+<li>
+<a href="lesson-12-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Monitoring &amp; Cost Optimization</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-12-8.html">
+<span class="step-number">8</span>
+<span class="step-title">Deliverables &amp; Next Steps</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li class="current">
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 12 - Part 8</span>
+        <h1>Deliverables &amp; Next Steps</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Deliverables</h2>
+        <p>Your capstone project should include:</p>
+
+        <h3>1. Working Application</h3>
+        <ul>
+          <li>Deployed and accessible</li>
+          <li>All features functional</li>
+          <li>Production-ready</li>
+        </ul>
+
+        <h3>2. Infrastructure as Code</h3>
+        <ul>
+          <li>Terraform/CDK configurations</li>
+          <li>Reproducible deployments</li>
+          <li>Version controlled</li>
+        </ul>
+
+        <h3>3. Documentation</h3>
+        <ul>
+          <li>Architecture diagram</li>
+          <li>Setup instructions</li>
+          <li>API documentation</li>
+          <li>Troubleshooting guide</li>
+        </ul>
+
+        <h3>4. Monitoring</h3>
+        <ul>
+          <li>CloudWatch dashboards</li>
+          <li>Alarms configured</li>
+          <li>Logs centralized</li>
+          <li>Tracing enabled</li>
+        </ul>
+
+        <h3>5. Security</h3>
+        <ul>
+          <li>IAM roles properly scoped</li>
+          <li>Data encrypted</li>
+          <li>WAF configured</li>
+          <li>Security scan passed</li>
+        </ul>
+
+        <h3>6. CI/CD</h3>
+        <ul>
+          <li>Automated testing</li>
+          <li>Automated deployment</li>
+          <li>Rollback capability</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Evaluation Criteria</h2>
+
+        <h3>Architecture (25%)</h3>
+        <ul>
+          <li>Well-designed and scalable</li>
+          <li>Appropriate service choices</li>
+          <li>Cost-effective</li>
+          <li>Follows AWS best practices</li>
+        </ul>
+
+        <h3>Implementation (30%)</h3>
+        <ul>
+          <li>Code quality</li>
+          <li>Error handling</li>
+          <li>Performance optimization</li>
+          <li>Security implementation</li>
+        </ul>
+
+        <h3>Operations (20%)</h3>
+        <ul>
+          <li>Comprehensive monitoring</li>
+          <li>Proper logging</li>
+          <li>Automated deployments</li>
+          <li>Documentation quality</li>
+        </ul>
+
+        <h3>Bonus Points (25%)</h3>
+        <ul>
+          <li>Innovation/creativity</li>
+          <li>Advanced features</li>
+          <li>Cost optimization</li>
+          <li>User experience</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Show Your Work!</h2>
+        <p>Share your capstone project:</p>
+        <ul>
+          <li>Blog post about what you built</li>
+          <li>GitHub repository (make it public!)</li>
+          <li>Video demo</li>
+          <li>Architecture diagram</li>
+          <li>Lessons learned</li>
+        </ul>
+        <p><strong>Tag it</strong>: #AWSCapstone #CloudNative #AWSLearning</p>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>What You've Accomplished</h2>
+        <p>Looking back at all 12 lessons:</p>
+
+        <ol>
+          <li><strong>Static Website</strong>: S3, CloudFront, Route 53</li>
+          <li><strong>EC2 Infrastructure</strong>: VPC, Load Balancers, Auto Scaling</li>
+          <li><strong>Serverless API</strong>: Lambda, API Gateway, DynamoDB</li>
+          <li><strong>Infrastructure as Code</strong>: Terraform</li>
+          <li><strong>Containers</strong>: Docker, ECS, Fargate</li>
+          <li><strong>Data Pipelines</strong>: S3 Events, RDS, ElastiCache</li>
+          <li><strong>Event-Driven</strong>: SNS, SQS, EventBridge, Step Functions</li>
+          <li><strong>Big Data</strong>: Kinesis, Glue, Athena</li>
+          <li><strong>AI/ML</strong>: Rekognition, Bedrock</li>
+          <li><strong>Observability</strong>: CloudWatch, X-Ray</li>
+          <li><strong>Security</strong>: IAM, KMS, GuardDuty, WAF</li>
+          <li><strong>Capstone</strong>: Everything together!</li>
+        </ol>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>You're Now an AWS Developer!</h2>
+
+        <h3>What's Next?</h3>
+
+        <h4>Keep Learning</h4>
+        <ul>
+          <li>AWS Solutions Architect certification</li>
+          <li>Advanced services (EKS, AppSync, Aurora Serverless)</li>
+          <li>Multi-region deployments</li>
+          <li>Cost optimization techniques</li>
+        </ul>
+
+        <h4>Build More</h4>
+        <ul>
+          <li>Open source contributions</li>
+          <li>Personal projects</li>
+          <li>Freelance work</li>
+          <li>Start your own SaaS</li>
+        </ul>
+
+        <h4>Join the Community</h4>
+        <ul>
+          <li>AWS re:Post</li>
+          <li>Local AWS user groups</li>
+          <li>Twitter/LinkedIn</li>
+          <li>Blog about your journey</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Thank You!</h2>
+        <p>Thank you for completing this AWS learning journey. You've built real projects, learned industry best practices, and gained hands-on experience with 30+ AWS services.</p>
+        <p><strong>Now go build something amazing!</strong></p>
+        <p>The cloud is your playground. The possibilities are endless.</p>
+        <p>Happy building!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-12-7.html" class="btn btn-secondary">← Previous: Monitoring &amp; Cost Optimization</a>
+          <a href="../index.html" class="btn btn-primary">Back to Home</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

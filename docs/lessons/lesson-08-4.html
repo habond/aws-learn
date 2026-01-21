@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 8: Athena Queries - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 8</h2>
+        <div class="lesson-title">Big Data Analytics</div>
+        <div class="lesson-meta">
+          <span>~7 hours</span>
+          <span>$3-5</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 80%;"></div>
+      </div>
+      <div class="progress-text">Step 4 of 5</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-08.html">
+<span class="step-number">1</span>
+<span class="step-title">Overview + Kinesis Data Streams</span>
+</a>
+</li>
+<li>
+<a href="lesson-08-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Kinesis Firehose to S3</span>
+</a>
+</li>
+<li>
+<a href="lesson-08-3.html">
+<span class="step-number">3</span>
+<span class="step-title">AWS Glue (Data Catalog)</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-08-4.html">
+<span class="step-number">4</span>
+<span class="step-title">Athena Queries</span>
+</a>
+</li>
+<li>
+<a href="lesson-08-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Real-time Processing with Lambda</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li class="current">
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 8 - Part 4</span>
+        <h1>Athena Queries</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 4: Athena Queries (1.5 hours)</h2>
+
+        <h3>Step 9: Create S3 Bucket for Query Results</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">S3</span><span class="code-service-badge">STS</span></div><code class="language-bash">export RESULTS_BUCKET="athena-results-$(aws sts get-caller-identity --query Account --output text)"
+aws s3 mb s3://$RESULTS_BUCKET</code></pre>
+
+        <h3>Step 10: Query Data with Athena</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">Athena</span></div><code class="language-bash"># Set query result location
+aws athena create-work-group \
+  --name sensor-analytics-workgroup \
+  --configuration "ResultConfiguration={OutputLocation=s3://$RESULTS_BUCKET/}" \
+  --description "Work group for sensor analytics"
+
+# Run query to get average temperature by location
+aws athena start-query-execution \
+  --query-string "SELECT location, AVG(temperature) as avg_temp, AVG(humidity) as avg_humidity, COUNT(*) as reading_count FROM sensor_data GROUP BY location ORDER BY avg_temp DESC" \
+  --query-execution-context Database=sensor_analytics \
+  --work-group sensor-analytics-workgroup
+
+# Get query execution ID from output
+export QUERY_ID="paste-query-id-here"
+
+# Check query status
+aws athena get-query-execution --query-execution-id $QUERY_ID
+
+# Get results (wait until query completes)
+aws athena get-query-results --query-execution-id $QUERY_ID</code></pre>
+
+        <h3>Step 11: More Useful Queries</h3>
+        <p>Create <code>queries.sql</code>:</p>
+
+        <pre><code class="language-sql">-- High temperature alerts
+SELECT
+  sensor_id,
+  location,
+  temperature,
+  timestamp
+FROM sensor_data
+WHERE temperature &gt; 28.0
+ORDER BY timestamp DESC
+LIMIT 10;
+
+-- Hourly averages
+SELECT
+  DATE_TRUNC('hour', from_iso8601_timestamp(timestamp)) as hour,
+  location,
+  AVG(temperature) as avg_temp,
+  AVG(humidity) as avg_humidity,
+  COUNT(*) as readings
+FROM sensor_data
+GROUP BY DATE_TRUNC('hour', from_iso8601_timestamp(timestamp)), location
+ORDER BY hour DESC, location;
+
+-- Sensor health check (find sensors not reporting)
+SELECT
+  sensor_id,
+  MAX(timestamp) as last_seen,
+  COUNT(*) as total_readings
+FROM sensor_data
+GROUP BY sensor_id
+ORDER BY last_seen DESC;</code></pre>
+
+        <p>Run queries:</p>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">Athena</span></div><code class="language-bash"># Query 1: High temperature alerts
+aws athena start-query-execution \
+  --query-string "SELECT sensor_id, location, temperature, timestamp FROM sensor_data WHERE temperature &gt; 28.0 ORDER BY timestamp DESC LIMIT 10" \
+  --query-execution-context Database=sensor_analytics \
+  --work-group sensor-analytics-workgroup
+
+# Get results...</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-08-3.html" class="btn btn-secondary">← Previous: AWS Glue (Data Catalog)</a>
+          <a href="lesson-08-5.html" class="btn btn-primary">Next: Real-time Processing with Lambda →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

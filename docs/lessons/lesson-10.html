@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 10: Observability - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 10</h2>
+        <div class="lesson-title">Observability - Know What&#39;s Happening</div>
+        <div class="lesson-meta">
+          <span>~6 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 16.67%;"></div>
+      </div>
+      <div class="progress-text">Step 1 of 6</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li class="active">
+<a href="lesson-10.html">
+<span class="step-number">1</span>
+<span class="step-title">Advanced CloudWatch Metrics</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-2.html">
+<span class="step-number">2</span>
+<span class="step-title">CloudWatch Logs Insights</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-3.html">
+<span class="step-number">3</span>
+<span class="step-title">CloudWatch Alarms</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-4.html">
+<span class="step-number">4</span>
+<span class="step-title">X-Ray Distributed Tracing</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-5.html">
+<span class="step-number">5</span>
+<span class="step-title">CloudWatch Synthetics</span>
+</a>
+</li>
+<li>
+<a href="lesson-10-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Container Insights + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li class="current">
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 10 - Part 1</span>
+        <h1>Observability - Know What's Happening (Before It Breaks)</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>What You're Building</h2>
+        <p>Build comprehensive observability for your applications using CloudWatch advanced features, X-Ray distributed tracing, and custom dashboards. You'll instrument an application to collect metrics, logs, and traces, then visualize everything to understand system behavior and troubleshoot issues quickly.</p>
+
+        <div class="aws-services-summary">
+          <h3>AWS Services Used in This Lesson</h3>
+          <div class="aws-services-grid">
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/cloudwatch/" target="_blank" rel="noopener noreferrer">
+                <strong>CloudWatch</strong>
+                <span>Metrics, logs, and dashboards</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/xray/" target="_blank" rel="noopener noreferrer">
+                <strong>X-Ray</strong>
+                <span>Distributed tracing</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/cloudwatch/latest/logs/AnalyzingLogData.html" target="_blank" rel="noopener noreferrer">
+                <strong>Logs Insights</strong>
+                <span>Query and analyze logs</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/cloudwatch/latest/monitoring/CloudWatch_Synthetics_Canaries.html" target="_blank" rel="noopener noreferrer">
+                <strong>CloudWatch Synthetics</strong>
+                <span>Proactive endpoint monitoring</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/ContainerInsights.html" target="_blank" rel="noopener noreferrer">
+                <strong>Container Insights</strong>
+                <span>Monitor ECS and EKS</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <h2>What You'll Learn</h2>
+        <ul>
+          <li><strong>CloudWatch Metrics</strong>: Custom metrics and dashboards</li>
+          <li><strong>CloudWatch Logs Insights</strong>: Query and analyze logs</li>
+          <li><strong>CloudWatch Alarms</strong>: Alert on problems</li>
+          <li><strong>X-Ray</strong>: Distributed tracing</li>
+          <li><strong>CloudWatch Synthetics</strong>: Proactive monitoring</li>
+          <li><strong>Container Insights</strong>: ECS/EKS monitoring</li>
+          <li><strong>Application Insights</strong>: Auto-discovery and monitoring</li>
+        </ul>
+
+        <h2>Prerequisites</h2>
+        <ul>
+          <li>Completed Lessons 1-9</li>
+          <li>Running application to monitor (use from previous lessons)</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Part 1: Advanced CloudWatch Metrics (1.5 hours)</h2>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Why do I need custom metrics when AWS provides built-in ones?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Custom CloudWatch metrics are application-specific measurements you send to CloudWatch yourself - like "orders processed per minute," "user signup rate," or "shopping cart abandonment." They go beyond AWS's built-in metrics (CPU, memory, network) to track business and application logic.</p>
+
+            <p><strong>Why we need it:</strong> Built-in metrics tell you system health (Is the server up? Is CPU high?), but custom metrics tell you business health (Are users actually using the features? Are payments succeeding?). You can't fix what you can't measure, and AWS doesn't know what your application does - you need to instrument that yourself.</p>
+
+            <p><strong>Key details:</strong> Custom metrics are sent via PutMetricData API calls. Each metric has a namespace (to group related metrics), metric name, dimensions (tags for filtering), and value. You can send metrics in batches of up to 20 for efficiency. Metrics are stored for 15 months.</p>
+
+            <p><strong>Common gotcha:</strong> Sending high-resolution custom metrics (every second) gets expensive fast - AWS charges per metric per month. Use standard resolution (1-minute) unless you truly need sub-minute granularity. Also, metric dimensions create separate metric streams, so don't use high-cardinality values like user IDs as dimensions.</p>
+          </div>
+        </div>
+
+        <h3>Step 1: Create Custom Metrics Application</h3>
+        <p>Create <code>monitored-app/index.js</code>:</p>
+
+        <pre><code class="language-javascript">const express = require('express');
+const { CloudWatchClient, PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
+
+const app = express();
+const cloudwatch = new CloudWatchClient({});
+const PORT = process.env.PORT || 3000;
+
+// Business metrics
+let orderCount = 0;
+let totalRevenue = 0;
+let requestDuration = [];
+
+// Middleware to track request duration
+app.use((req, res, next) =&gt; {
+  const start = Date.now();
+
+  res.on('finish', () =&gt; {
+    const duration = Date.now() - start;
+    requestDuration.push(duration);
+
+    // Send custom metric to CloudWatch
+    sendMetric('RequestDuration', duration, 'Milliseconds');
+  });
+
+  next();
+});
+
+async function sendMetric(metricName, value, unit = 'None') {
+  try {
+    await cloudwatch.send(new PutMetricDataCommand({
+      Namespace: 'CustomApp',
+      MetricData: [
+        {
+          MetricName: metricName,
+          Value: value,
+          Unit: unit,
+          Timestamp: new Date()
+        }
+      ]
+    }));
+  } catch (error) {
+    console.error('Failed to send metric:', error);
+  }
+}
+
+app.get('/health', (req, res) =&gt; {
+  res.json({ status: 'healthy' });
+});
+
+app.post('/order', express.json(), async (req, res) =&gt; {
+  const { amount } = req.body;
+
+  orderCount++;
+  totalRevenue += amount;
+
+  // Send business metrics
+  await sendMetric('OrderCount', 1, 'Count');
+  await sendMetric('Revenue', amount, 'None');
+
+  console.log(`Order placed: $${amount}. Total orders: ${orderCount}, Total revenue: $${totalRevenue}`);
+
+  res.json({
+    orderId: `ORD-${Date.now()}`,
+    amount,
+    status: 'success'
+  });
+});
+
+app.get('/metrics', (req, res) =&gt; {
+  const avgDuration = requestDuration.length &gt; 0
+    ? requestDuration.reduce((a, b) =&gt; a + b, 0) / requestDuration.length
+    : 0;
+
+  res.json({
+    orderCount,
+    totalRevenue,
+    avgRequestDuration: avgDuration,
+    recentRequests: requestDuration.slice(-10)
+  });
+});
+
+// Endpoint that sometimes fails (for testing alerts)
+app.get('/flaky', (req, res) =&gt; {
+  if (Math.random() &lt; 0.3) {
+    throw new Error('Random failure!');
+  }
+  res.json({ status: 'ok' });
+});
+
+// Error handler
+app.use((err, req, res, next) =&gt; {
+  console.error('Error:', err);
+  sendMetric('Errors', 1, 'Count');
+
+  res.status(500).json({ error: err.message });
+});
+
+app.listen(PORT, () =&gt; {
+  console.log(`Server running on port ${PORT}`);
+
+  // Send heartbeat metric every minute
+  setInterval(async () =&gt; {
+    await sendMetric('Heartbeat', 1, 'Count');
+  }, 60000);
+});</code></pre>
+
+        <p>Deploy:</p>
+
+        <pre><code class="language-bash">cd monitored-app
+npm init -y
+npm install express @aws-sdk/client-cloudwatch
+node index.js &amp;
+export APP_PID=$!
+
+# Generate some traffic
+for i in {1..10}; do
+  curl -X POST http://localhost:3000/order \
+    -H "Content-Type: application/json" \
+    -d "{\"amount\": $((RANDOM % 100 + 10))}"
+  sleep 1
+done
+
+# Check metrics endpoint
+curl http://localhost:3000/metrics</code></pre>
+
+        <h3>Step 2: View Custom Metrics in CloudWatch</h3>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">CloudWatch</span></div><code class="language-bash"># List custom metrics
+aws cloudwatch list-metrics --namespace CustomApp
+
+# Get metric statistics
+aws cloudwatch get-metric-statistics \
+  --namespace CustomApp \
+  --metric-name OrderCount \
+  --start-time $(date -u -v-1H +%Y-%m-%dT%H:%M:%S) \
+  --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+  --period 300 \
+  --statistics Sum
+
+# Or view in console: CloudWatch → Metrics → CustomApp</code></pre>
+
+        <h3>Step 3: Create CloudWatch Dashboard</h3>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">CloudWatch</span></div><code class="language-bash">cat &gt; dashboard-config.json &lt;&lt; 'EOF'
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "CustomApp", "OrderCount", { "stat": "Sum" } ]
+        ],
+        "period": 300,
+        "stat": "Sum",
+        "region": "us-east-1",
+        "title": "Order Count"
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "CustomApp", "Revenue", { "stat": "Sum" } ]
+        ],
+        "period": 300,
+        "stat": "Sum",
+        "region": "us-east-1",
+        "title": "Total Revenue"
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "CustomApp", "RequestDuration", { "stat": "Average" } ],
+          [ "...", { "stat": "Maximum" } ]
+        ],
+        "period": 300,
+        "region": "us-east-1",
+        "title": "Request Duration"
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "CustomApp", "Errors", { "stat": "Sum" } ]
+        ],
+        "period": 300,
+        "stat": "Sum",
+        "region": "us-east-1",
+        "title": "Error Count"
+      }
+    }
+  ]
+}
+EOF
+
+aws cloudwatch put-dashboard \
+  --dashboard-name application-monitoring \
+  --dashboard-body file://dashboard-config.json
+
+echo "Dashboard created: https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#dashboards:name=application-monitoring"</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-09.html" class="btn btn-secondary">← Previous Lesson</a>
+          <a href="lesson-10-2.html" class="btn btn-primary">Next: CloudWatch Logs Insights →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

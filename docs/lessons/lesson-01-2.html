@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 1: Build Your Website - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 1</h2>
+        <div class="lesson-title">Your First Internet Empire</div>
+        <div class="lesson-meta">
+          <span>~6 hours</span>
+          <span>$1-2</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 25%;"></div>
+      </div>
+      <div class="progress-text">Step 2 of 8</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-01.html">
+<span class="step-number">1</span>
+<span class="step-title">Overview + AWS Setup</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-01-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Build Your Website</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-3.html">
+<span class="step-number">3</span>
+<span class="step-title">S3 Storage</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-4.html">
+<span class="step-number">4</span>
+<span class="step-title">CloudFront CDN</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Custom Domain</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-6.html">
+<span class="step-number">6</span>
+<span class="step-title">CloudWatch Monitoring</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Make Updates</span>
+</a>
+</li>
+<li>
+<a href="lesson-01-8.html">
+<span class="step-number">8</span>
+<span class="step-title">CLI Practice + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li class="current">
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 1 - Part 2</span>
+        <h1>Build Your Website</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 2: Build Your Website (1 hour)</h2>
+
+        <h3>Step 4: Create Your Masterpiece</h3>
+        <p>Pick one (or make your own):</p>
+        <ul>
+          <li><strong>Personal site</strong>: Portfolio, blog, "about me"</li>
+          <li><strong>Hot take generator</strong>: Random opinions on tech</li>
+          <li><strong>Meme portfolio</strong>: Your finest work</li>
+          <li><strong>Product landing page</strong>: For your imaginary startup</li>
+        </ul>
+
+        <p><strong>Use the starter template</strong> in the <code>website/</code> folder, or create your own!</p>
+
+        <pre><code class="language-bash">cd lesson-01-first-internet-empire/website
+
+# Check out the files
+ls -la</code></pre>
+
+        <p><strong>Pro tip</strong>: Keep it simple for now. You can make it fancy later. A single <code>index.html</code> is fine!</p>
+
+        <h3>What Makes a Good Static Site for This Lesson:</h3>
+        <ul>
+          <li>HTML/CSS/JavaScript only (no server-side code)</li>
+          <li>Images (so we can test CDN performance)</li>
+          <li>Multiple pages (to test routing)</li>
+          <li>Some CSS/JS files (to test caching)</li>
+        </ul>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What's the difference between Static and Dynamic websites?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A static website is pre-built HTML/CSS/JS files served exactly as stored - same content for everyone. A dynamic website generates custom pages on-the-fly based on who's viewing, using databases and server code (like PHP, Python, Node.js).</p>
+
+            <p><strong>Why we need it:</strong> Static sites are perfect for content that doesn't change per user: portfolios, documentation, landing pages, blogs (with build tools). They're 10-100x cheaper to host because you don't need servers - just storage. They're also faster and more secure (no server to hack).</p>
+
+            <p><strong>Key details:</strong> Modern static sites aren't boring - you can use JavaScript to make them interactive. Many blogs use "static site generators" like Jekyll or Hugo that build static HTML from templates, getting benefits of both worlds. You update by rebuilding and re-uploading.</p>
+
+            <p><strong>Common gotcha:</strong> Users can't log in, submit forms, or see personalized content without adding external services (like Auth0 for login, FormSpree for forms). If you need "admin updates blog without rebuilding", you need either a dynamic site or a headless CMS with a static site generator.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-01.html" class="btn btn-secondary">← Previous: AWS Setup</a>
+          <a href="lesson-01-3.html" class="btn btn-primary">Next: S3 Storage →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

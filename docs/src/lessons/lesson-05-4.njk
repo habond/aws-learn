@@ -1,0 +1,159 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-05-4.html
+lessonNumber: 5
+lessonTitle: "Containers Are Taking Over"
+duration: "~8 hours"
+cost: "$2-3"
+stepNumber: 4
+totalSteps: 7
+progress: 57.14
+title: "Lesson 5: Application Load Balancer - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-05.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Docker Basics</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Push to ECR</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">ECS Cluster with Fargate</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-05-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">Application Load Balancer</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">ECS Service</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Scaling and Updates</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Monitoring + Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 5 - Part 4</span>
+        <h1>Application Load Balancer</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 4: Application Load Balancer (1.5 hours)</h2>
+
+        <h3>Step 14: Create ALB Security Group</h3>
+        <pre><code class="language-bash"># Create security group for ALB
+aws ec2 create-security-group \
+  --group-name task-manager-alb-sg \
+  --description "Security group for Task Manager ALB" \
+  --vpc-id $VPC_ID
+
+export ALB_SG_ID=$(aws ec2 describe-security-groups \
+  --filters "Name=group-name,Values=task-manager-alb-sg" \
+  --query "SecurityGroups[0].GroupId" \
+  --output text)
+
+# Allow HTTP from anywhere
+aws ec2 authorize-security-group-ingress \
+  --group-id $ALB_SG_ID \
+  --protocol tcp \
+  --port 80 \
+  --cidr 0.0.0.0/0
+
+# Update ECS security group to only allow traffic from ALB
+aws ec2 revoke-security-group-ingress \
+  --group-id $ECS_SG_ID \
+  --protocol tcp \
+  --port 3000 \
+  --cidr 0.0.0.0/0
+
+aws ec2 authorize-security-group-ingress \
+  --group-id $ECS_SG_ID \
+  --protocol tcp \
+  --port 3000 \
+  --source-group $ALB_SG_ID</code></pre>
+
+        <h3>Step 15: Create Application Load Balancer</h3>
+        <pre><code class="language-bash"># Get all subnets (ALB requires 2+ AZs)
+export ALL_SUBNETS=$(aws ec2 describe-subnets \
+  --filters "Name=vpc-id,Values=$VPC_ID" \
+  --query "Subnets[*].SubnetId" \
+  --output text | tr '\t' ' ')
+
+# Create ALB
+aws elbv2 create-load-balancer \
+  --name task-manager-alb \
+  --subnets $ALL_SUBNETS \
+  --security-groups $ALB_SG_ID \
+  --scheme internet-facing \
+  --type application
+
+# Get ALB ARN and DNS
+export ALB_ARN=$(aws elbv2 describe-load-balancers \
+  --names task-manager-alb \
+  --query "LoadBalancers[0].LoadBalancerArn" \
+  --output text)
+
+export ALB_DNS=$(aws elbv2 describe-load-balancers \
+  --names task-manager-alb \
+  --query "LoadBalancers[0].DNSName" \
+  --output text)
+
+echo "ALB DNS: $ALB_DNS"</code></pre>
+
+        <h3>Step 16: Create Target Group</h3>
+        <pre><code class="language-bash"># Create target group
+aws elbv2 create-target-group \
+  --name task-manager-tg \
+  --protocol HTTP \
+  --port 3000 \
+  --vpc-id $VPC_ID \
+  --target-type ip \
+  --health-check-path /health \
+  --health-check-interval-seconds 30 \
+  --health-check-timeout-seconds 5 \
+  --healthy-threshold-count 2 \
+  --unhealthy-threshold-count 3
+
+# Get target group ARN
+export TG_ARN=$(aws elbv2 describe-target-groups \
+  --names task-manager-tg \
+  --query "TargetGroups[0].TargetGroupArn" \
+  --output text)
+
+# Create listener (forward HTTP:80 to target group)
+aws elbv2 create-listener \
+  --load-balancer-arn $ALB_ARN \
+  --protocol HTTP \
+  --port 80 \
+  --default-actions Type=forward,TargetGroupArn=$TG_ARN</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-05-3.html" class="btn btn-secondary">← Previous: ECS Cluster with Fargate</a>
+          <a href="lesson-05-5.html" class="btn btn-primary">Next: ECS Service →</a>
+        </div>
+      </div>

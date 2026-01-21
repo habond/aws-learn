@@ -1,0 +1,136 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-02-2.html
+lessonNumber: 2
+lessonTitle: "Renting Computers in Someone Else's Basement"
+duration: "~8 hours"
+cost: "$2-3"
+stepNumber: 2
+totalSteps: 7
+progress: 28.6
+title: "Lesson 2: SSH Key Pair - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-02.html">
+  <span class="step-number">1</span>
+  <span class="step-title">VPC Basics</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-02-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">SSH Key Pair</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-02-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">Launch EC2 Instance</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-02-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">Deploy Application</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-02-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Load Balancer</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-02-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Auto Scaling</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-02-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">CloudWatch + Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 2 - Part 2</span>
+        <h1>Create SSH Key Pair</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 2: Create SSH Key Pair (15 minutes)</h2>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is SSH and how do key pairs work?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> SSH (Secure Shell) is a way to remotely access and control a computer over a network. A key pair consists of two cryptographic keys: a private key (stays on your computer) and a public key (goes on the server). Think of it like a lock and key - but way more secure than a password.</p>
+
+            <p><strong>Why we need it:</strong> Passwords can be guessed, leaked, or brute-forced. SSH keys use mathematical encryption that's nearly impossible to crack. The server has the public key (lock), you have the private key. When you connect, the server challenges you to prove you have the matching private key, all without ever transmitting the key itself over the network.</p>
+
+            <p><strong>Key details:</strong> AWS doesn't support password authentication for EC2 instances - you must use SSH keys. When you create a key pair, AWS generates the pair and gives you the private key exactly once. If you lose it, you can't recover it - you'd need to create a new key pair. The public key is stored on the EC2 instance in ~/.ssh/authorized_keys.</p>
+
+            <p><strong>Common gotcha:</strong> Never share your private key or commit it to version control. If someone gets your private key, they can access all servers that trust it. Also, SSH keys are region-independent but must be created per-region in AWS - a key pair created in us-east-1 won't appear in us-west-2's dropdown menus.</p>
+          </div>
+        </div>
+
+        <h3>Step 2: Generate Key Pair</h3>
+
+        <pre><code class="language-bash"># Create key pair
+aws ec2 create-key-pair \
+  --key-name my-aws-key \
+  --query 'KeyMaterial' \
+  --output text &gt; ~/.ssh/my-aws-key.pem</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is a .pem file?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> PEM (Privacy Enhanced Mail) is a file format for storing cryptographic keys and certificates. Despite the name, it's not just for email - it's a standard format for encoding keys in base64 with header/footer markers. Your .pem file contains your SSH private key in this format.</p>
+
+            <p><strong>Why we need it:</strong> Cryptographic keys are binary data that can't be easily displayed or copied as text. The PEM format converts them to ASCII text that's safe to store in files, transmit, and work with across different systems. It's a widely supported standard that works with SSH, SSL/TLS, and many other security tools.</p>
+
+            <p><strong>Key details:</strong> A .pem file starts with "-----BEGIN RSA PRIVATE KEY-----" and ends with "-----END RSA PRIVATE KEY-----" (or similar). Everything in between is base64-encoded binary data. The .pem extension is just a convention - it's still a plain text file. AWS EC2 generates keys in PEM format by default because it's universally compatible.</p>
+
+            <p><strong>Common gotcha:</strong> PEM files must have Unix-style line endings (LF, not CRLF). If you edit them on Windows and accidentally save with Windows line endings, SSH will reject them with cryptic errors. Also, extra whitespace or characters before/after the header/footer markers will break the file. Never edit .pem files manually unless you know what you're doing.</p>
+          </div>
+        </div>
+
+        <pre><code class="language-bash"># Secure the key
+chmod 400 ~/.ssh/my-aws-key.pem</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>Why chmod 400? What does it mean?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> The chmod command changes file permissions on Unix-like systems. The number 400 means "owner can read only" - no write, no execute, and no access for anyone else. It's the most restrictive permission that still lets you use the file.</p>
+
+            <p><strong>Why we need it:</strong> SSH refuses to use private keys that are too permissive - it's a security feature to prevent accidentally exposing your keys. If others can read your private key, they could copy it and impersonate you. If it's writable, malware could modify it. SSH requires private keys to be readable only by you, and chmod 400 enforces exactly that.</p>
+
+            <p><strong>Key details:</strong> In Unix permissions, 4=read, 2=write, 1=execute. The three digits represent owner, group, and others. So 400 means: owner has read (4), group has nothing (0), others have nothing (0). You could also use 600 (owner read+write) which SSH also accepts, but 400 is more secure since you don't need to modify the key.</p>
+
+            <p><strong>Common gotcha:</strong> Windows doesn't use Unix permissions, so chmod doesn't exist there. If you're on Windows using Git Bash or WSL, chmod works, but Windows's file properties override it. Instead, right-click the file, go to Properties &gt; Security, and ensure only your user has access. Also, if you copy the .pem file, the copy might have different permissions - always re-run chmod 400.</p>
+          </div>
+        </div>
+
+        <pre><code class="language-bash"># Verify it exists
+aws ec2 describe-key-pairs --key-name my-aws-key</code></pre>
+
+        <p><strong>Don't lose this key!</strong> It's your only way to SSH into your servers.</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-02.html" class="btn btn-secondary">← Previous: VPC Basics</a>
+          <a href="lesson-02-3.html" class="btn btn-primary">Next: Launch EC2 Instance →</a>
+        </div>
+      </div>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 5: Containers Are Taking Over - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 5</h2>
+        <div class="lesson-title">Containers Are Taking Over</div>
+        <div class="lesson-meta">
+          <span>~8 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 14.29%;"></div>
+      </div>
+      <div class="progress-text">Step 1 of 7</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li class="active">
+<a href="lesson-05.html">
+<span class="step-number">1</span>
+<span class="step-title">Docker Basics</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Push to ECR</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-3.html">
+<span class="step-number">3</span>
+<span class="step-title">ECS Cluster with Fargate</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-4.html">
+<span class="step-number">4</span>
+<span class="step-title">Application Load Balancer</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-5.html">
+<span class="step-number">5</span>
+<span class="step-title">ECS Service</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Scaling and Updates</span>
+</a>
+</li>
+<li>
+<a href="lesson-05-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Monitoring + Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li class="current">
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 5 - Part 1</span>
+        <h1>Containers Are Taking Over</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>What You're Building</h2>
+        <p>Containerize a web application with Docker and deploy it to AWS using ECS (Elastic Container Service) with Fargate. You'll build a simple task manager API, package it in a container, push it to ECR (Elastic Container Registry), and run it on Fargate (serverless containers). No servers to manage, just containers that scale.</p>
+
+        <div class="aws-services-summary">
+          <h3>AWS Services Used in This Lesson</h3>
+          <div class="aws-services-grid">
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/ecr/" target="_blank" rel="noopener noreferrer">
+                <strong>ECR</strong>
+                <span>Container image registry</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/ecs/" target="_blank" rel="noopener noreferrer">
+                <strong>ECS</strong>
+                <span>Container orchestration</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html" target="_blank" rel="noopener noreferrer">
+                <strong>Fargate</strong>
+                <span>Serverless container runtime</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/application/" target="_blank" rel="noopener noreferrer">
+                <strong>ALB</strong>
+                <span>Application Load Balancer</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/vpc/" target="_blank" rel="noopener noreferrer">
+                <strong>VPC</strong>
+                <span>Virtual Private Cloud</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/iam/" target="_blank" rel="noopener noreferrer">
+                <strong>IAM</strong>
+                <span>Identity & Access Management</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/cloudwatch/" target="_blank" rel="noopener noreferrer">
+                <strong>CloudWatch</strong>
+                <span>Logging and monitoring</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/ec2/" target="_blank" rel="noopener noreferrer">
+                <strong>EC2</strong>
+                <span>Security groups & networking</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <h2>What You'll Learn</h2>
+        <ul>
+          <li><strong>Docker</strong>: Containerization basics</li>
+          <li><strong>ECR</strong>: AWS's container registry</li>
+          <li><strong>ECS</strong>: Container orchestration service</li>
+          <li><strong>Fargate</strong>: Serverless container runtime</li>
+          <li><strong>Application Load Balancer</strong>: Route traffic to containers</li>
+          <li><strong>Task Definitions</strong>: Define container configurations</li>
+          <li><strong>Services</strong>: Keep containers running</li>
+        </ul>
+
+        <h2>Prerequisites</h2>
+        <ul>
+          <li>Completed Lessons 1-4</li>
+          <li>Docker installed (<code>docker --version</code>)</li>
+          <li>AWS CLI configured</li>
+          <li>Node.js or Python installed</li>
+          <li>Basic understanding of containers (helpful but not required)</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Why Containers?</h2>
+
+        <h3>The problem:</h3>
+        <ul>
+          <li>"Works on my machine" syndrome</li>
+          <li>Dependency conflicts</li>
+          <li>Environment inconsistencies</li>
+          <li>Hard to scale applications</li>
+        </ul>
+
+        <h3>Containers solve this:</h3>
+        <ul>
+          <li>Package app + dependencies together</li>
+          <li>Consistent across dev, staging, production</li>
+          <li>Fast to start (seconds, not minutes)</li>
+          <li>Easy to scale (spin up more containers)</li>
+          <li>Portable (run anywhere)</li>
+        </ul>
+
+        <h3>AWS container options:</h3>
+        <ul>
+          <li><strong>ECS</strong>: AWS's container orchestration</li>
+          <li><strong>Fargate</strong>: Serverless (no EC2 to manage)</li>
+          <li><strong>EKS</strong>: Managed Kubernetes (advanced, not in this lesson)</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Part 1: Docker Basics (1.5 hours)</h2>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is Docker and why do containers matter?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Docker is a platform for packaging applications and their dependencies into containers - isolated, lightweight units that run consistently across any environment. A container includes your code, runtime, libraries, and settings all bundled together.</p>
+
+            <p><strong>Why we need it:</strong> The classic problem: your app works on your laptop but crashes in production because of different library versions, missing dependencies, or environment differences. Containers solve this by packaging everything together. If it works in a container on your laptop, it works in a container in production - guaranteed.</p>
+
+            <p><strong>Key details:</strong> Containers are lighter than virtual machines because they share the host OS kernel instead of running a full OS. They start in seconds, not minutes. Docker images are built in layers - each instruction in your Dockerfile creates a layer, and layers are cached for faster builds.</p>
+
+            <p><strong>Common gotcha:</strong> Containers are ephemeral - when a container stops, any data written inside it is lost. For persistent data, you need volumes or external databases. Also, containers run as isolated processes, so "localhost" inside a container refers to the container itself, not your host machine.</p>
+          </div>
+        </div>
+
+        <h3>Step 1: Install Docker</h3>
+        <pre><code class="language-bash"># macOS/Windows: Download Docker Desktop
+# https://www.docker.com/products/docker-desktop
+
+# Linux
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Verify installation
+docker --version
+docker run hello-world</code></pre>
+
+        <h3>Step 2: Build a Simple App</h3>
+        <p>Create a task manager API. Create <code>app/</code> directory:</p>
+
+        <pre><code class="language-bash">mkdir task-manager-app
+cd task-manager-app</code></pre>
+
+        <p>Create <code>package.json</code>:</p>
+        <pre><code class="language-json">{
+  "name": "task-manager",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.0"
+  }
+}</code></pre>
+
+        <p>Create <code>index.js</code>:</p>
+        <pre><code class="language-javascript">const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+
+// In-memory task storage
+let tasks = [
+  { id: 1, title: 'Learn Docker', completed: false },
+  { id: 2, title: 'Deploy to ECS', completed: false }
+];
+let nextId = 3;
+
+// Health check
+app.get('/health', (req, res) =&gt; {
+  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
+// Get all tasks
+app.get('/tasks', (req, res) =&gt; {
+  res.json(tasks);
+});
+
+// Get single task
+app.get('/tasks/:id', (req, res) =&gt; {
+  const task = tasks.find(t =&gt; t.id === parseInt(req.params.id));
+  if (!task) return res.status(404).json({ error: 'Task not found' });
+  res.json(task);
+});
+
+// Create task
+app.post('/tasks', (req, res) =&gt; {
+  const { title } = req.body;
+  if (!title) return res.status(400).json({ error: 'Title required' });
+
+  const task = {
+    id: nextId++,
+    title,
+    completed: false
+  };
+  tasks.push(task);
+  res.status(201).json(task);
+});
+
+// Update task
+app.put('/tasks/:id', (req, res) =&gt; {
+  const task = tasks.find(t =&gt; t.id === parseInt(req.params.id));
+  if (!task) return res.status(404).json({ error: 'Task not found' });
+
+  if (req.body.title !== undefined) task.title = req.body.title;
+  if (req.body.completed !== undefined) task.completed = req.body.completed;
+
+  res.json(task);
+});
+
+// Delete task
+app.delete('/tasks/:id', (req, res) =&gt; {
+  const index = tasks.findIndex(t =&gt; t.id === parseInt(req.params.id));
+  if (index === -1) return res.status(404).json({ error: 'Task not found' });
+
+  tasks.splice(index, 1);
+  res.status(204).send();
+});
+
+app.listen(PORT, '0.0.0.0', () =&gt; {
+  console.log(`Task Manager API running on port ${PORT}`);
+});</code></pre>
+
+        <p>Test locally:</p>
+        <pre><code class="language-bash">npm install
+npm start
+
+# In another terminal
+curl http://localhost:3000/health
+curl http://localhost:3000/tasks</code></pre>
+
+        <h3>Step 3: Create Dockerfile</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is a Dockerfile?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A Dockerfile is a text file containing step-by-step instructions for building a Docker image. It's like a recipe: FROM specifies the base image, COPY adds files, RUN executes commands, and CMD defines what runs when the container starts.</p>
+
+            <p><strong>Why we need it:</strong> Instead of manually configuring a container each time, you write the configuration once in a Dockerfile. Anyone can then build an identical image from it. Dockerfiles are versioned alongside your code, making your entire application environment reproducible and auditable.</p>
+
+            <p><strong>Key details:</strong> Each instruction creates a new layer in the image. Order matters for caching - put things that change rarely (like installing dependencies) before things that change often (like copying source code). The node:20-alpine base image is a minimal Linux with Node.js pre-installed, keeping your image small.</p>
+
+            <p><strong>Common gotcha:</strong> Large images take longer to build and deploy. Use .dockerignore to exclude unnecessary files (like node_modules) from being copied. Also, RUN commands create layers, so chain related commands with &amp;&amp; to minimize layer count and image size.</p>
+          </div>
+        </div>
+
+        <p>Create <code>Dockerfile</code>:</p>
+        <pre><code class="language-javascript"># Use official Node.js LTS image
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install --production
+
+# Copy application code
+COPY . .
+
+# Expose port
+EXPOSE 3000
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/health', (r) =&gt; process.exit(r.statusCode === 200 ? 0 : 1))"
+
+# Run application
+CMD ["npm", "start"]</code></pre>
+
+        <p>Create <code>.dockerignore</code>:</p>
+        <pre><code>node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+.env</code></pre>
+
+        <h3>Step 4: Build and Test Docker Image</h3>
+        <pre><code class="language-bash"># Build image with platform flag for AWS compatibility
+docker build --platform linux/amd64 -t task-manager:latest .
+
+# Check image size
+docker images task-manager
+
+# Run container locally
+docker run -d -p 3000:3000 --name task-manager-test task-manager:latest
+
+# Test it
+curl http://localhost:3000/health
+curl http://localhost:3000/tasks
+
+# Create a task
+curl -X POST http://localhost:3000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Containerize everything"}'
+
+# View logs
+docker logs task-manager-test
+
+# Stop and remove container
+docker stop task-manager-test
+docker rm task-manager-test</code></pre>
+
+        <p><strong>Your app is now containerized!</strong></p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="../index.html" class="btn btn-secondary">Back to Home</a>
+          <a href="lesson-05-2.html" class="btn btn-primary">Next: Push to ECR →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

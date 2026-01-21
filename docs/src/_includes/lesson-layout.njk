@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+{% include "partials/head.njk" %}
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson {{ lessonNumber }}</h2>
+        <div class="lesson-title">{{ lessonTitle }}</div>
+        <div class="lesson-meta">
+          <span>{{ duration }}</span>
+          <span>{{ cost }}</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: {{ progress }}%;"></div>
+      </div>
+      <div class="progress-text">Step {{ stepNumber }} of {{ totalSteps }}</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          {{ tocContent | safe }}
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      {% include "partials/all-lessons-nav.njk" %}
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      {{ content | safe }}
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

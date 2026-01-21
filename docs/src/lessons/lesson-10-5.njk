@@ -1,0 +1,152 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-10-5.html
+lessonNumber: 10
+lessonTitle: "Observability - Know What's Happening"
+duration: "~6 hours"
+cost: "$2-3"
+stepNumber: 5
+totalSteps: 6
+progress: 83.33
+title: "Lesson 10: CloudWatch Synthetics - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-10.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Advanced CloudWatch Metrics</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-10-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">CloudWatch Logs Insights</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-10-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">CloudWatch Alarms</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-10-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">X-Ray Distributed Tracing</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-10-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">CloudWatch Synthetics</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-10-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Container Insights + Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 10 - Part 5</span>
+        <h1>CloudWatch Synthetics (Canaries)</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 5: CloudWatch Synthetics (Canaries) (45 minutes)</h2>
+
+        <h3>Step 9: Create Synthetic Monitor</h3>
+
+        <pre><code class="language-bash"># Create S3 bucket for canary artifacts
+export CANARY_BUCKET="canary-artifacts-$(aws sts get-caller-identity --query Account --output text)"
+aws s3 mb s3://$CANARY_BUCKET
+
+# Create IAM role for canary
+cat &gt; canary-trust-policy.json &lt;&lt; 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+
+aws iam create-role \
+  --role-name canary-execution-role \
+  --assume-role-policy-document file://canary-trust-policy.json
+
+aws iam attach-role-policy \
+  --role-name canary-execution-role \
+  --policy-arn arn:aws:iam::aws:policy/CloudWatchSyntheticsFullAccess
+
+export CANARY_ROLE_ARN=$(aws iam get-role \
+  --role-name canary-execution-role \
+  --query 'Role.Arn' \
+  --output text)</code></pre>
+
+        <h3>Create Canary Script</h3>
+
+        <pre><code class="language-javascript">cat &gt; canary-script.js &lt;&lt; 'EOF'
+const synthetics = require('Synthetics');
+const log = require('SyntheticsLogger');
+
+const apiCanaryBlueprint = async function () {
+  const url = process.env.API_URL;
+
+  let requestOptions = {
+    hostname: url.replace('http://', '').replace('https://', ''),
+    method: 'GET',
+    path: '/health',
+    port: 3000
+  };
+
+  let stepConfig = {
+    includeRequestHeaders: true,
+    includeResponseHeaders: true,
+    includeRequestBody: true,
+    includeResponseBody: true
+  };
+
+  await synthetics.executeHttpStep('Verify health endpoint', requestOptions, null, stepConfig);
+};
+
+exports.handler = async () =&gt; {
+  return await apiCanaryBlueprint();
+};
+EOF
+
+# Note: Synthetics canaries require console creation for full setup
+# Or use AWS CDK/CloudFormation for complex canaries</code></pre>
+
+        <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 15px; margin: 20px 0;">
+          <strong>What are Canaries?</strong>
+          <p style="margin: 10px 0 0 0;">Canaries are automated tests that run on a schedule to monitor your endpoints and workflows. They catch issues before your users do by continuously validating that your application is working as expected.</p>
+        </div>
+
+        <h3>Common Canary Use Cases</h3>
+        <ul>
+          <li><strong>Endpoint monitoring</strong>: Check that your API endpoints respond correctly</li>
+          <li><strong>Page load testing</strong>: Verify websites load within acceptable time</li>
+          <li><strong>User workflow testing</strong>: Test complete user journeys (login, checkout, etc.)</li>
+          <li><strong>SSL certificate monitoring</strong>: Alert before certificates expire</li>
+        </ul>
+
+        <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
+          <strong>Note:</strong> For production setups, create canaries through the AWS Console or using CloudFormation/CDK templates for better management and monitoring.
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-10-4.html" class="btn btn-secondary">← Previous: X-Ray Distributed Tracing</a>
+          <a href="lesson-10-6.html" class="btn btn-primary">Next: Container Insights + Cleanup →</a>
+        </div>
+      </div>

@@ -1,0 +1,215 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-06.html
+lessonNumber: 6
+lessonTitle: "Data Pipelines"
+duration: "~7 hours"
+cost: "$3-4"
+stepNumber: 1
+totalSteps: 6
+progress: 16.67
+title: "Lesson 6: Data Pipelines - AWS Learning Tutorial"
+tocContent: |
+  <li class="active">
+  <a href="lesson-06.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Set Up Networking (VPC)</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">RDS PostgreSQL Database</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">ElastiCache Redis</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">S3 Bucket for Data Upload</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Lambda Data Processor</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-06-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Query API with Caching</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 6 - Part 1</span>
+        <h1>Data Pipelines - Because Excel Spreadsheets Don't Scale</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>What You're Building</h2>
+        <p>Build an automated data processing pipeline that processes uploaded files, stores results in a database, and caches frequently accessed data. You'll create a system that automatically:</p>
+        <ul>
+          <li>Watches S3 for new CSV uploads</li>
+          <li>Processes data with Lambda</li>
+          <li>Stores results in RDS (PostgreSQL)</li>
+          <li>Caches hot data in ElastiCache (Redis)</li>
+          <li>Exposes API to query results</li>
+        </ul>
+
+        <p><strong>Real-world use case</strong>: Log processing, data ingestion, ETL pipelines, analytics preprocessing.</p>
+
+        <h2>What You'll Learn</h2>
+        <ul>
+          <li><strong>S3 Events</strong>: Trigger actions on file uploads</li>
+          <li><strong>Lambda</strong>: Process data serverlessly</li>
+          <li><strong>RDS</strong>: Managed relational database (PostgreSQL)</li>
+          <li><strong>ElastiCache</strong>: Managed Redis cache</li>
+          <li><strong>VPC</strong>: Networking for databases</li>
+          <li><strong>Secrets Manager</strong>: Secure credential storage</li>
+          <li><strong>Event-driven architecture</strong>: Reacting to data changes</li>
+        </ul>
+
+        <h2>Prerequisites</h2>
+        <ul>
+          <li>Completed Lessons 1-5</li>
+          <li>AWS CLI configured</li>
+          <li>Node.js or Python installed</li>
+          <li>Basic SQL knowledge</li>
+          <li>Understanding of Redis (helpful)</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Architecture Overview</h2>
+        <pre><code class="language-bash">CSV Upload → S3 Bucket
+                ↓ (S3 Event)
+           Lambda Function
+                ↓
+        ┌───────┴──────┐
+        ↓              ↓
+    RDS (PostgreSQL)   ElastiCache (Redis)
+        ↓              ↓
+    API Lambda ←───────┘
+        ↓
+   API Gateway</code></pre>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is a VPC and why do databases need one?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A VPC (Virtual Private Cloud) is your own isolated section of the AWS cloud where you can create private networks with subnets, security groups, and routing tables. Think of it as your own virtual data center with complete control over networking.</p>
+
+            <p><strong>Why we need it:</strong> Databases like RDS and ElastiCache can't be directly exposed to the internet - they need to run in a private network for security. VPCs let you create public subnets (for load balancers) and private subnets (for databases) so only authorized resources can access your data.</p>
+
+            <p><strong>Key details:</strong> Subnets are subdivisions of your VPC in specific availability zones. Security groups act as virtual firewalls controlling inbound/outbound traffic. Network ACLs provide subnet-level security. Internet gateways allow public subnet resources to reach the internet.</p>
+
+            <p><strong>Common gotcha:</strong> Resources in private subnets can't reach the internet by default. If a Lambda function or database in a private subnet needs to call AWS APIs or external services, you need a NAT gateway, which adds cost. Design your network architecture carefully to avoid unnecessary NAT charges.</p>
+          </div>
+        </div>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Part 1: Set Up Networking (VPC) (1 hour)</h2>
+
+        <h3>Step 1: Create VPC for Databases</h3>
+        <pre><code class="language-bash"># We'll use default VPC for simplicity
+export VPC_ID=$(aws ec2 describe-vpcs \
+  --filters "Name=isDefault,Values=true" \
+  --query "Vpcs[0].VpcId" \
+  --output text)
+
+echo "VPC ID: $VPC_ID"
+
+# Get subnet IDs in different AZs
+export SUBNET_1=$(aws ec2 describe-subnets \
+  --filters "Name=vpc-id,Values=$VPC_ID" \
+  --query "Subnets[0].SubnetId" \
+  --output text)
+
+export SUBNET_2=$(aws ec2 describe-subnets \
+  --filters "Name=vpc-id,Values=$VPC_ID" \
+  --query "Subnets[1].SubnetId" \
+  --output text)
+
+echo "Subnets: $SUBNET_1, $SUBNET_2"</code></pre>
+
+        <h3>Step 2: Create Security Groups</h3>
+        <pre><code class="language-bash"># Security group for Lambda functions
+aws ec2 create-security-group \
+  --group-name data-pipeline-lambda-sg \
+  --description "Security group for data pipeline Lambda functions" \
+  --vpc-id $VPC_ID
+
+export LAMBDA_SG=$(aws ec2 describe-security-groups \
+  --filters "Name=group-name,Values=data-pipeline-lambda-sg" \
+  --query "SecurityGroups[0].GroupId" \
+  --output text)
+
+# Security group for RDS
+aws ec2 create-security-group \
+  --group-name data-pipeline-rds-sg \
+  --description "Security group for RDS database" \
+  --vpc-id $VPC_ID
+
+export RDS_SG=$(aws ec2 describe-security-groups \
+  --filters "Name=group-name,Values=data-pipeline-rds-sg" \
+  --query "SecurityGroups[0].GroupId" \
+  --output text)
+
+# Security group for ElastiCache
+aws ec2 create-security-group \
+  --group-name data-pipeline-redis-sg \
+  --description "Security group for ElastiCache Redis" \
+  --vpc-id $VPC_ID
+
+export REDIS_SG=$(aws ec2 describe-security-groups \
+  --filters "Name=group-name,Values=data-pipeline-redis-sg" \
+  --query "SecurityGroups[0].GroupId" \
+  --output text)
+
+# Allow Lambda to access RDS (PostgreSQL port 5432)
+aws ec2 authorize-security-group-ingress \
+  --group-id $RDS_SG \
+  --protocol tcp \
+  --port 5432 \
+  --source-group $LAMBDA_SG
+
+# Allow Lambda to access Redis (port 6379)
+aws ec2 authorize-security-group-ingress \
+  --group-id $REDIS_SG \
+  --protocol tcp \
+  --port 6379 \
+  --source-group $LAMBDA_SG
+
+echo "Lambda SG: $LAMBDA_SG"
+echo "RDS SG: $RDS_SG"
+echo "Redis SG: $REDIS_SG"</code></pre>
+
+        <p><strong>What just happened?</strong></p>
+        <ul>
+          <li>Created a VPC (or used default) for our resources</li>
+          <li>Set up security groups to control network access</li>
+          <li>Configured Lambda to access both RDS and Redis</li>
+          <li>Ensured proper network isolation and security</li>
+        </ul>
+
+        <p><strong>Pro tip</strong>: Security groups act as virtual firewalls. We're only allowing traffic from Lambda to our databases, keeping them secure.</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="../index.html" class="btn btn-secondary">Back to Home</a>
+          <a href="lesson-06-2.html" class="btn btn-primary">Next: RDS PostgreSQL Database →</a>
+        </div>
+      </div>

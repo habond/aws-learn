@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 11: Security Deep Dive - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 11</h2>
+        <div class="lesson-title">Security Deep Dive</div>
+        <div class="lesson-meta">
+          <span>~8 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 14.3%;"></div>
+      </div>
+      <div class="progress-text">Step 1 of 7</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li class="active">
+<a href="lesson-11.html">
+<span class="step-number">1</span>
+<span class="step-title">IAM Deep Dive</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Data Encryption with KMS</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-3.html">
+<span class="step-number">3</span>
+<span class="step-title">GuardDuty Threat Detection</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-4.html">
+<span class="step-number">4</span>
+<span class="step-title">WAF Protection</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-5.html">
+<span class="step-number">5</span>
+<span class="step-title">CloudTrail Auditing</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Security Hub</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Secrets Rotation &amp; Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li class="current">
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 11 - Part 1</span>
+        <h1>Security Deep Dive - Lock Everything Down!</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>What You're Building</h2>
+        <p>Implement comprehensive security for AWS environment: secure IAM policies, encrypt data with KMS, detect threats with GuardDuty, protect APIs with WAF, audit with CloudTrail, and scan for vulnerabilities. This is the lesson that keeps you employed (and out of the news for security breaches).</p>
+
+        <div class="aws-services-summary">
+          <h3>AWS Services Used in This Lesson</h3>
+          <div class="aws-services-grid">
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/iam/" target="_blank" rel="noopener noreferrer">
+                <strong>IAM</strong>
+                <span>Identity and access management</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/kms/" target="_blank" rel="noopener noreferrer">
+                <strong>KMS</strong>
+                <span>Encryption key management</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/waf/" target="_blank" rel="noopener noreferrer">
+                <strong>WAF</strong>
+                <span>Web application firewall</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/guardduty/" target="_blank" rel="noopener noreferrer">
+                <strong>GuardDuty</strong>
+                <span>Intelligent threat detection</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/cloudtrail/" target="_blank" rel="noopener noreferrer">
+                <strong>CloudTrail</strong>
+                <span>Audit and compliance logging</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/secretsmanager/" target="_blank" rel="noopener noreferrer">
+                <strong>Secrets Manager</strong>
+                <span>Secure credential storage and rotation</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/securityhub/" target="_blank" rel="noopener noreferrer">
+                <strong>Security Hub</strong>
+                <span>Centralized security findings</span>
+              </a>
+            </div>
+            <div class="aws-service-item">
+              <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html" target="_blank" rel="noopener noreferrer">
+                <strong>IAM Access Analyzer</strong>
+                <span>Find overly permissive access</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <h2>What You'll Learn</h2>
+        <ul>
+          <li><strong>IAM Best Practices</strong>: Least privilege, policies, roles</li>
+          <li><strong>KMS</strong>: Encryption key management</li>
+          <li><strong>WAF</strong>: Web application firewall</li>
+          <li><strong>GuardDuty</strong>: Threat detection</li>
+          <li><strong>CloudTrail</strong>: Audit logging</li>
+          <li><strong>Secrets Manager</strong>: Credential management</li>
+          <li><strong>Security Hub</strong>: Centralized security findings</li>
+          <li><strong>IAM Access Analyzer</strong>: Find overly permissive access</li>
+        </ul>
+
+        <h2>Prerequisites</h2>
+        <ul>
+          <li>Completed Lessons 1-10</li>
+          <li>AWS CLI configured</li>
+          <li>Running application to secure</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Part 1: IAM Deep Dive (2 hours)</h2>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is the principle of least privilege in IAM?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Least privilege means giving users and services only the minimum permissions they need to do their job - nothing more. Instead of granting broad permissions like "full S3 access," you grant specific permissions like "read-only access to this one bucket."</p>
+
+            <p><strong>Why we need it:</strong> Security breaches often happen when compromised credentials have overly broad permissions. If a hacker steals API keys with full admin access, they can delete everything. If those keys only have permission to read from one S3 bucket, the blast radius is limited. Least privilege minimizes damage from any security incident.</p>
+
+            <p><strong>Key details:</strong> Start with no permissions and add what's needed, rather than starting with full access and removing things. Use IAM Policy Simulator to test permissions before granting them. Review permissions regularly and remove unused ones. Service-specific roles (like Lambda execution roles) should only access resources that function actually uses.</p>
+
+            <p><strong>Common gotcha:</strong> It's tempting to grant AdministratorAccess when troubleshooting permission errors, but don't leave it that way. Use CloudTrail to see what API calls are being denied, then grant only those specific permissions. Also, managed policies like "AmazonS3FullAccess" often grant more than needed - write custom policies for sensitive environments.</p>
+          </div>
+        </div>
+
+        <h3>Step 1: Audit Current IAM Configuration</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">IAM</span></div><code class="language-bash"># List all users
+aws iam list-users
+
+# Check users without MFA
+aws iam list-users --query 'Users[*].[UserName]' --output text | \
+  while read user; do
+    mfa=$(aws iam list-mfa-devices --user-name $user --query 'MFADevices' --output text)
+    if [ -z "$mfa" ]; then
+      echo "No MFA: $user"
+    fi
+  done
+
+# Find overly permissive policies
+aws iam list-policies \
+  --scope Local \
+  --query 'Policies[?contains(PolicyName, `Admin`)].PolicyName'
+
+# Check for unused credentials
+aws iam generate-credential-report
+sleep 5
+aws iam get-credential-report --query 'Content' --output text | base64 -d &gt; credentials-report.csv
+
+# View root account usage (should be minimal!)
+aws iam get-account-summary</code></pre>
+
+        <h3>Step 2: Create Least-Privilege Policies</h3>
+        <p>Example: DynamoDB read-only for specific table:</p>
+        <pre><div class="code-block-badges"><span class="code-service-badge">IAM</span></div><code class="language-bash">cat &gt; dynamodb-readonly-policy.json &lt;&lt; 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:BatchGetItem"
+      ],
+      "Resource": "arn:aws:dynamodb:us-east-1:*:table/my-specific-table"
+    }
+  ]
+}
+EOF
+
+aws iam create-policy \
+  --policy-name DynamoDBReadOnlySpecific \
+  --policy-document file://dynamodb-readonly-policy.json</code></pre>
+
+        <h3>Step 3: Implement IAM Conditions</h3>
+        <p>Example: Require MFA for sensitive operations:</p>
+        <pre><code class="language-bash">cat &gt; require-mfa-policy.json &lt;&lt; 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "aws:MultiFactorAuthPresent": "true"
+        }
+      }
+    },
+    {
+      "Effect": "Deny",
+      "Action": [
+        "ec2:TerminateInstances",
+        "rds:DeleteDBInstance",
+        "s3:DeleteBucket"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "BoolIfExists": {
+          "aws:MultiFactorAuthPresent": "false"
+        }
+      }
+    }
+  ]
+}
+EOF</code></pre>
+
+        <h3>Step 4: Enable IAM Access Analyzer</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">STS</span></div><code class="language-bash"># Create analyzer
+aws accessanalyzer create-analyzer \
+  --analyzer-name account-analyzer \
+  --type ACCOUNT
+
+# List findings (overly permissive access)
+aws accessanalyzer list-findings \
+  --analyzer-arn arn:aws:access-analyzer:us-east-1:$(aws sts get-caller-identity --query Account --output text):analyzer/account-analyzer
+
+# Check specific resource
+aws accessanalyzer list-findings \
+  --analyzer-arn arn:aws:access-analyzer:us-east-1:$(aws sts get-caller-identity --query Account --output text):analyzer/account-analyzer \
+  --filter "resourceType={eq='AWS::S3::Bucket'}"</code></pre>
+
+        <h3>Step 5: Implement Service Control Policies (SCPs)</h3>
+        <p>For AWS Organizations (if you have one):</p>
+        <pre><code class="language-bash"># Example: Deny ability to disable CloudTrail
+cat &gt; deny-cloudtrail-disable.json &lt;&lt; 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Deny",
+      "Action": [
+        "cloudtrail:StopLogging",
+        "cloudtrail:DeleteTrail"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+
+# Apply to organization (if applicable)
+# aws organizations create-policy --content file://deny-cloudtrail-disable.json --name DenyCloudTrailDisable --type SERVICE_CONTROL_POLICY</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="../index.html" class="btn btn-secondary">Back to Home</a>
+          <a href="lesson-11-2.html" class="btn btn-primary">Next: Data Encryption with KMS →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

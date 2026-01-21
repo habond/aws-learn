@@ -1,0 +1,10 @@
+<div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    {%- for lesson in lessons %}
+    <li{% if lessonNumber == lesson.number %} class="current"{% endif %}>
+      <a href="lesson-{{ lesson.number | padLeft }}.html">{{ lesson.number }}. {{ lesson.shortTitle }}</a>
+    </li>
+    {%- endfor %}
+  </ul>
+</div>

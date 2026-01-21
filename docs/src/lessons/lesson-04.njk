@@ -1,0 +1,260 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-04.html
+lessonNumber: 4
+lessonTitle: "Automate All The Things!"
+duration: "~7 hours"
+cost: "~$1"
+stepNumber: 1
+totalSteps: 7
+progress: 14.28
+title: "Lesson 4: Automate All The Things! - AWS Learning Tutorial"
+tocContent: |
+  <li class="active">
+  <a href="lesson-04.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Overview + Terraform Setup</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">DynamoDB with Terraform</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">Lambda Functions</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">API Gateway</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Test &amp; Iterate</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Advanced Terraform</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-04-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Destroy &amp; Rebuild</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 4 - Part 1</span>
+        <h1>Automate All The Things!</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>What You're Building</h2>
+        <p>Recreate the entire URL shortener from Lesson 3, but this time define everything as Infrastructure as Code (IaC) using Terraform. No more clicking around the console or memorizing CLI commands. Everything lives in version-controlled <code>.tf</code> files that you can deploy with a single command.</p>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is Infrastructure as Code (IaC)?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Infrastructure as Code means defining your cloud resources (servers, databases, networks) in text files rather than creating them manually through a web console or CLI commands.</p>
+
+            <p><strong>Why we need it:</strong> Without IaC, you have to remember what buttons you clicked to set up your infrastructure. If you need to create the same setup again, you have to repeat all those steps manually. If something breaks, you might not remember how you configured it. IaC solves this by making infrastructure reproducible, reviewable, and version-controlled like application code.</p>
+
+            <p><strong>Key details:</strong> Popular IaC tools include Terraform (cloud-agnostic), AWS CloudFormation (AWS-only), and Pulumi (uses programming languages). With IaC, you can spin up identical environments for development, staging, and production with a single command.</p>
+
+            <p><strong>Common gotcha:</strong> Once you start using IaC, don't make manual changes in the console. If you do, your code and actual infrastructure will be out of sync, which causes confusion and errors. The rule is: if it's managed by Terraform, only change it through Terraform.</p>
+          </div>
+        </div>
+
+        <h2>What You'll Learn</h2>
+        <ul>
+          <li><strong>Terraform</strong>: Industry-standard Infrastructure as Code tool</li>
+          <li><strong>IaC Principles</strong>: Why code beats clicking</li>
+          <li><strong>State Management</strong>: How Terraform tracks your infrastructure</li>
+          <li><strong>Variables &amp; Outputs</strong>: Parameterize and reuse configurations</li>
+          <li><strong>Modules</strong>: Organize and share infrastructure code</li>
+          <li><strong>CI/CD Mindset</strong>: Infrastructure automation</li>
+        </ul>
+
+        <h2>Prerequisites</h2>
+        <ul>
+          <li>Completed Lessons 1-3</li>
+          <li>Terraform installed (<code>brew install terraform</code> or download from terraform.io)</li>
+          <li>AWS CLI configured</li>
+          <li>Git installed</li>
+          <li>Text editor with HCL syntax support</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Why Infrastructure as Code?</h2>
+
+        <p><strong>The old way</strong> (what we did in Lessons 1-3):</p>
+        <ul>
+          <li>Click around AWS console</li>
+          <li>Run CLI commands manually</li>
+          <li>Hard to replicate</li>
+          <li>Error-prone</li>
+          <li>No history of changes</li>
+          <li>Hard to review</li>
+        </ul>
+
+        <p><strong>The IaC way</strong>:</p>
+        <ul>
+          <li>Define infrastructure in code</li>
+          <li>Version control everything</li>
+          <li>One command to deploy</li>
+          <li>Repeatable and consistent</li>
+          <li>Easy to review changes</li>
+          <li>Can destroy and rebuild anytime</li>
+        </ul>
+
+        <p><strong>Real talk</strong>: You'll still use the console for exploration and debugging, but production infrastructure should be code!</p>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Part 1: Terraform Setup (30 minutes)</h2>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What is Terraform?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> Terraform is an open-source Infrastructure as Code tool created by HashiCorp. It lets you define cloud resources using a declarative language called HCL (HashiCorp Configuration Language), which looks similar to JSON but is more human-readable.</p>
+
+            <p><strong>Why we need it:</strong> Terraform is cloud-agnostic, meaning you can use the same tool to manage AWS, Azure, Google Cloud, and hundreds of other services. This is different from AWS CloudFormation, which only works with AWS. Terraform also has a massive ecosystem of providers and modules, making it the industry standard for IaC.</p>
+
+            <p><strong>Key details:</strong> Terraform works by tracking the state of your infrastructure in a state file. When you run terraform apply, it compares your desired state (code) with actual state (what's in AWS) and makes only the necessary changes. This approach is called "declarative" - you declare what you want, not the steps to get there.</p>
+
+            <p><strong>Common gotcha:</strong> The terraform.tfstate file is critical - it's Terraform's record of what resources it manages. Don't delete it manually, and for team projects, store it remotely in S3 so everyone works from the same state. Losing state means Terraform forgets what it created.</p>
+          </div>
+        </div>
+
+        <h3>Step 1: Install Terraform</h3>
+        <pre><code class="language-bash"># macOS
+brew install terraform
+
+# Linux
+wget https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
+unzip terraform_1.6.0_linux_amd64.zip
+sudo mv terraform /usr/local/bin/
+
+# Verify installation
+terraform version</code></pre>
+
+        <h3>Step 2: Create Project Structure</h3>
+        <pre><code class="language-bash"># Create project directory
+cd lesson-04-automate-all-things
+mkdir terraform-url-shortener
+cd terraform-url-shortener
+
+# Create basic structure
+touch main.tf variables.tf outputs.tf terraform.tfvars
+mkdir lambda</code></pre>
+
+        <p>Your structure:</p>
+        <pre><code class="language-javascript">terraform-url-shortener/
+├── main.tf           # Main infrastructure definitions
+├── variables.tf      # Input variables
+├── outputs.tf        # Output values
+├── terraform.tfvars  # Variable values
+└── lambda/           # Lambda function code</code></pre>
+
+        <h3>Step 3: Configure AWS Provider</h3>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>What are Terraform Providers?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A Terraform provider is a plugin that knows how to interact with a specific service or platform. The AWS provider translates your Terraform code into AWS API calls. There are providers for Azure, Google Cloud, GitHub, Datadog, and hundreds of other services.</p>
+
+            <p><strong>Why we need it:</strong> Terraform itself is just an orchestration engine. It doesn't know how to create AWS resources natively. Providers act as translators, converting your HCL code into the specific API calls each platform needs. The required_providers block tells Terraform which providers to download.</p>
+
+            <p><strong>Key details:</strong> Provider versions matter! The "~&gt; 5.0" syntax means "use any 5.x version, but not 6.0." This gives you bug fixes and minor updates automatically while preventing breaking changes. You can also specify exact versions like "= 5.0.0" for maximum stability.</p>
+
+            <p><strong>Common gotcha:</strong> If you don't lock provider versions, terraform init might download different versions on different machines, causing inconsistent behavior. Always use version constraints in production code.</p>
+          </div>
+        </div>
+
+        <p>Create <code>main.tf</code>:</p>
+        <pre><code class="language-terraform">terraform {
+  required_version = "&gt;= 1.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~&gt; 5.0"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~&gt; 2.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+
+  default_tags {
+    tags = {
+      Project     = "URLShortener"
+      Environment = var.environment
+      ManagedBy   = "Terraform"
+    }
+  }
+}</code></pre>
+
+        <p>Create <code>variables.tf</code>:</p>
+        <pre><code class="language-terraform">variable "aws_region" {
+  description = "AWS region to deploy resources"
+  type        = string
+  default     = "us-east-1"
+}
+
+variable "environment" {
+  description = "Environment name (dev, staging, prod)"
+  type        = string
+  default     = "dev"
+}
+
+variable "project_name" {
+  description = "Project name for resource naming"
+  type        = string
+  default     = "url-shortener"
+}</code></pre>
+
+        <p>Create <code>terraform.tfvars</code>:</p>
+        <pre><code class="language-terraform">aws_region   = "us-east-1"
+environment  = "dev"
+project_name = "url-shortener"</code></pre>
+
+        <h3>Step 4: Initialize Terraform</h3>
+        <pre><code class="language-bash"># Initialize Terraform (downloads providers)
+terraform init
+
+# You should see "Terraform has been successfully initialized!"</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="../index.html" class="btn btn-secondary">Back to Home</a>
+          <a href="lesson-04-2.html" class="btn btn-primary">Next: DynamoDB with Terraform →</a>
+        </div>
+      </div>

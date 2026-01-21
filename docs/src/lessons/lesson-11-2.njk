@@ -1,0 +1,161 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-11-2.html
+lessonNumber: 11
+lessonTitle: "Security Deep Dive"
+duration: "~8 hours"
+cost: "$2-3"
+stepNumber: 2
+totalSteps: 7
+progress: 28.6
+title: "Lesson 11: Security Deep Dive - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-11.html">
+  <span class="step-number">1</span>
+  <span class="step-title">IAM Deep Dive</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-11-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Data Encryption with KMS</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">GuardDuty Threat Detection</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">WAF Protection</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">CloudTrail Auditing</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Security Hub</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-11-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Secrets Rotation &amp; Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 11 - Part 2</span>
+        <h1>Data Encryption with KMS</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 2: Data Encryption with KMS (1.5 hours)</h2>
+
+        <h3>Step 6: Create KMS Keys</h3>
+        <pre><code class="language-bash"># Create customer-managed key
+aws kms create-key \
+  --description "Application data encryption key" \
+  --key-policy '{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "Enable IAM policies",
+        "Effect": "Allow",
+        "Principal": {
+          "AWS": "arn:aws:iam::'"$(aws sts get-caller-identity --query Account --output text)"':root"
+        },
+        "Action": "kms:*",
+        "Resource": "*"
+      }
+    ]
+  }'
+
+export KEY_ID=$(aws kms list-keys --query 'Keys[0].KeyId' --output text)
+
+# Create alias
+aws kms create-alias \
+  --alias-name alias/application-key \
+  --target-key-id $KEY_ID
+
+echo "KMS Key ID: $KEY_ID"</code></pre>
+
+        <h3>Step 7: Encrypt/Decrypt Data</h3>
+        <pre><code class="language-bash"># Encrypt data
+echo "sensitive-data" | aws kms encrypt \
+  --key-id alias/application-key \
+  --plaintext fileb:///dev/stdin \
+  --output text \
+  --query CiphertextBlob &gt; encrypted.txt
+
+# Decrypt data
+aws kms decrypt \
+  --ciphertext-blob fileb://encrypted.txt \
+  --output text \
+  --query Plaintext | base64 -d</code></pre>
+
+        <h3>Step 8: Enable S3 Bucket Encryption</h3>
+        <pre><code class="language-bash">export SECURE_BUCKET="secure-data-$(aws sts get-caller-identity --query Account --output text)"
+aws s3 mb s3://$SECURE_BUCKET
+
+# Enable default encryption with KMS
+aws s3api put-bucket-encryption \
+  --bucket $SECURE_BUCKET \
+  --server-side-encryption-configuration '{
+    "Rules": [
+      {
+        "ApplyServerSideEncryptionByDefault": {
+          "SSEAlgorithm": "aws:kms",
+          "KMSMasterKeyID": "'"$KEY_ID"'"
+        }
+      }
+    ]
+  }'
+
+# Enable versioning (for data protection)
+aws s3api put-bucket-versioning \
+  --bucket $SECURE_BUCKET \
+  --versioning-configuration Status=Enabled
+
+# Block public access
+aws s3api put-public-access-block \
+  --bucket $SECURE_BUCKET \
+  --public-access-block-configuration \
+    BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true</code></pre>
+
+        <h3>Step 9: Encrypt RDS Database</h3>
+        <pre><code class="language-python"># Create encrypted RDS instance
+aws rds create-db-instance \
+  --db-instance-identifier secure-database \
+  --db-instance-class db.t3.micro \
+  --engine postgres \
+  --master-username admin \
+  --master-user-password "$(openssl rand -base64 32)" \
+  --allocated-storage 20 \
+  --storage-encrypted \
+  --kms-key-id $KEY_ID \
+  --backup-retention-period 7 \
+  --no-publicly-accessible</code></pre>
+
+        <div style="background: var(--info-bg); border-left: 4px solid var(--info-color); padding: 15px; margin: 20px 0;">
+          <strong>Note:</strong> Keep your KEY_ID saved - you'll need it for subsequent steps. Store it in a secure location or export it to a file.
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-11.html" class="btn btn-secondary">← Previous: IAM Deep Dive</a>
+          <a href="lesson-11-3.html" class="btn btn-primary">Next: GuardDuty Threat Detection →</a>
+        </div>
+      </div>

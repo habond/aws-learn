@@ -1,0 +1,216 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-12.html
+lessonNumber: 12
+lessonTitle: "Victory Lap - Build Something Amazing!"
+duration: "~10-20 hours"
+cost: "$10-20"
+stepNumber: 1
+totalSteps: 8
+progress: 12.5
+title: "Lesson 12: Victory Lap - Build Something Amazing! - AWS Learning Tutorial"
+tocContent: |
+  <li class="active">
+  <a href="lesson-12.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Capstone Overview</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Infrastructure Setup</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">Processing Pipeline</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">API Layer</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">Frontend Integration</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">CI/CD Pipeline</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Monitoring &amp; Cost Optimization</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-12-8.html">
+  <span class="step-number">8</span>
+  <span class="step-title">Deliverables &amp; Next Steps</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 12 - Part 1</span>
+        <h1>Victory Lap - Build Something Amazing!</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Capstone Project</h2>
+        <p>Congratulations! You've made it through 11 lessons. Now it's time to put everything together and build a complete, production-ready application that combines all the skills you've learned.</p>
+
+        <div class="learn-more">
+          <div class="learn-more-header">
+            <span class="icon">📘</span>
+            <strong>How should I approach building a capstone project?</strong>
+          </div>
+          <div class="learn-more-content">
+            <p><strong>What it is:</strong> A capstone project is a comprehensive application that demonstrates everything you've learned. Unlike earlier lessons with step-by-step instructions, this is your chance to architect, design, and build something independently that showcases your AWS skills.</p>
+
+            <p><strong>Why we need it:</strong> Following tutorials teaches you tools, but building something from scratch teaches you to think like an architect. You'll face real decisions: which database to use, how to handle failures, where to optimize costs. These decisions - and the mistakes you make - are where deep learning happens. Plus, this becomes a portfolio piece for job interviews.</p>
+
+            <p><strong>Key details:</strong> Start with architecture diagrams before writing any code. Define your MVP (minimum viable product) first, then add features iteratively. Use Infrastructure as Code (Terraform) from the beginning. Implement monitoring and logging from day one, not as an afterthought. Document your decisions and tradeoffs - this shows engineering maturity.</p>
+
+            <p><strong>Common gotcha:</strong> Don't try to use every AWS service just to check boxes. Choose services that solve real problems in your application. Over-engineering is as bad as under-engineering. Also, remember to clean up resources when testing - capstone projects can rack up costs if you leave everything running 24/7.</p>
+          </div>
+        </div>
+
+        <h2>Project Options</h2>
+        <p>Choose one (or create your own!):</p>
+
+        <h3>Option 1: Full-Stack Social Media Platform</h3>
+        <p><strong>Services Used</strong>: S3, CloudFront, API Gateway, Lambda, DynamoDB, Rekognition, SQS, SNS, CloudWatch, WAF</p>
+        <p><strong>Features</strong>:</p>
+        <ul>
+          <li>User authentication (Cognito)</li>
+          <li>Image uploads with moderation (Rekognition)</li>
+          <li>Posts, comments, likes</li>
+          <li>Real-time notifications (WebSocket API)</li>
+          <li>Content delivery (CloudFront)</li>
+          <li>Event-driven processing (SQS/SNS)</li>
+        </ul>
+
+        <h3>Option 2: Real-Time Analytics Dashboard</h3>
+        <p><strong>Services Used</strong>: Kinesis, Lambda, DynamoDB, Athena, S3, CloudWatch, QuickSight</p>
+        <p><strong>Features</strong>:</p>
+        <ul>
+          <li>Streaming data ingestion</li>
+          <li>Real-time processing</li>
+          <li>Data warehousing</li>
+          <li>SQL queries (Athena)</li>
+          <li>Visualization (QuickSight)</li>
+          <li>Alerting on anomalies</li>
+        </ul>
+
+        <h3>Option 3: E-Commerce Backend</h3>
+        <p><strong>Services Used</strong>: API Gateway, Lambda, DynamoDB, RDS, ElastiCache, SQS, Step Functions, SES, Cognito</p>
+        <p><strong>Features</strong>:</p>
+        <ul>
+          <li>Product catalog (DynamoDB)</li>
+          <li>Shopping cart (ElastiCache)</li>
+          <li>Order processing (Step Functions)</li>
+          <li>Payment integration</li>
+          <li>Email notifications (SES)</li>
+          <li>Inventory management</li>
+        </ul>
+
+        <h3>Option 4: AI-Powered Content Platform</h3>
+        <p><strong>Services Used</strong>: S3, Lambda, Bedrock, Rekognition, Comprehend, DynamoDB, API Gateway</p>
+        <p><strong>Features</strong>:</p>
+        <ul>
+          <li>Upload documents/images</li>
+          <li>AI analysis and tagging</li>
+          <li>Search and discovery</li>
+          <li>Content recommendations</li>
+          <li>Multi-language support</li>
+          <li>Sentiment analysis</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Architecture Requirements</h2>
+        <p>Your project must include:</p>
+
+        <h3>Core Services (Required)</h3>
+        <ul>
+          <li><strong>Compute</strong>: Lambda, ECS, or EC2</li>
+          <li><strong>Storage</strong>: S3, DynamoDB or RDS</li>
+          <li><strong>API</strong>: API Gateway or ALB</li>
+          <li><strong>Security</strong>: IAM roles, encryption, WAF</li>
+          <li><strong>Monitoring</strong>: CloudWatch metrics, logs, alarms</li>
+        </ul>
+
+        <h3>Advanced Features (Choose 3+)</h3>
+        <ul>
+          <li>Event-driven architecture (SNS/SQS/EventBridge)</li>
+          <li>Caching (ElastiCache or CloudFront)</li>
+          <li>Async processing (Step Functions)</li>
+          <li>Real-time data (Kinesis)</li>
+          <li>AI/ML integration (Rekognition, Bedrock)</li>
+          <li>Containers (ECS/Fargate)</li>
+          <li>Infrastructure as Code (Terraform/CDK)</li>
+        </ul>
+
+        <h3>Production Readiness (Required)</h3>
+        <ul>
+          <li>Multi-AZ deployment</li>
+          <li>Automated backups</li>
+          <li>CI/CD pipeline</li>
+          <li>Comprehensive monitoring</li>
+          <li>Security best practices</li>
+          <li>Cost optimization</li>
+          <li>Documentation</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Example: Building a Video Processing Platform</h2>
+        <p>Let's build a complete video processing platform as an example capstone project.</p>
+
+        <h3>Features</h3>
+        <ul>
+          <li>Upload videos to S3</li>
+          <li>Automatic transcoding (MediaConvert)</li>
+          <li>Thumbnail generation (Lambda + FFmpeg)</li>
+          <li>Metadata extraction</li>
+          <li>Content moderation (Rekognition Video)</li>
+          <li>Searchable catalog</li>
+          <li>CDN delivery</li>
+        </ul>
+
+        <h3>Architecture</h3>
+        <pre><code class="language-bash">User Upload → S3 → EventBridge
+                     ↓
+              Step Functions
+                     ↓
+        ┌────────────┼────────────┐
+        ↓            ↓            ↓
+   MediaConvert  Rekognition  Lambda
+   (Transcode)   (Moderate)   (Thumbnail)
+        ↓            ↓            ↓
+        └────────────┴────────────┘
+                     ↓
+                 DynamoDB
+                     ↓
+              API Gateway → Lambda → Query Results
+                     ↓
+                CloudFront → S3 (Video/Thumbnails)</code></pre>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="../index.html" class="btn btn-secondary">Back to Home</a>
+          <a href="lesson-12-2.html" class="btn btn-primary">Next: Infrastructure Setup →</a>
+        </div>
+      </div>

@@ -1,0 +1,26 @@
+{
+  "TableName": "url-shortener",
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "shortCode",
+      "AttributeType": "S"
+    }
+  ],
+  "KeySchema": [
+    {
+      "AttributeName": "shortCode",
+      "KeyType": "HASH"
+    }
+  ],
+  "BillingMode": "PAY_PER_REQUEST",
+  "Tags": [
+    {
+      "Key": "Project",
+      "Value": "URLShortener"
+    },
+    {
+      "Key": "Lesson",
+      "Value": "03"
+    }
+  ]
+}

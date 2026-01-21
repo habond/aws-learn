@@ -1,0 +1,8 @@
+{
+  "pathParameters": {
+    "shortCode": "aws"
+  },
+  "headers": {},
+  "httpMethod": "GET",
+  "path": "/aws"
+}

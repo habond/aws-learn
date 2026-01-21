@@ -1,0 +1,252 @@
+---
+layout: lesson-layout.njk
+permalink: lessons/lesson-05-7.html
+lessonNumber: 5
+lessonTitle: "Containers Are Taking Over"
+duration: "~8 hours"
+cost: "$2-3"
+stepNumber: 7
+totalSteps: 7
+progress: 100
+title: "Lesson 5: Monitoring + Cleanup - AWS Learning Tutorial"
+tocContent: |
+  <li>
+  <a href="lesson-05.html">
+  <span class="step-number">1</span>
+  <span class="step-title">Docker Basics</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-2.html">
+  <span class="step-number">2</span>
+  <span class="step-title">Push to ECR</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-3.html">
+  <span class="step-number">3</span>
+  <span class="step-title">ECS Cluster with Fargate</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-4.html">
+  <span class="step-number">4</span>
+  <span class="step-title">Application Load Balancer</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-5.html">
+  <span class="step-number">5</span>
+  <span class="step-title">ECS Service</span>
+  </a>
+  </li>
+  <li>
+  <a href="lesson-05-6.html">
+  <span class="step-number">6</span>
+  <span class="step-title">Scaling and Updates</span>
+  </a>
+  </li>
+  <li class="active">
+  <a href="lesson-05-7.html">
+  <span class="step-number">7</span>
+  <span class="step-title">Monitoring + Cleanup</span>
+  </a>
+  </li>
+---
+
+<div class="step-header">
+        <span class="step-badge">Lesson 5 - Part 7</span>
+        <h1>Monitoring + Cleanup</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 7: Monitoring (30 minutes)</h2>
+
+        <h3>Step 22: View Logs</h3>
+        <pre><code class="language-bash"># View logs for all tasks
+aws logs tail /ecs/task-manager --follow
+
+# Or in CloudWatch console
+# CloudWatch → Log groups → /ecs/task-manager</code></pre>
+
+        <h3>Step 23: Check Metrics</h3>
+        <pre><code class="language-bash"># View CPU utilization
+aws cloudwatch get-metric-statistics \
+  --namespace AWS/ECS \
+  --metric-name CPUUtilization \
+  --dimensions Name=ServiceName,Value=task-manager-service Name=ClusterName,Value=task-manager-cluster \
+  --start-time $(date -u -v-1H +%Y-%m-%dT%H:%M:%S) \
+  --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+  --period 300 \
+  --statistics Average
+
+# View in console: ECS → Clusters → task-manager-cluster → Services → Metrics</code></pre>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Challenges (Optional)</h2>
+
+        <h3>Easy</h3>
+        <ul>
+          <li>Add environment variables for configuration</li>
+          <li>Add container insights for advanced monitoring</li>
+          <li>Create a custom dashboard in CloudWatch</li>
+        </ul>
+
+        <h3>Medium</h3>
+        <ul>
+          <li>Add HTTPS with ALB and ACM certificate</li>
+          <li>Deploy with Terraform (combine with Lesson 4!)</li>
+          <li>Add health check endpoint that checks dependencies</li>
+          <li>Set up CI/CD with GitHub Actions</li>
+        </ul>
+
+        <h3>Hard</h3>
+        <ul>
+          <li>Implement blue/green deployment</li>
+          <li>Add service discovery with AWS Cloud Map</li>
+          <li>Create multi-region deployment</li>
+          <li>Add RDS database and persist tasks</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Troubleshooting</h2>
+
+        <h3>Task not starting?</h3>
+        <ul>
+          <li>Check CloudWatch logs for errors</li>
+          <li>Verify ECR image exists and is accessible</li>
+          <li>Check task execution role has ECR permissions</li>
+          <li>Verify security groups allow traffic</li>
+        </ul>
+
+        <h3>Can't pull image from ECR?</h3>
+        <ul>
+          <li>Re-authenticate Docker to ECR</li>
+          <li>Check task execution role permissions</li>
+          <li>Verify image tag is correct</li>
+        </ul>
+
+        <h3>Health checks failing?</h3>
+        <ul>
+          <li>Check health check path is correct</li>
+          <li>Verify container is listening on correct port</li>
+          <li>Check security groups allow traffic</li>
+          <li>View container logs for errors</li>
+        </ul>
+
+        <h3>ALB returning 503?</h3>
+        <ul>
+          <li>Wait for targets to be healthy (takes 1-2 minutes)</li>
+          <li>Check target group health in console</li>
+          <li>Verify security groups allow ALB → ECS traffic</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Cleanup (IMPORTANT!)</h2>
+        <pre><code class="language-bash"># Delete ECS service
+aws ecs update-service \
+  --cluster task-manager-cluster \
+  --service task-manager-service \
+  --desired-count 0
+
+aws ecs delete-service \
+  --cluster task-manager-cluster \
+  --service task-manager-service \
+  --force
+
+# Delete cluster
+aws ecs delete-cluster --cluster task-manager-cluster
+
+# Delete ALB
+export LISTENER_ARN=$(aws elbv2 describe-listeners \
+  --load-balancer-arn $ALB_ARN \
+  --query 'Listeners[0].ListenerArn' \
+  --output text)
+
+aws elbv2 delete-listener --listener-arn $LISTENER_ARN
+aws elbv2 delete-load-balancer --load-balancer-arn $ALB_ARN
+
+# Wait for ALB to delete
+sleep 30
+
+# Delete target group
+aws elbv2 delete-target-group --target-group-arn $TG_ARN
+
+# Delete security groups
+aws ec2 delete-security-group --group-id $ECS_SG_ID
+aws ec2 delete-security-group --group-id $ALB_SG_ID
+
+# Delete ECR repository
+aws ecr delete-repository --repository-name task-manager --force
+
+# Delete CloudWatch log group
+aws logs delete-log-group --log-group-name /ecs/task-manager
+
+# Delete IAM role
+aws iam detach-role-policy \
+  --role-name ecsTaskExecutionRole \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+aws iam delete-role --role-name ecsTaskExecutionRole</code></pre>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>What You Learned</h2>
+        <ul>
+          <li>Built and containerized applications with Docker</li>
+          <li>Pushed images to ECR</li>
+          <li>Deployed containers to ECS with Fargate</li>
+          <li>Set up Application Load Balancer</li>
+          <li>Created ECS services for high availability</li>
+          <li>Implemented rolling deployments</li>
+          <li>Configured auto-scaling</li>
+          <li>Monitored containers with CloudWatch</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Containers vs Serverless vs VMs</h2>
+
+        <h3>Use Containers (ECS/Fargate) when:</h3>
+        <ul>
+          <li>Need full control over runtime environment</li>
+          <li>Long-running processes</li>
+          <li>Microservices architecture</li>
+          <li>Want portability across clouds</li>
+          <li>Need predictable performance</li>
+        </ul>
+
+        <h3>Use Serverless (Lambda) when:</h3>
+        <ul>
+          <li>Event-driven workloads</li>
+          <li>Unpredictable traffic</li>
+          <li>Want zero infrastructure management</li>
+          <li>Short tasks (&lt; 15 minutes)</li>
+          <li>Cost optimization for low traffic</li>
+        </ul>
+
+        <h3>Use VMs (EC2) when:</h3>
+        <ul>
+          <li>Legacy applications</li>
+          <li>Specific OS/kernel requirements</li>
+          <li>Very high sustained traffic</li>
+          <li>Need GPU/specialized hardware</li>
+          <li>Maximum control needed</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Next Steps</h2>
+        <p>Head to <strong>Lesson 6: Data Pipelines</strong> to learn how to build data processing systems with S3, Lambda, RDS, and ElastiCache. You'll process files automatically and build a real data pipeline!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-05-6.html" class="btn btn-secondary">← Previous: Scaling and Updates</a>
+          <a href="lesson-06.html" class="btn btn-primary">Next: Lesson 6 →</a>
+        </div>
+      </div>

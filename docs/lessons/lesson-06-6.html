@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 6: Query API with Caching - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 6</h2>
+        <div class="lesson-title">Data Pipelines</div>
+        <div class="lesson-meta">
+          <span>~7 hours</span>
+          <span>$3-4</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 100%;"></div>
+      </div>
+      <div class="progress-text">Step 6 of 6</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-06.html">
+<span class="step-number">1</span>
+<span class="step-title">Set Up Networking (VPC)</span>
+</a>
+</li>
+<li>
+<a href="lesson-06-2.html">
+<span class="step-number">2</span>
+<span class="step-title">RDS PostgreSQL Database</span>
+</a>
+</li>
+<li>
+<a href="lesson-06-3.html">
+<span class="step-number">3</span>
+<span class="step-title">ElastiCache Redis</span>
+</a>
+</li>
+<li>
+<a href="lesson-06-4.html">
+<span class="step-number">4</span>
+<span class="step-title">S3 Bucket for Data Upload</span>
+</a>
+</li>
+<li>
+<a href="lesson-06-5.html">
+<span class="step-number">5</span>
+<span class="step-title">Lambda Data Processor</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-06-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Query API with Caching</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li class="current">
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li>
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 6 - Part 6</span>
+        <h1>Query API with Caching</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 6: Query API with Caching (1.5 hours)</h2>
+
+        <h3>Step 17: Create Query Lambda Function</h3>
+        <p><strong>Create <code>query-api/index.js</code>:</strong></p>
+
+        <pre><code class="language-javascript">const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { Client } = require('pg');
+const Redis = require('ioredis');
+
+const secretsManager = new SecretsManagerClient({});
+let dbClient;
+let redisClient;
+
+async function getDbCredentials() {
+  const response = await secretsManager.send(
+    new GetSecretValueCommand({ SecretId: process.env.SECRET_ARN })
+  );
+  return JSON.parse(response.SecretString);
+}
+
+async function initializeConnections() {
+  if (!dbClient) {
+    const creds = await getDbCredentials();
+    dbClient = new Client({
+      host: creds.host,
+      port: creds.port,
+      database: creds.database,
+      user: creds.username,
+      password: creds.password
+    });
+    await dbClient.connect();
+  }
+
+  if (!redisClient) {
+    redisClient = new Redis({
+      host: process.env.REDIS_ENDPOINT,
+      port: 6379
+    });
+  }
+
+  return { dbClient, redisClient };
+}
+
+async function getTotalSales(dbClient, redisClient) {
+  const cacheKey = 'sales:total';
+
+  // Try cache first
+  let cached = await redisClient.get(cacheKey);
+  if (cached) {
+    console.log('Cache hit for total sales');
+    return { ...JSON.parse(cached), cached: true };
+  }
+
+  // Query database
+  const result = await dbClient.query(
+    'SELECT COUNT(*) as total_orders, SUM(revenue) as total_revenue FROM sales_data'
+  );
+
+  const data = result.rows[0];
+
+  // Cache for 5 minutes
+  await redisClient.setex(cacheKey, 300, JSON.stringify(data));
+
+  return { ...data, cached: false };
+}
+
+async function getSalesByProduct(dbClient, redisClient) {
+  const cacheKey = 'sales:by_product';
+
+  let cached = await redisClient.get(cacheKey);
+  if (cached) {
+    console.log('Cache hit for sales by product');
+    return { data: JSON.parse(cached), cached: true };
+  }
+
+  const result = await dbClient.query(
+    'SELECT product, SUM(quantity) as total_quantity, SUM(revenue) as total_revenue FROM sales_data GROUP BY product ORDER BY total_revenue DESC'
+  );
+
+  // Cache for 5 minutes
+  await redisClient.setex(cacheKey, 300, JSON.stringify(result.rows));
+
+  return { data: result.rows, cached: false };
+}
+
+async function getSalesByRegion(dbClient, redisClient) {
+  const cacheKey = 'sales:by_region';
+
+  let cached = await redisClient.get(cacheKey);
+  if (cached) {
+    console.log('Cache hit for sales by region');
+    return { data: JSON.parse(cached), cached: true };
+  }
+
+  const result = await dbClient.query(
+    'SELECT region, SUM(quantity) as total_quantity, SUM(revenue) as total_revenue FROM sales_data GROUP BY region ORDER BY total_revenue DESC'
+  );
+
+  await redisClient.setex(cacheKey, 300, JSON.stringify(result.rows));
+
+  return { data: result.rows, cached: false };
+}
+
+exports.handler = async (event) =&gt; {
+  const path = event.path || event.requestContext?.http?.path || '/';
+
+  try {
+    const { dbClient, redisClient } = await initializeConnections();
+
+    let response;
+
+    switch (path) {
+      case '/total':
+        response = await getTotalSales(dbClient, redisClient);
+        break;
+      case '/by-product':
+        response = await getSalesByProduct(dbClient, redisClient);
+        break;
+      case '/by-region':
+        response = await getSalesByRegion(dbClient, redisClient);
+        break;
+      default:
+        return {
+          statusCode: 404,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ error: 'Not found' })
+        };
+    }
+
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(response)
+    };
+  } catch (error) {
+    console.error('Error:', error);
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Internal server error' })
+    };
+  }
+};</code></pre>
+
+        <p><strong>Package and deploy:</strong></p>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">Lambda</span></div><code class="language-bash">cd query-api
+cp ../processor/package.json .
+npm install
+zip -r ../query-api.zip .
+cd ..
+
+aws lambda create-function \
+  --function-name data-pipeline-query-api \
+  --runtime nodejs20.x \
+  --role $LAMBDA_ROLE_ARN \
+  --handler index.handler \
+  --zip-file fileb://query-api.zip \
+  --timeout 30 \
+  --memory-size 512 \
+  --environment "Variables={SECRET_ARN=$SECRET_ARN,REDIS_ENDPOINT=$REDIS_ENDPOINT}" \
+  --vpc-config SubnetIds=$SUBNET_1,$SUBNET_2,SecurityGroupIds=$LAMBDA_SG</code></pre>
+
+        <h3>Step 18: Create API Gateway</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">API Gateway</span><span class="code-service-badge">Lambda</span><span class="code-service-badge">STS</span></div><code class="language-bash"># Create HTTP API (simpler than REST API)
+aws apigatewayv2 create-api \
+  --name data-pipeline-api \
+  --protocol-type HTTP \
+  --target $(aws lambda get-function --function-name data-pipeline-query-api --query 'Configuration.FunctionArn' --output text)
+
+export API_ID=$(aws apigatewayv2 get-apis \
+  --query "Items[?Name=='data-pipeline-api'].ApiId" \
+  --output text)
+
+# Give API Gateway permission to invoke Lambda
+aws lambda add-permission \
+  --function-name data-pipeline-query-api \
+  --statement-id apigateway-invoke \
+  --action lambda:InvokeFunction \
+  --principal apigateway.amazonaws.com \
+  --source-arn "arn:aws:execute-api:us-east-1:$(aws sts get-caller-identity --query Account --output text):$API_ID/*/*"
+
+# Get API endpoint
+export API_ENDPOINT=$(aws apigatewayv2 get-apis \
+  --query "Items[?Name=='data-pipeline-api'].ApiEndpoint" \
+  --output text)
+
+echo "API Endpoint: $API_ENDPOINT"</code></pre>
+
+        <h3>Step 19: Test Query API</h3>
+        <pre><code class="language-bash"># Test endpoints
+curl $API_ENDPOINT/total
+curl $API_ENDPOINT/by-product
+curl $API_ENDPOINT/by-region
+
+# Test caching (second request should be faster and show cached: true)
+time curl $API_ENDPOINT/total
+time curl $API_ENDPOINT/total</code></pre>
+
+        <p><strong>You have a complete data pipeline with caching!</strong></p>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Challenges (Optional)</h2>
+
+        <h3>Easy</h3>
+        <ul>
+          <li>Add more CSV files and watch automatic processing</li>
+          <li>Query database directly to explore data</li>
+          <li>Monitor cache hit rates in Redis</li>
+        </ul>
+
+        <h3>Medium</h3>
+        <ul>
+          <li>Add error handling and dead letter queue</li>
+          <li>Create CloudWatch dashboard for pipeline metrics</li>
+          <li>Add data validation in processor Lambda</li>
+          <li>Implement different cache TTLs per endpoint</li>
+        </ul>
+
+        <h3>Hard</h3>
+        <ul>
+          <li>Add support for different file formats (JSON, Parquet)</li>
+          <li>Implement incremental updates (upserts instead of inserts)</li>
+          <li>Add data partitioning by date in S3</li>
+          <li>Create data quality checks and alerts</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Troubleshooting</h2>
+
+        <p><strong>Lambda can't connect to RDS?</strong></p>
+        <ul>
+          <li>Check security groups allow Lambda SG → RDS SG</li>
+          <li>Verify Lambda is in same VPC as RDS</li>
+          <li>Check subnet routing and NAT gateway if needed</li>
+        </ul>
+
+        <p><strong>Redis connection issues?</strong></p>
+        <ul>
+          <li>Verify Lambda can reach ElastiCache endpoint</li>
+          <li>Check security groups</li>
+          <li>Test Redis endpoint from within VPC</li>
+        </ul>
+
+        <p><strong>S3 trigger not working?</strong></p>
+        <ul>
+          <li>Check Lambda permissions for S3</li>
+          <li>Verify notification configuration</li>
+          <li>Check CloudWatch Logs for errors</li>
+        </ul>
+
+        <p><strong>Secrets Manager access denied?</strong></p>
+        <ul>
+          <li>Verify Lambda role has secretsmanager:GetSecretValue</li>
+          <li>Check secret ARN is correct</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Cleanup</h2>
+
+        <pre><div class="code-block-badges"><span class="code-service-badge">API Gateway</span><span class="code-service-badge">EC2</span><span class="code-service-badge">ElastiCache</span><span class="code-service-badge">IAM</span><span class="code-service-badge">Lambda</span><span class="code-service-badge">RDS</span><span class="code-service-badge">S3</span><span class="code-service-badge">Secrets Manager</span></div><code class="language-bash"># Delete API
+aws apigatewayv2 delete-api --api-id $API_ID
+
+# Delete Lambda functions
+aws lambda delete-function --function-name data-pipeline-processor
+aws lambda delete-function --function-name data-pipeline-query-api
+
+# Delete ElastiCache
+aws elasticache delete-cache-cluster --cache-cluster-id data-pipeline-redis
+
+# Delete RDS (skip final snapshot for dev)
+aws rds delete-db-instance \
+  --db-instance-identifier data-pipeline-db \
+  --skip-final-snapshot
+
+# Empty and delete S3 bucket
+aws s3 rm s3://$BUCKET_NAME --recursive
+aws s3 rb s3://$BUCKET_NAME
+
+# Delete secrets
+aws secretsmanager delete-secret \
+  --secret-id data-pipeline/db-credentials \
+  --force-delete-without-recovery
+
+# Delete security groups (after RDS/Redis deleted)
+sleep 300  # Wait for resources to fully delete
+aws ec2 delete-security-group --group-id $LAMBDA_SG
+aws ec2 delete-security-group --group-id $RDS_SG
+aws ec2 delete-security-group --group-id $REDIS_SG
+
+# Delete subnet groups
+aws rds delete-db-subnet-group --db-subnet-group-name data-pipeline-subnet-group
+aws elasticache delete-cache-subnet-group --cache-subnet-group-name data-pipeline-redis-subnet
+
+# Delete IAM role
+aws iam delete-role-policy --role-name data-pipeline-lambda-role --policy-name DataPipelinePermissions
+aws iam detach-role-policy --role-name data-pipeline-lambda-role --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+aws iam detach-role-policy --role-name data-pipeline-lambda-role --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+aws iam delete-role --role-name data-pipeline-lambda-role</code></pre>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>What You Learned</h2>
+
+        <ul>
+          <li>Built event-driven data pipeline with S3 triggers</li>
+          <li>Processed data automatically with Lambda</li>
+          <li>Stored data in RDS PostgreSQL</li>
+          <li>Implemented caching with ElastiCache Redis</li>
+          <li>Secured credentials with Secrets Manager</li>
+          <li>Configured VPC networking for databases</li>
+          <li>Created query API with cache invalidation</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Next Steps</h2>
+
+        <p>Head to <a href="lesson-07.html">Lesson 7: Event-Driven Chaos</a> to learn SNS, SQS, EventBridge, and Step Functions. You'll build complex event-driven workflows that can handle anything!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-06-5.html" class="btn btn-secondary">← Previous: Lambda Data Processor</a>
+          <a href="lesson-07.html" class="btn btn-primary">Next Lesson: Event-Driven Chaos →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 11: Security Deep Dive - AWS Learning Tutorial</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>☁️</text></svg>">
+  <link rel="stylesheet" href="../assets/style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Additional language support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="../assets/terraform.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1><a href="../index.html">AWS Learning</a></h1>
+      </div>
+
+      <div class="lesson-info">
+        <h2>Lesson 11</h2>
+        <div class="lesson-title">Security Deep Dive</div>
+        <div class="lesson-meta">
+          <span>~8 hours</span>
+          <span>$2-3</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 100%;"></div>
+      </div>
+      <div class="progress-text">Step 7 of 7</div>
+
+      <!-- Table of Contents -->
+      <nav class="toc">
+        <h3>In This Lesson</h3>
+        <ul>
+          <li>
+<a href="lesson-11.html">
+<span class="step-number">1</span>
+<span class="step-title">IAM Deep Dive</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-2.html">
+<span class="step-number">2</span>
+<span class="step-title">Data Encryption with KMS</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-3.html">
+<span class="step-number">3</span>
+<span class="step-title">GuardDuty Threat Detection</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-4.html">
+<span class="step-number">4</span>
+<span class="step-title">WAF Protection</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-5.html">
+<span class="step-number">5</span>
+<span class="step-title">CloudTrail Auditing</span>
+</a>
+</li>
+<li>
+<a href="lesson-11-6.html">
+<span class="step-number">6</span>
+<span class="step-title">Security Hub</span>
+</a>
+</li>
+<li class="active">
+<a href="lesson-11-7.html">
+<span class="step-number">7</span>
+<span class="step-title">Secrets Rotation &amp; Cleanup</span>
+</a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- All Lessons -->
+      <div class="all-lessons">
+  <h3>All Lessons</h3>
+  <ul>
+    <li>
+      <a href="lesson-01.html">1. Your First Internet Empire</a>
+    </li>
+    <li>
+      <a href="lesson-02.html">2. Renting Computers</a>
+    </li>
+    <li>
+      <a href="lesson-03.html">3. Databases That Don&#39;t Die</a>
+    </li>
+    <li>
+      <a href="lesson-04.html">4. Containers &amp; Orchestration</a>
+    </li>
+    <li>
+      <a href="lesson-05.html">5. Serverless Computing</a>
+    </li>
+    <li>
+      <a href="lesson-06.html">6. Data Pipelines</a>
+    </li>
+    <li>
+      <a href="lesson-07.html">7. Event-Driven Chaos</a>
+    </li>
+    <li>
+      <a href="lesson-08.html">8. Big Data Analytics</a>
+    </li>
+    <li>
+      <a href="lesson-09.html">9. AI/ML Buzzwords</a>
+    </li>
+    <li>
+      <a href="lesson-10.html">10. Observability</a>
+    </li>
+    <li class="current">
+      <a href="lesson-11.html">11. Security Deep Dive</a>
+    </li>
+    <li>
+      <a href="lesson-12.html">12. Final Project</a>
+    </li>
+  </ul>
+</div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      
+<div class="step-header">
+        <span class="step-badge">Lesson 11 - Part 7</span>
+        <h1>Secrets Rotation &amp; Cleanup</h1>
+      </div>
+
+      <div class="step-content">
+        <h2>Part 7: Secrets Rotation (45 minutes)</h2>
+
+        <h3>Step 19: Set Up Secrets Manager with Rotation</h3>
+        <pre><div class="code-block-badges"><span class="code-service-badge">Secrets Manager</span></div><code class="language-bash"># Create secret with rotation
+aws secretsmanager create-secret \
+  --name app/database/credentials \
+  --secret-string '{"username":"admin","password":"'"$(openssl rand -base64 32)"'"}' \
+  --description "Database credentials with automatic rotation"
+
+# Create Lambda for rotation (simplified version)
+# In production, use AWS-provided rotation templates
+
+# Enable rotation (requires rotation Lambda)
+# aws secretsmanager rotate-secret \
+#   --secret-id app/database/credentials \
+#   --rotation-lambda-arn $ROTATION_LAMBDA_ARN \
+#   --rotation-rules AutomaticallyAfterDays=30</code></pre>
+
+        <div style="background: var(--info-bg); border-left: 4px solid var(--info-color); padding: 15px; margin: 20px 0;">
+          <strong>Why Secrets Manager?</strong> Never hardcode credentials in your application code! Secrets Manager stores credentials securely, encrypts them with KMS, and can automatically rotate them. Your application retrieves secrets at runtime via the AWS SDK.
+        </div>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Security Checklist</h2>
+
+        <h3>Account Security</h3>
+        <ul>
+          <li>MFA enabled on root account</li>
+          <li>Root account not used for daily tasks</li>
+          <li>Billing alerts configured</li>
+          <li>CloudTrail enabled in all regions</li>
+          <li>GuardDuty enabled</li>
+          <li>Security Hub enabled</li>
+        </ul>
+
+        <h3>IAM</h3>
+        <ul>
+          <li>Least privilege policies</li>
+          <li>No long-lived access keys</li>
+          <li>MFA for sensitive operations</li>
+          <li>Regular access reviews</li>
+          <li>Service roles instead of user credentials</li>
+        </ul>
+
+        <h3>Data Protection</h3>
+        <ul>
+          <li>Encryption at rest (KMS)</li>
+          <li>Encryption in transit (TLS)</li>
+          <li>S3 buckets private by default</li>
+          <li>Database encryption enabled</li>
+          <li>Secrets in Secrets Manager</li>
+        </ul>
+
+        <h3>Network Security</h3>
+        <ul>
+          <li>Security groups restrictive</li>
+          <li>NACLs configured</li>
+          <li>WAF on public endpoints</li>
+          <li>VPC Flow Logs enabled</li>
+          <li>Private subnets for databases</li>
+        </ul>
+
+        <h3>Monitoring</h3>
+        <ul>
+          <li>CloudWatch alarms for security events</li>
+          <li>GuardDuty findings reviewed</li>
+          <li>Config rules monitoring compliance</li>
+          <li>Access Analyzer findings addressed</li>
+          <li>Regular security audits</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Cleanup</h2>
+        <pre><div class="code-block-badges"><span class="code-service-badge">S3</span></div><code class="language-bash"># Disable GuardDuty
+aws guardduty delete-detector --detector-id $DETECTOR_ID
+
+# Disable Security Hub
+aws securityhub disable-security-hub
+
+# Delete WAF Web ACL
+aws wafv2 disassociate-web-acl --resource-arn $API_STAGE_ARN --region us-east-1
+aws wafv2 delete-web-acl --name api-protection-acl --scope REGIONAL --region us-east-1 --id $(echo $WEB_ACL_ARN | cut -d'/' -f3) --lock-token $(aws wafv2 get-web-acl --name api-protection-acl --scope REGIONAL --region us-east-1 --id $(echo $WEB_ACL_ARN | cut -d'/' -f3) --query 'LockToken' --output text)
+
+# Stop CloudTrail
+aws cloudtrail stop-logging --name security-audit-trail
+aws cloudtrail delete-trail --name security-audit-trail
+
+# Delete S3 buckets
+aws s3 rm s3://$TRAIL_BUCKET --recursive
+aws s3 rb s3://$TRAIL_BUCKET
+aws s3 rm s3://$SECURE_BUCKET --recursive
+aws s3 rb s3://$SECURE_BUCKET
+
+# Delete KMS key (schedule deletion)
+aws kms schedule-key-deletion --key-id $KEY_ID --pending-window-in-days 7</code></pre>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>What You Learned</h2>
+        <ul>
+          <li>Implemented IAM best practices</li>
+          <li>Encrypted data with KMS</li>
+          <li>Protected APIs with WAF</li>
+          <li>Detected threats with GuardDuty</li>
+          <li>Audited activity with CloudTrail</li>
+          <li>Managed secrets securely</li>
+          <li>Centralized security with Security Hub</li>
+          <li>Found overly permissive access</li>
+        </ul>
+
+        <h2>Security = Layers</h2>
+        <p>No single security measure is enough. Use defense in depth:</p>
+        <ul>
+          <li><strong>Network</strong>: VPC, security groups, WAF</li>
+          <li><strong>IAM</strong>: Least privilege, MFA</li>
+          <li><strong>Data</strong>: Encryption at rest and in transit</li>
+          <li><strong>Detection</strong>: GuardDuty, CloudTrail</li>
+          <li><strong>Response</strong>: Automated remediation</li>
+          <li><strong>Audit</strong>: Regular reviews and compliance checks</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid var(--border-color);">
+
+        <h2>Challenges (Optional)</h2>
+
+        <h3>Easy</h3>
+        <ul>
+          <li>Enable MFA on all IAM users</li>
+          <li>Review and reduce IAM permissions</li>
+          <li>Enable CloudTrail in all regions</li>
+        </ul>
+
+        <h3>Medium</h3>
+        <ul>
+          <li>Implement automated incident response</li>
+          <li>Create custom Config rules</li>
+          <li>Set up VPC Flow Logs analysis</li>
+          <li>Build security dashboard</li>
+        </ul>
+
+        <h3>Hard</h3>
+        <ul>
+          <li>Implement zero-trust architecture</li>
+          <li>Create automated remediation workflows</li>
+          <li>Build custom threat detection rules</li>
+          <li>Implement data loss prevention (DLP)</li>
+        </ul>
+
+        <div style="background: var(--success-bg); border-left: 4px solid var(--success-color); padding: 20px; margin: 30px 0; border-radius: 4px;">
+          <h3 style="margin-top: 0;">Congratulations!</h3>
+          <p>You've completed the Security Deep Dive lesson! Your AWS environment is now significantly more secure. Remember: security is not a one-time task but an ongoing process. Regularly review and update your security posture.</p>
+        </div>
+
+        <h2>Next Steps</h2>
+        <p>Head to <a href="lesson-12.html">Lesson 12: Victory Lap - Capstone Project</a> to build a complete production-ready application combining everything you've learned!</p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="step-navigation">
+        <div class="nav-button-group">
+          <a href="lesson-11-6.html" class="btn btn-secondary">← Previous: Security Hub</a>
+          <a href="lesson-12.html" class="btn btn-primary">Next: Lesson 12 - Final Project →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>
